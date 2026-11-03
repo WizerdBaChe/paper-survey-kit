@@ -133,3 +133,7 @@ python -X utf8 docs/assets/build_assets.py
 
 它從 `docs/assets/src/*.html` 與示範成果的 `paper-explainer.html`、`source/pages/p001.png` 截圖，
 產生 `docs/assets/` 裡所有 PNG。圖內標籤是繁體中文（社群卡為英文）。不要手改圖片。
+
+流程圖（`src/pipeline.html`）的線條由具名錨點算出、只走水平與垂直，箭頭尖端落在框邊。頁面自己量每條線
+（`window.__edgeCheck`）；腳本截圖前先載入故意縮短一條線的壞樣本（`#control-short`，必須報錯），
+再載入正式圖（必須 0 個問題），任一邊不對就停止、不出圖。

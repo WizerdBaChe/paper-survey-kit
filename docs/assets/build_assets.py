@@ -35,6 +35,21 @@ FIND_BLOCK = """t => { const els = [...document.querySelectorAll('caption, figca
   window.scrollTo(0, box.getBoundingClientRect().top + window.scrollY - 24); return true; }"""
 
 
+def edge_check(page, src: Path) -> None:
+    """The pipeline diagram measures its own edges (window.__edgeCheck). Two-sided: the known-bad load
+    (#control-short, one endpoint 4 px short of its border) must report a problem, the real load none."""
+    page.goto(src.as_uri() + "#control-short")
+    bad = page.evaluate("window.__edgeCheck")
+    page.goto(src.as_uri())
+    good = page.evaluate("window.__edgeCheck")
+    print(f"edge check: known-bad {len(bad['problems'])} problem(s) {bad['problems'][:1]} vs real {len(good['problems'])} "
+          f"over {good['edges']} edges")
+    if not bad["problems"]:
+        sys.exit("edge check control did not fire: the check cannot be trusted")
+    if good["problems"]:
+        sys.exit("edge check failed: " + "; ".join(good["problems"]))
+
+
 def shot_page(page, src: Path, out: Path, w: int, h: int) -> None:
     page.set_viewport_size({"width": w, "height": h})
     page.goto(src.as_uri())
@@ -56,6 +71,7 @@ def main() -> int:
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         page = browser.new_page(device_scale_factor=1)
+        edge_check(page, SRC / "pipeline.html")
         shot_page(page, SRC / "pipeline.html", ASSETS / "pipeline.zh-TW.png", 1600, 840)
 
         page.set_viewport_size({"width": 1440, "height": 900})
