@@ -3,6 +3,14 @@
 All notable changes to this repository. Versions follow semantic versioning: minor = new capability,
 patch = fix.
 
+## v1.0.1 — 2026-11-03
+
+- README image source pages declare a registered page class (`diagram` for the pipeline, `showcase` for
+  hero and social card) instead of the unregistered `figure`.
+- Social card: the licence line has its own style class instead of reusing the pill class at another size.
+- `docs/DEVELOPER.md` explains why the page-fill gate does not apply to the fixed-size image canvases.
+- No change to the skills, the demo run or any README picture (all PNGs regenerate byte-identical).
+
 ## v1.0.0 — 2026-11-03
 
 First public release.
