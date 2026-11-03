@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hant" data-page-class="document-long">
+<head>
+<meta charset="utf-8">
+<title>fill-gate known-bad: formula overflow</title>
+<style>
+  body{margin:0;font-family:system-ui,sans-serif;line-height:1.6}
+  #side{position:fixed;left:0;top:0;bottom:0;width:280px;background:#eee;border-right:1px solid #ccc}
+  main{margin-left:280px;padding:36px clamp(20px,4vw,64px)}
+  p{margin:8px 0}
+  .box{border-left:4px solid #888;background:#f4f4f4;padding:10px 16px}
+  math[display="block"]{display:block;overflow-x:auto;overflow-y:hidden;font-size:1.12em}
+</style>
+</head>
+<body>
+<nav id="side">TOC</nav>
+<main>
+  <h1 id="ctl">Known-bad control: a display formula wider than its box</h1>
+  <p>The page itself fills its area (reach is fine), but the calculation line below is far wider than the column, so its tail (the boxed answer) scrolls out of sight. The gate must FAIL this file on the clipped-overflow rule alone.</p>
+  <div class="box">A painted box that spans its parent.</div>
+  <math display="block"><mrow>
+    <mi>d</mi><mo>=</mo><mn>0.123456</mn><mo>+</mo><mn>0.234567</mn><mo>+</mo><mn>0.345678</mn><mo>+</mo><mn>0.456789</mn><mo>+</mo><mn>0.567891</mn><mo>+</mo><mn>0.678912</mn><mo>+</mo><mn>0.789123</mn><mo>+</mo><mn>0.891234</mn><mo>+</mo><mn>0.912345</mn><mo>+</mo><mn>0.123456</mn><mo>+</mo><mn>0.234567</mn><mo>+</mo><mn>0.345678</mn><mo>+</mo><mn>0.456789</mn><mo>+</mo><mn>0.567891</mn><mo>+</mo><mn>0.678912</mn><mo>+</mo><mn>0.789123</mn><mo>+</mo><mn>0.891234</mn><mo>+</mo><mn>0.912345</mn><mo>+</mo><mn>0.123456</mn><mo>+</mo><mn>0.234567</mn><mo>+</mo><mn>0.345678</mn><mo>+</mo><mn>0.456789</mn><mo>+</mo><mn>0.567891</mn><mo>+</mo><mn>0.678912</mn><mo>=</mo><menclose notation="box"><mn>12.345678</mn><mtext>&#x2009;µm</mtext></menclose>
+  </mrow></math>
+  <p>More running text so the measured area has several blocks. More running text so the measured area has several blocks.</p>
+</main>
+</body>
+</html>

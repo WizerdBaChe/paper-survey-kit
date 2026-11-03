@@ -1,0 +1,297 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "paper-distill/cards@1",
+  "title": "paper-distill cards.json",
+  "description": "Every stage's output for one source — the EVIDENCE layer. Origin tags: author | verified | inferred | assumed. v1.2 (2026-09-03 split): keypoint, talk and deck_hints are no longer required — the key point (logic extraction) and the decks belong to paper-story (story.json); the blocks stay optional so v1.1 runs remain valid.",
+  "type": "object",
+  "required": ["schema", "run", "source", "intake", "claims", "figures", "position", "paper_says", "terms"],
+  "properties": {
+    "schema": { "const": "paper-distill/cards@1" },
+    "run": {
+      "type": "object",
+      "required": ["id", "created", "depth"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_\\-]*$", "description": "== the run folder name: <FirstAuthor><Year>_<short-title-slug> since 2026-09-04 (naming over routing); dated ids YYYYMMDD_… are the pre-migration form" },
+        "created": { "type": "string" },
+        "revision": { "type": "integer", "minimum": 1, "default": 1 },
+        "depth": { "enum": ["full", "standard", "triage"] },
+        "presenter": { "type": "string" },
+        "model": { "type": "string" },
+        "skill_version": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["type", "title", "access"],
+      "properties": {
+        "type": { "enum": ["paper", "preprint", "patent", "techdoc", "popsci", "other"] },
+        "title": { "type": "string", "minLength": 1 },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "venue": { "type": "string" },
+        "year": { "type": ["integer", "null"] },
+        "doi": { "type": "string" },
+        "url": { "type": "string" },
+        "access": { "enum": ["full", "partial", "abstract"] },
+        "file": { "type": "string" },
+        "pages": { "type": ["integer", "null"] },
+        "lang": { "type": "string" },
+        "abstract": { "type": "string", "description": "verbatim abstract if available; used by the author-overlap gate" }
+      }
+    },
+    "intake": {
+      "type": "object",
+      "required": ["why_this", "triage"],
+      "properties": {
+        "why_this": { "type": "string" },
+        "triage": {
+          "type": "object",
+          "properties": {
+            "abstract_problem": { "type": "string" },
+            "conclusion_claim": { "type": "string" },
+            "intro_contribution": { "type": "string" },
+            "one_figure": { "type": "string" },
+            "decision": { "enum": ["deep", "skim", "archive"] },
+            "reason": { "type": "string" },
+            "depth_ruler": {
+              "type": "object",
+              "description": "the three axes the decision rests on (Day 07 ruler, reading-method.md Stage 0 q5): relevance to my research, weight of the method on the result, depth of the evidence",
+              "properties": {
+                "relevance": { "enum": ["high", "mid", "low"] },
+                "method_weight": { "enum": ["high", "mid", "low"] },
+                "evidence_depth": { "enum": ["high", "mid", "low"] }
+              }
+            }
+          }
+        },
+        "domain_profile": { "type": "string", "description": "scientific-research-guide profile name when the field matches, else ''" },
+        "lab_relevance": { "type": "string" },
+        "marked": {
+          "type": "array",
+          "description": "Marks already on the PDF, imported at ingest from Zotero (literature-search-extract zotero_local.py --annotations KEY --json). A mark is a CANDIDATE: only origin owner may be read as the reader's own attention, and it is confirmed, not assumed; named / tool / external / unattributed are someone else's attention and never evidence. Absent = not imported (not a Zotero PDF, or an older run); [] = imported, none found.",
+          "items": {
+            "type": "object",
+            "required": ["origin", "kind", "text"],
+            "properties": {
+              "origin": { "enum": ["owner", "named", "tool", "external", "unattributed"] },
+              "kind": { "type": "string", "description": "highlight | underline | note | image | ink | text | child-note | type-N" },
+              "text": { "type": "string" },
+              "comment": { "type": "string" },
+              "locator": { "type": "string", "description": "p.<pageLabel> — the PDF's page LABEL, which can differ from the page index" },
+              "author": { "type": "string" },
+              "used_in": { "type": "string", "description": "the card field this mark seeded, or 'unused: <why>'" }
+            }
+          }
+        }
+      }
+    },
+    "skeleton": {
+      "type": "object",
+      "properties": {
+        "I": { "$ref": "#/definitions/skeletonRow" },
+        "M": { "$ref": "#/definitions/skeletonRow" },
+        "R": { "$ref": "#/definitions/skeletonRow" },
+        "D": { "$ref": "#/definitions/skeletonRow" },
+        "gap": { "type": "object", "properties": { "problem": { "type": "string" }, "prior": { "type": "string" }, "gap": { "type": "string" } } },
+        "method_elements": { "type": "object", "properties": { "tools": { "type": "string" }, "sampling": { "type": "string" }, "procedure": { "type": "string" }, "model": { "type": "string" } } },
+        "anomalies": { "type": "array", "items": { "type": "object", "properties": { "where": { "type": "string" }, "looks_like": { "type": "string" }, "why_here": { "type": "string" } } } },
+        "what_why_leaks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "core": {
+      "type": "object",
+      "properties": {
+        "rq": { "type": "string" },
+        "methods": { "type": "string" },
+        "results": { "type": "string" },
+        "limitations": { "type": "string" },
+        "contribution_claimed": { "type": "string" },
+        "holds_up": { "type": "string" },
+        "missing": { "type": "string" },
+        "related_work": { "type": "array", "items": { "type": "object", "properties": { "prior": { "type": "string" }, "author_says_insufficient": { "type": "string" }, "fair": { "type": "string" } } } },
+        "assumptions": {
+          "type": "array",
+          "description": "premises the paper accepts as true without testing them (reading-method.md Stage 2 前提盤點): what breaks if one is false is the audit's cheapest lever",
+          "items": {
+            "type": "object",
+            "required": ["premise"],
+            "properties": {
+              "premise": { "type": "string", "minLength": 1 },
+              "where": { "type": "string", "description": "locator when the paper states it; 'implicit' when it does not" },
+              "tested": { "enum": ["yes", "partly", "no", "unknown"] },
+              "if_false": { "type": "string", "description": "which claim rows / chain steps fall" },
+              "origin": { "enum": ["author", "verified", "inferred", "assumed"] }
+            }
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "type", "evidence", "kind", "verdict", "origin"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^C[0-9]+$" },
+          "text": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["specific", "testable", "mechanism", "prediction"] },
+          "reach": { "description": "axes the claim asserts; definitions in ~/.claude/references/writing-norms/claim-reach.md §1", "type": "array", "uniqueItems": true, "items": { "enum": ["occurrence", "direction", "magnitude", "significance", "practical", "equivalence", "association", "causation", "mechanism", "whole-system", "real-device", "generality"] } },
+          "evidence": { "type": "array", "items": { "type": "object", "required": ["locator", "what"], "properties": { "locator": { "type": "string" }, "what": { "type": "string" } } } },
+          "kind": { "enum": ["E1", "E2", "E3", "E4", "none"] },
+          "missing": { "type": "string" },
+          "verdict": { "enum": ["provisional", "leaning", "hypothetical", "withhold"] },
+          "origin": { "enum": ["author", "verified", "inferred", "assumed"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "did": {
+      "type": "object",
+      "properties": {
+        "framework": { "type": "boolean" }, "term": { "type": "boolean" },
+        "use_case": { "type": "boolean" }, "experiment_or_derivation": { "type": "boolean" },
+        "note": { "type": "string" }
+      }
+    },
+    "figures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "locator", "question", "look_for", "shows"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^F[0-9]+$" },
+          "locator": { "type": "string" },
+          "file": { "type": "string", "description": "path relative to the run folder; figures[0].file is embedded in the one-pager" },
+          "question": { "type": "string" },
+          "look_for": { "type": "array", "minItems": 1, "maxItems": 4, "items": { "type": "string" } },
+          "shows": { "type": "string" },
+          "supports": { "type": "string" },
+          "caveat": { "type": "string" },
+          "blind_spot": { "type": "string" },
+          "borrowed_from": { "type": "string" }
+        }
+      }
+    },
+    "craft": {
+      "type": "object",
+      "description": "Stage 5 writing craft — what this paper teaches about writing a paper (writing-craft.md)",
+      "properties": {
+        "argument_chain": { "type": "array", "items": { "type": "object", "required": ["step", "text"], "properties": { "step": { "type": "string" }, "text": { "type": "string" }, "locator": { "type": "string" } } } },
+        "methods_writing": { "type": "object", "properties": { "given": { "type": "string" }, "missing_to_reproduce": { "type": "string" }, "order": { "type": "string" }, "design_data": { "type": "string" } } },
+        "figure_design": { "type": "array", "items": { "type": "object", "properties": { "locator": { "type": "string" }, "designed_to_prove": { "type": "string" }, "chart_choice": { "type": "string" }, "note": { "type": "string" } } } },
+        "results_writing": { "type": "string" },
+        "limitations_writing": { "type": "string" },
+        "sentence_patterns": { "type": "array", "maxItems": 6, "items": { "type": "object", "properties": { "pattern": { "type": "string" }, "locator": { "type": "string" }, "use": { "type": "string" } } } },
+        "my_rewrite": { "type": "string" }
+      }
+    },
+    "position": {
+      "type": "object",
+      "required": ["relevance"],
+      "properties": {
+        "future_work": { "type": "string" }, "limitations": { "type": "string" },
+        "cross_paper": { "type": "string" }, "gap": { "type": "string" },
+        "relevance": { "type": "string", "minLength": 1 },
+        "borrow": { "type": "string" }, "not_borrow": { "type": "string" },
+        "lineage": {
+          "type": "object",
+          "description": "read people, not only papers (reading-method.md Stage 6): the group's own prior work this paper stands on (its self-citations), who else attacks the same problem, which community it belongs to — one line each, from the reference list; no author database",
+          "properties": {
+            "group_prior_work": { "type": "string" },
+            "who_else": { "type": "string" },
+            "community": { "type": "string" }
+          }
+        }
+      }
+    },
+    "keypoint": {
+      "type": "object",
+      "required": ["title", "pillars", "spoken", "holds_when", "overturned_by", "origin"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "description": "the WHOLE paper distilled through my reading, one sentence ≤ 50 CJK chars" },
+        "pillars": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": { "type": "object", "required": ["axis", "text", "locator"], "properties": {
+            "axis": { "enum": ["方法", "證據", "邊界"] }, "text": { "type": "string", "minLength": 1 }, "locator": { "type": "string", "minLength": 1 } } }
+        },
+        "question": { "type": "string" },
+        "view": { "type": "string" },
+        "basis": { "type": "string", "description": "the atomic-essay basis sentence; must contain a locator" },
+        "conclusion": { "type": "string" },
+        "spoken": { "type": "string" },
+        "holds_when": { "type": "string", "minLength": 1 },
+        "overturned_by": { "type": "string", "minLength": 1 },
+        "evidence_kind": { "enum": ["E1", "E2", "E3", "E4", "none"] },
+        "origin": { "const": "model" },
+        "candidates_rejected": { "type": "array", "items": { "type": "object", "properties": { "angle": { "type": "string" }, "text": { "type": "string" }, "why": { "type": "string" } } } }
+      }
+    },
+    "paper_says": {
+      "type": "object",
+      "required": ["conclusion_quote", "locator"],
+      "properties": { "conclusion_quote": { "type": "string" }, "locator": { "type": "string" } }
+    },
+    "terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["term", "gloss"],
+        "properties": {
+          "term": { "type": "string" },
+          "gloss": { "type": "string" },
+          "glossary_only": { "type": "boolean" },
+          "role": { "enum": ["subject", "frame", "field", "coined"], "description": "the first-pass glossary class (Day 09, reading-method.md Stage 0b): subject 主角 · frame 解釋框架 · field 領域共用 · coined 本文特有 — a coined term is checked against the field's standard term (claim-audit.md term substitution)" },
+          "freq": { "type": "integer", "description": "occurrences in source/paper.txt, from scripts/glossary.py" },
+          "unclear": { "type": "string", "description": "what I do not yet understand about this term after the first pass" },
+          "ask_next": { "type": "string", "description": "the question the second pass must answer about it" }
+        }
+      }
+    },
+    "talk": {
+      "type": "object",
+      "description": "the spoken memo (口述稿): what I will SAY, in talk order — personal, meant to be rewritten by the presenter",
+      "required": ["sections"],
+      "properties": {
+        "minutes": { "type": "number" },
+        "sections": {
+          "type": "array", "minItems": 4,
+          "items": { "type": "object", "required": ["name", "say"], "properties": {
+            "name": { "type": "string" }, "seconds": { "type": "number" },
+            "say": { "type": "string", "minLength": 1, "description": "spoken prose, first person, as it would be said" },
+            "bridge": { "type": "string", "description": "the transition sentence into the next section" },
+            "if_asked": { "type": "string", "description": "what to answer if the audience asks the obvious question here" } } }
+        }
+      }
+    },
+    "learning": {
+      "type": "object",
+      "properties": {
+        "hard": { "type": "string" },
+        "self_check": { "type": "array", "items": { "type": "string" } },
+        "practice": { "type": "string" },
+        "your_version_first": { "type": "string", "description": "left empty by the model; the user fills it before reading candidates" },
+        "admire": { "type": "string", "description": "what the authors did well — the appreciation half of 欣賞作者、同時保留懷疑 (reading-method.md B-7); an audit that only lists gaps has read half the paper" }
+      }
+    },
+    "deck_hints": {
+      "type": "object",
+      "properties": {
+        "minutes": { "type": "number" },
+        "page_plan": { "type": "array", "items": { "type": "object", "properties": { "section": { "type": "string" }, "pages": { "type": "string" }, "weight": { "type": "string" }, "source_fields": { "type": "array", "items": { "type": "string" } } } } },
+        "figures_for_deck": { "type": "array", "items": { "type": "string" } },
+        "essay_for_writing": { "type": "string" }
+      }
+    }
+  },
+  "definitions": {
+    "skeletonRow": {
+      "type": "object",
+      "properties": {
+        "function": { "type": "string" },
+        "materials": { "type": "string" },
+        "understood": { "type": "string" }
+      }
+    }
+  }
+}

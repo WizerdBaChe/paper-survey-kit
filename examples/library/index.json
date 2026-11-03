@@ -1,0 +1,49 @@
+{
+ "schema": "paper-distill/index@2",
+ "home": "<PAPER_DISTILL_HOME>",
+ "entries": [
+  {
+   "run_id": "Placeholder2026_wax-delay-bridges",
+   "distill_run": "Placeholder2026_wax-delay-bridges",
+   "story_run": "Placeholder2026_wax-delay-bridges",
+   "paper": "Placeholder2026_wax-delay-bridges",
+   "kind": "accepted",
+   "label": "",
+   "path": "<PAPER_DISTILL_HOME>/Placeholder2026_wax-delay-bridges",
+   "mode": "deep",
+   "story_schema": "paper-story/story@6",
+   "model": "Claude Sonnet 5.5",
+   "products": [
+    "reading-record.md",
+    "narrative-record.md",
+    "paper-explainer.html",
+    "lab-deck.pptx",
+    "story.json",
+    "cards.json"
+   ],
+   "title": "Wax Delay Bridges for Timed Reagent Release in Paper Microfluidics",
+   "first_author": "Ada Placeholder",
+   "year": 2026,
+   "venue": "Journal of Imaginary Microfluidics 1, 101-108 (fictional)",
+   "doi": "",
+   "source_type": "paper",
+   "depth": "full",
+   "created": "2026-11-03T21:26:16+08:00",
+   "revision": 1,
+   "keypoint_title": "把要控制的時序量掛在既有製程步驟已決定的幾何尺寸上；先寫下它該服從的標度律，再只掃這一個尺寸去對照；最後用一個實際任務驗收用途。",
+   "keypoint_reading": "作者面對的是一個很具體的問題：多步驟檢測要試劑依序到達，紙裝置卻讓試劑一起到達；手上的計時元件，糖障壁變異大、閥要加零件。他們先退一步，把『時序量』（延遲）掛在一個本來就由既有製程決定的尺寸上——蠟印刷已經在定義通道，所以多印一段只部分熔融的蠟橋，橋長 L 就成了延遲的旋鈕；這樣做之所以合理，是因為不必再加材料或組裝。",
+   "patterns": [
+    "hang-function-on-existing-geometry",
+    "one-knob-scan-against-scaling-law"
+   ],
+   "relations": [],
+   "c1_verdict": "provisional",
+   "domain_profile": "",
+   "tags": [
+    "paper"
+   ],
+   "related": [],
+   "registered": "2026-11-03T21:45:57+08:00"
+  }
+ ]
+}

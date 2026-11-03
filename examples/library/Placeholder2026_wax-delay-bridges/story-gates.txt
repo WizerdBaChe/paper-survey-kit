@@ -1,0 +1,25 @@
+paper-story gates — 2026-11-03T21:48:55+08:00
+S1  PASS — story.json valid (assets/story.schema.json)
+S4  PASS — one-page: 4 tiles (4 image files) present, five table cells filled, keypoint strip 61 CJK-eq (logic.keypoint verbatim)
+S4d SKIP — mode deep — argument-step tiles are a story-mode rule (deep mode unchanged)
+S5  PASS — deck: 15 pages, Keypoint page p2, every highlight ≤ 48
+OUT PASS — wrote no separate file (the talk script is the explainer's 口述稿 section; talk-script.md is no longer written)
+EX  PASS — paper-explainer.html via tools/carriers html-explainer: build PASS, check ok
+S2  PASS — whys present on 5 axis items, 7 beats, 4 chain links (each with its in_this_paper sentence)
+S3  PASS — axis, beats, chain backing and drift rows all carry locators
+S6  PASS — 15 terms, every one appears on a rendered page (hover cards active)
+S9  PASS — talk carries the lab's opening formula, outline sentence and closing synthesis
+S4b PASS — Conclusion cell keeps the author's ending and appends a marked 深讀判定
+S4c PASS — 4 one-page figures declared: 3 evidence, 1 schematic, no motivation figure
+S10 PASS — 19 quotes found verbatim in source/paper.txt; every drift row anchored
+S11 PASS — every unit in structure.json (11) is cited by a locator or explicitly skipped
+S12 PASS — probe found no structure anomalies
+S13 PASS — drift checklist walked: 5 kinds found in 7 rows, 5 declared none, all 10 covered
+S14 PASS — no stray-script characters in any text field
+S15 PASS — 5 roles bound to referents, every clause of the slogan covered (hover cards on the strip)
+S16 PASS — slogan 61 CJK-eq; description 348 CJK-eq (the 讀書心得終極詮釋 printed under 展開解讀, on the 解讀 page and the deck's Keypoint page)
+S17 PASS — layers undeclared; if_asked 4 (clarify 1, challenge 2, extend 1); backup pages 2
+S18 PASS — 4 methods, all named up front; 6 verdicts (達到（實測） 2, 部分達到 2, 僅模擬／計算 0, 沒有證明 2)
+S19 PASS — 4 figure pages, each with look / see / means (+ against on Results) and spoken deixis
+S20 PASS — 12 flow pages with asks / bridge (inside notes) / takeaway; no recited highlight; key point spoken at the close; story_arc 5 craft steps
+RESULT: PASS

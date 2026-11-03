@@ -1,0 +1,563 @@
+{
+ "schema": "paper-story/story@5",
+ "_note": "SYNTHETIC SAMPLE (same invented trench-MOSFET paper as paper-distill's fixture). Exercises the renderer and gates only. Never cite.",
+ "run": {
+  "id": "20260903_Sample2026_synthetic-story",
+  "created": "2026-09-03T01:00:00+08:00",
+  "mode": "deep",
+  "presenter": "示範",
+  "model": "selftest",
+  "skill_version": "1.0",
+  "distill_run": ""
+ },
+ "source": {
+  "type": "paper",
+  "title": "Sidewall passivation for dynamic on-resistance recovery in vertical GaN trench MOSFETs (SYNTHETIC)",
+  "authors": [
+   "A. Sample",
+   "B. Fixture",
+   "C. Control"
+  ],
+  "venue": "J. Synthetic Devices",
+  "year": 2026,
+  "doi": "10.0000/synthetic.0001",
+  "url": "",
+  "access": "full",
+  "file": "source/paper.pdf",
+  "pages": 9,
+  "lang": "en"
+ },
+ "why_me": {
+  "why_read": "下一批 trench 元件要決定側壁製程，這篇是少數同時給動態 Ron 與陷阱密度的。",
+  "helps": "給我一個公平的 A/B 對照設計與一套脈衝量測時序，可以直接搬。",
+  "project": "示範專案",
+  "question_i_bring": "側壁鈍化值不值得加進製程？"
+ },
+ "axis": {
+  "entry_point": {
+   "what": "trench MOSFET 的動態 Ron 退化能否用側壁鈍化壓下來",
+   "why": "前人只做 ex-situ 鈍化、效果有限且界面先氧化；作者群有 in-situ MOCVD 能力，切入點是「用自己的沉積能力解別人的界面問題」[inferred]",
+   "locator": "p.1 §1"
+  },
+  "central_claim": {
+   "what": "in-situ 側壁鈍化把應力後的動態 Ron 上升壓到四分之一",
+   "why_matters": "動態 Ron 決定開關損耗，是垂直 GaN 商用化的門檻 [author]",
+   "locator": "p.1 §1, p.8 §5",
+   "quote": "suppresses the post-stress dynamic on-resistance rise to a quarter"
+  },
+  "method_choice": {
+   "what": "同片晶圓兩區 A/B、600 V/1 ms 脈衝應力後 10 µs 量 Ron",
+   "why": "同片對照排除批次差異；脈衝量測抓到的是陷阱時間尺度內的退化 [author]",
+   "alternatives": "跨批次比較（被排除：製程漂移）",
+   "locator": "p.3 §2"
+  },
+  "evaluation_plan": {
+   "what_to_show": "鈍化組退化明顯小於未鈍化組，且改善來自陷阱減少",
+   "metrics": "Ron 上升比例中位數；C-V 抽取 Dit",
+   "criteria": "未明寫 [assumed]",
+   "controls": "同片未鈍化區",
+   "expected": "鈍化組退化小",
+   "why": "退化比例直接對應開關損耗；Dit 是唯一能連到機制的可量指標 [inferred]",
+   "locator": "p.3–4 §2"
+  },
+  "presentation": {
+   "stats": "中位數與四分位距，n=12/組",
+   "visuals": "箱型圖（Fig.3）、C-V 曲線（Fig.4）、benchmark 散佈（Fig.5）",
+   "order": "效果量 → 機制 → 靜態指標",
+   "why": "箱型圖因為主張是分布不重疊；benchmark 圖是給審稿人的定位 [inferred]",
+   "locator": "p.5–7"
+  }
+ },
+ "storyline": [
+  {
+   "beat": "①情境與痛點",
+   "what": "垂直 GaN trench 元件的動態 Ron 退化",
+   "why": "退化直接變成開關損耗",
+   "locator": "p.1 §1 ¶1"
+  },
+  {
+   "beat": "②缺口與提問",
+   "what": "沒有同批對照的 in-situ 鈍化數據",
+   "why": "ex-situ 界面先氧化，效果被界面狀態遮蔽",
+   "locator": "p.1 §1 ¶3"
+  },
+  {
+   "beat": "③方法選擇",
+   "what": "同片晶圓 A/B 對照 + in-situ SiN",
+   "why": "同片排除批次差異，in-situ 避免界面氧化",
+   "locator": "p.3 §2"
+  },
+  {
+   "beat": "④評估計畫",
+   "what": "應力後 Ron 上升比例、Dit、BV/Ron,sp",
+   "why": "效果量、機制、靜態代價三件都要有",
+   "locator": "p.3–4 §2"
+  },
+  {
+   "beat": "⑤執行與呈現",
+   "what": "12% vs 48%、Dit 降 4 倍、FOM 接近極限",
+   "why": "箱型圖讓分布不重疊一眼可見",
+   "locator": "p.5–7 Fig.3–5"
+  },
+  {
+   "beat": "⑥詮釋與收束",
+   "what": "鈍化是穩定化的可行路線",
+   "why": "作者把效果量與機制一起收束成「可行」",
+   "locator": "p.8 §5"
+  }
+ ],
+ "drift": [
+  {
+   "where": "p.8 §5",
+   "what_drifted": "「viable route」超過機制證據（只有 C-V 推論）",
+   "why_it_matters": "路線宣稱建立在未證的機制上",
+   "locator": "p.8 §5",
+   "quote": "a viable route towards commercial vertical GaN",
+   "kind": "over-claim"
+  }
+ ],
+ "logic": {
+  "keypoint": "用同批對照把鈍化效果量與側壁機制拆成兩個問題分別量；效果量以分布不重疊為證、機制以單一間接指標為證",
+  "keypoint_description": "作者面對的是垂直 GaN 元件在高壓應力後導通電阻會上升、而側壁缺陷被懷疑是元凶的問題。第一步先用同一片晶圓分區做有鈍化與沒鈍化的對照（同批對照），因為製程漂移比鈍化效應本身還大，跨批比較看不出差異。第二步把「壓下來」這個主張交給分布來證明：十二顆對照十二顆，兩組的導通電阻上升分布完全不重疊，比平均值相差多少更難被質疑（鈍化效果量）。第三步才碰機制：側壁缺陷密度只能用 C-V 反推的 Dit 一個間接指標來看（側壁機制、單一間接指標），所以作者只把它當作機制的代理證據，不宣稱直接看見缺陷。我學到的是：先把「有沒有效」和「為什麼有效」拆成兩個問題，各自配上最強的證據種類，而不是用一組數據同時撐兩個宣稱。",
+  "bindings": [
+   {
+    "role": "同批對照",
+    "referent": "同一片 GaN 晶圓上分區做有／無 in-situ SiN 側壁鈍化的 A/B 對照",
+    "locator": "p.3 §2"
+   },
+   {
+    "role": "鈍化效果量",
+    "referent": "600 V/1 ms 應力後動態導通電阻 Ron 的上升幅度（鈍化 12% vs 未鈍化 48%）",
+    "locator": "p.5 Fig.3"
+   },
+   {
+    "role": "側壁機制",
+    "referent": "trench 側壁的介面缺陷密度 Dit 是否被鈍化壓低",
+    "locator": "p.6 Fig.4"
+   },
+   {
+    "role": "分布不重疊",
+    "referent": "每組 12 顆元件的 Ron 上升分布，鈍化組與未鈍化組沒有交集",
+    "locator": "p.5 Fig.3"
+   },
+   {
+    "role": "單一間接指標",
+    "referent": "C-V 量測反推的 Dit，本篇機制證據的唯一來源",
+    "locator": "p.6 Fig.4"
+   }
+  ],
+  "patterns": [
+   "split-effect-from-mechanism",
+   "same-batch-control"
+  ],
+  "relations": [],
+  "chain": [
+   {
+    "step": "同批對照拆掉批次差異",
+    "in_this_paper": "同一片 GaN 晶圓分區，一半做 in-situ SiN 側壁鈍化、一半不做，其他製程完全相同",
+    "warrant": "製程漂移比鈍化效應大，不同批比不出來",
+    "backing": "p.3 §2",
+    "qualifier": "單片晶圓"
+   },
+   {
+    "step": "效果量以分布不重疊為證",
+    "in_this_paper": "應力後 Ron 上升 12% 對 48%，兩組各 12 顆的分布沒有交集（Fig.3）",
+    "warrant": "主張是「壓下來」，分布不重疊比平均值差更難被質疑",
+    "backing": "p.5 Fig.3",
+    "qualifier": "n=12/組"
+   },
+   {
+    "step": "機制以間接指標為證",
+    "in_this_paper": "用 C-V 反推側壁 Dit，鈍化後降 4 倍，當作缺陷被壓低的代理證據（Fig.4）",
+    "warrant": "Dit 是唯一可量的機制代理",
+    "backing": "p.6 Fig.4",
+    "qualifier": "C-V 單一方法"
+   }
+  ],
+  "fragile": {
+   "what": "第 3 步",
+   "why": "單一間接指標撐不起機制宣稱"
+  },
+  "portable": {
+   "where": "示範專案的下一批 A/B 對照",
+   "why": "邏輯只依賴同片對照與分布證據",
+   "when_not": "無法同片分區時"
+  }
+ },
+ "onepage": {
+  "table": {
+   "structure": "垂直 GaN trench MOSFET，in-situ SiN 側壁鈍化",
+   "features": "同片 A/B 對照；脈衝量測 10 µs",
+   "method": "600 V/1 ms 應力後量 Ron；C-V 抽 Dit",
+   "result": "Ron 上升 12% vs 48%；Dit 降 4 倍；BV 1.3 kV",
+   "conclusion": "鈍化是穩定化路線（作者）。深讀判定：機制 hypothetical（僅 C-V 推論）"
+  },
+  "figures": [
+   {
+    "file": "figures/S1.png",
+    "caption": "Fig.3 應力後 Ron 上升分布",
+    "locator": "p.5",
+    "kind": "evidence"
+   },
+   {
+    "file": "figures/S2.png",
+    "caption": "Fig.4 C-V 與 Dit",
+    "locator": "p.6",
+    "kind": "evidence"
+   },
+   {
+    "file": "figures/S3.png",
+    "caption": "Fig.5 benchmark",
+    "locator": "p.7",
+    "kind": "evidence"
+   }
+  ]
+ },
+ "deck": {
+  "minutes": 6,
+  "pages": [
+   {
+    "section": "Keypoint",
+    "title": "為什麼讀它、對我有什麼幫助",
+    "figure": "",
+    "highlights": [
+     "下一批側壁製程要做決定",
+     "可搬：同片 A/B 對照 + 脈衝時序",
+     "邏輯：效果量與機制拆開量"
+    ],
+    "notes": "教授、各位學長姐大家好，我是示範。今天的題目是…，我讀它是因為…。這篇的重點一句話：用同批對照把鈍化效果量與側壁機制拆成兩個問題分別量；效果量以分布不重疊為證、機制以單一間接指標為證",
+    "locator": "",
+    "layer": "A"
+   },
+   {
+    "section": "Verdict",
+    "title": "有沒有做到、怎麼判讀",
+    "figure": "",
+    "highlights": [],
+    "notes": "先把答案講在前面，因為後面每一頁都在回答這張表。這篇用了三個方法：同片 A/B 對照、脈衝量測、C-V 抽 Dit。效果量是用十二顆對十二顆的分布判讀的，所以算做到；但機制只靠一個間接指標，只能算部分。",
+    "locator": "p.5–6",
+    "layer": "A",
+    "asks": "它到底有沒有做到？怎麼判讀的？",
+    "bridge": "先把答案講在前面",
+    "takeaway": "效果量做到了；機制只到間接證據",
+    "beat": "⑤"
+   },
+   {
+    "section": "Cover",
+    "title": "Sidewall passivation for dynamic on-resistance recovery",
+    "figure": "",
+    "highlights": [
+     "J. Synthetic Devices 2026",
+     "報告分為四個部分"
+    ],
+    "notes": "這次的報告分為四個部分說明。",
+    "locator": "p.1",
+    "layer": "B"
+   },
+   {
+    "section": "Introduction",
+    "title": "動態 Ron 退化與側壁陷阱",
+    "figure": "",
+    "highlights": [
+     "退化＝開關損耗",
+     "ex-situ 鈍化界面先氧化"
+    ],
+    "notes": "首先簡單介紹背景。動態 Ron 在應力後會上升，因為側壁陷阱會抓電子，所以它直接變成開關損耗。但是 ex-situ 做的鈍化，界面會先氧化。",
+    "locator": "p.1 §1",
+    "layer": "C",
+    "asks": "為什麼動態 Ron 值得在意？",
+    "bridge": "首先簡單介紹背景",
+    "takeaway": "動態 Ron 退化就是開關損耗",
+    "beat": "①",
+    "no_figure": "論文第一節沒有圖；背景只需一句話"
+   },
+   {
+    "section": "Method",
+    "title": "同片 A/B 對照與脈衝量測",
+    "figure": "figures/S1.png",
+    "highlights": [
+     "同片兩區各 12 顆",
+     "600 V/1 ms → 10 µs 量 Ron"
+    ],
+    "notes": "要比得公平，第一步是拿掉批次差異。他們在同一片晶圓上切兩區，因為製程漂移比鈍化效應還大。看這張圖，橫軸是兩組、縱軸是 Ron 上升比例，所以分布一眼可比。（補充：箱型圖顯示分布；FOM 以 BV²/Ron,sp 比較；DLTS 是下一步要做的直接量測。）",
+    "locator": "p.3 §2",
+    "layer": "B",
+    "asks": "怎麼確定差異來自鈍化而不是批次？",
+    "bridge": "要比得公平，第一步是拿掉批次差異",
+    "takeaway": "同片分區對照，才看得到鈍化本身的效果",
+    "beat": "③",
+    "figure_read": {
+     "look": "箱型圖：橫軸是有無鈍化兩組，縱軸是應力後 Ron 上升比例",
+     "see": "兩個箱體完全不重疊",
+     "means": "同片對照下，差異來自鈍化"
+    }
+   },
+   {
+    "section": "Results",
+    "title": "應力後 Ron 上升 12% vs 48%",
+    "figure": "figures/S2.png",
+    "highlights": [
+     "箱體不重疊",
+     "n=12/組"
+    ],
+    "notes": "那結果呢？看左邊這張箱型圖，鈍化組上升 12%，未鈍化 48%。因為兩組各 12 顆的分布沒有交集，所以比平均值差更難被質疑。",
+    "locator": "p.5 Fig.3",
+    "layer": "A",
+    "asks": "鈍化到底壓下多少？",
+    "bridge": "那結果呢",
+    "takeaway": "應力後 Ron 上升 12% 對 48%，分布不重疊",
+    "beat": "⑤",
+    "figure_read": {
+     "look": "橫軸兩組、縱軸 Ron 上升比例",
+     "see": "中位數 12% 對 48%，箱體無交集",
+     "against": "同片未鈍化區",
+     "means": "效果量成立；機制要另外證"
+    }
+   },
+   {
+    "section": "Storyline",
+    "title": "這篇怎麼說故事",
+    "figure": "",
+    "highlights": [],
+    "notes": "退一步看這篇怎麼說故事。作者先證有效，因為分布最難被質疑；接下來才碰機制，所以宣稱留在間接證據。收成一句話：用同批對照把鈍化效果量與側壁機制拆成兩個問題分別量；效果量以分布不重疊為證、機制以單一間接指標為證。",
+    "locator": "p.1–8",
+    "layer": "B",
+    "asks": "這篇怎麼把故事說完？",
+    "bridge": "退一步看這篇怎麼說故事",
+    "takeaway": "先拆效果與機制，再各配最強證據"
+   },
+   {
+    "section": "Conclusion",
+    "title": "作者說 vs 我說",
+    "figure": "",
+    "highlights": [
+     "作者：viable route",
+     "我：機制只到推論"
+    ],
+    "notes": "回到作者的結論，作者說鈍化是可行路線。但是機制只有 C-V 推論，所以我判定為 hypothetical。",
+    "locator": "p.8 §5",
+    "layer": "B",
+    "asks": "作者宣稱和證據差在哪？",
+    "bridge": "回到作者的結論",
+    "takeaway": "路線可行是作者的話；機制仍是推論",
+    "beat": "⑥"
+   },
+   {
+    "section": "Closing",
+    "title": "對我的幫助",
+    "figure": "",
+    "highlights": [
+     "研究依據：同片對照",
+     "下一步：溫度相依量測"
+    ],
+    "notes": "最後回到我自己的專案。這篇幫我建立的研究依據是同片對照，因為批次漂移太大；所以下一步是溫度相依量測。",
+    "locator": "",
+    "layer": "A",
+    "asks": "這篇對我有什麼幫助？",
+    "bridge": "最後回到我自己的專案",
+    "takeaway": "同片 A/B 對照可以直接搬"
+   }
+  ]
+ },
+ "talk": {
+  "opening": "教授、各位學長姐大家好，我是示範。今天我要報告的題目是《Sidewall passivation for dynamic on-resistance recovery in vertical GaN trench MOSFETs》，這篇論文在 2026 年發表於 J. Synthetic Devices，主要探討側壁鈍化對動態導通電阻的影響。我讀它是因為下一批側壁製程要做決定。",
+  "outline": "這次的報告分為四個部分說明：背景、方法、結果、對我的幫助。",
+  "closing": {
+   "basis": "同片 A/B 對照是公平比較的最低要求",
+   "help": "後續我可以量脈衝應力後的 Ron 與溫度相依",
+   "next": "設計 25–150 °C 的動態 Ron 量測"
+  },
+  "if_asked": [
+   {
+    "q": "為什麼機制只算假設？",
+    "a": "Dit 只用 C-V 一種方法抽，沒有 DLTS。",
+    "kind": "challenge",
+    "challenge": {
+     "admit": "對，機制目前只有 C-V 推論，沒有直接量測。",
+     "reason": "作者先用同片 A/B 對照把效果量量準，機制量測排在下一步。",
+     "settle": "鈍化側壁的 DLTS，或溫度相依的動態 Ron，能把界面與體陷阱分開。",
+     "locator": "p.8 §5"
+    }
+   },
+   {
+    "q": "脈衝應力條件是什麼？",
+    "a": "600 V、1 ms，應力後 10 µs 量 Ron。",
+    "kind": "clarify"
+   }
+  ],
+  "story_arc": {
+   "spine": "垂直 GaN 需要低開關損耗，但側壁陷阱讓動態 Ron 上升、前人的鈍化又被界面遮蔽，所以作者用同片對照先證效果、再用 C-V 推機制。",
+   "craft": [
+    {
+     "beat": "①",
+     "move": "開頭就把退化換算成開關損耗",
+     "why_it_works": "讀者先接受問題有代價，後面的數字才有意義",
+     "locator": "p.1 §1"
+    },
+    {
+     "beat": "③",
+     "move": "同片分區而不是跨批比較",
+     "why_it_works": "先關掉「是不是批次差」這個最先會被問的質疑",
+     "locator": "p.3 §2"
+    },
+    {
+     "beat": "⑤",
+     "move": "效果量用分布呈現",
+     "why_it_works": "不重疊的箱體比平均值差更難反駁",
+     "locator": "p.5 Fig.3"
+    },
+    {
+     "beat": "⑥",
+     "move": "機制只用一個指標並收在可行路線",
+     "why_it_works": "把宣稱留在證據撐得住的範圍，審稿人難以挑剔",
+     "locator": "p.8 §5"
+    }
+   ]
+  }
+ },
+ "terms": [
+  {
+   "term": "動態 Ron",
+   "en": "dynamic on-resistance",
+   "zh": "動態導通電阻",
+   "gloss": "元件在關態高壓應力後短時間內量到的導通電阻，通常高於靜態值；它直接反映陷阱造成的開關損耗。",
+   "aliases": [
+    "Ron"
+   ]
+  },
+  {
+   "term": "側壁鈍化",
+   "en": "sidewall passivation",
+   "zh": "側壁鈍化",
+   "gloss": "在溝槽側壁沉積介電層以減少界面陷阱；in-situ 指在同一反應腔內不破真空完成。",
+   "aliases": []
+  },
+  {
+   "term": "Dit",
+   "en": "interface trap density",
+   "zh": "界面陷阱密度",
+   "gloss": "單位面積、單位能量的界面陷阱數，常由 C-V 頻散抽取。",
+   "aliases": []
+  },
+  {
+   "term": "箱型圖",
+   "en": "box plot",
+   "zh": "箱型圖",
+   "gloss": "以中位數與四分位距呈現分布的統計圖；兩組箱體不重疊是效果量的直觀證據。",
+   "aliases": []
+  },
+  {
+   "term": "C-V",
+   "en": "capacitance–voltage",
+   "zh": "電容電壓量測",
+   "gloss": "量電容隨偏壓的變化以推得摻雜與界面陷阱；抽取值依賴模型假設。",
+   "aliases": []
+  },
+  {
+   "term": "BV",
+   "en": "breakdown voltage",
+   "zh": "崩潰電壓",
+   "gloss": "元件關態能承受的最大電壓。",
+   "aliases": []
+  },
+  {
+   "term": "MOCVD",
+   "en": "metal-organic chemical vapour deposition",
+   "zh": "有機金屬化學氣相沉積",
+   "gloss": "以金屬有機前驅物長磊晶與介電層的沉積方法。",
+   "aliases": []
+  },
+  {
+   "term": "FOM",
+   "en": "figure of merit",
+   "zh": "品質因數",
+   "gloss": "BV²/Ron,sp，用來在同一張 benchmark 圖上比較功率元件。",
+   "aliases": []
+  },
+  {
+   "term": "trench MOSFET",
+   "en": "trench MOSFET",
+   "zh": "溝槽式金氧半場效電晶體",
+   "gloss": "閘極做在蝕刻溝槽側壁的垂直 MOSFET，通道沿側壁。",
+   "aliases": []
+  },
+  {
+   "term": "DLTS",
+   "en": "deep-level transient spectroscopy",
+   "zh": "深能階暫態頻譜",
+   "gloss": "以電容暫態隨溫度變化直接量陷阱能階與密度的方法。",
+   "aliases": []
+  },
+  {
+   "term": "benchmark",
+   "en": "benchmark plot",
+   "zh": "基準比較圖",
+   "gloss": "把 Ron,sp 對 BV 畫在同一張圖與理論極限線比較。",
+   "aliases": []
+  },
+  {
+   "term": "脈衝量測",
+   "en": "pulsed measurement",
+   "zh": "脈衝量測",
+   "gloss": "在應力後極短延遲內量測，捕捉陷阱尚未釋放時的元件狀態。",
+   "aliases": []
+  }
+ ],
+ "coverage": {
+  "skipped": [],
+  "drift_checklist": {
+   "over-claim": "found",
+   "grafted-result": "none",
+   "no-criterion": "none",
+   "method-after-the-fact": "none",
+   "figure-unasked": "none",
+   "limitation-aside": "none",
+   "weaker-instrument": "none",
+   "discussion-new-data": "none",
+   "selective-condition": "none",
+   "abstract-mismatch": "none"
+  }
+ },
+ "brief": {
+  "problem": "垂直 GaN trench MOSFET 在高壓應力後動態 Ron 會上升，懷疑是側壁陷阱；前人的 ex-situ 鈍化界面先氧化，效果被界面狀態遮蔽。",
+  "approach": "同一片晶圓分區做有／無 in-situ SiN 側壁鈍化，600 V/1 ms 應力後 10 µs 量 Ron，再用 C-V 反推 Dit。",
+  "differs": "跟 ex-situ 鈍化比：不破真空、界面不先氧化；跟跨批比較比：同片對照拆掉製程漂移。",
+  "conversation": "p.1 §1 ¶3",
+  "methods": [
+   {
+    "name": "同片 A/B 對照",
+    "kind": "fabrication",
+    "answers": "差異是不是來自鈍化而不是批次",
+    "locator": "p.3 §2"
+   },
+   {
+    "name": "脈衝量測",
+    "kind": "measurement",
+    "answers": "應力後陷阱還沒釋放時 Ron 上升多少",
+    "locator": "p.3 §2"
+   },
+   {
+    "name": "C-V 抽 Dit",
+    "kind": "analysis",
+    "answers": "側壁陷阱是否真的被壓低",
+    "locator": "p.6 Fig.4"
+   }
+  ],
+  "verdicts": [
+   {
+    "goal": "壓下動態 Ron",
+    "judged_by": "每組 12 顆應力後 Ron 上升的分布",
+    "result": "12% 對 48%，分布不重疊",
+    "status": "achieved",
+    "locator": "p.5 Fig.3"
+   },
+   {
+    "goal": "證明機制是側壁陷阱",
+    "judged_by": "C-V 反推 Dit（單一間接指標）",
+    "result": "Dit 降 4 倍，沒有 DLTS",
+    "status": "partly",
+    "locator": "p.6 Fig.4"
+   }
+  ]
+ }
+}

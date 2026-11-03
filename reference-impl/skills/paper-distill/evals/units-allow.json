@@ -1,0 +1,14 @@
+{
+ "schema": "paper-distill/units-allow@1",
+ "note": "Foreign-text hits in body units (units.py checks.foreign_hits) that were read and found to be genuine source text. Keyed by run id; each entry names the unit, the exact match string units.py reports, and why it is allowed. A hit not listed here fails units.py --check.",
+ "foreign": {
+  "Tran2018_ultra-low-loss-si-waveguides-hetero-si-iii-v": [
+   {"unit": "p11-y627-x76", "match": "appl. sci. #, #, #",
+    "reason": "reference 41 cites a paper in the same journal ('Appl. Sci. 2017, 7, 732'); it matches the running header only after digit folding (checked 2026-09-27)"}
+  ],
+  "Mu2020_edge-couplers-si-pic-review": [
+   {"unit": "p22-y383-x76", "match": "appl. sci. #, #, #",
+    "reason": "references 11 and 12 cite papers in the same journal ('Appl. Sci. 2016, 6, 426', 'Appl. Sci. 2018, 8, 1142'); they match the running header only after digit folding (checked 2026-09-27)"}
+  ]
+ }
+}

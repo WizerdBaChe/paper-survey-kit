@@ -1,0 +1,12 @@
+env: python 3.12.7, Windows 11, pymupdf 1.26.7, python-pptx 1.0.2, playwright 1.62.0, jsonschema 4.26.0, pytest 9.1.1
+K1   render_story.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K2   lab_deck.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K3   build.py selftest: exit 0, 'selftest: ALL PASS' found -> ok
+K4   test_fill_gate.py : exit 0, 'test_fill_gate: PASS' found -> ok
+K5a  glossary.py --selftest: exit 0, 'selftest OK' found -> ok
+K5b  paper-distill pytest: exit 0, 50 passed in 2.19s -> ok
+K6   verify_run: shipped V2 PASS, FAIL lines 0 (exit 0) vs quote altered at paper_says/conclusion_quote V2 WARN (exit 0) -> ok
+K7a  verify_story: shipped exit 0, V2 FAIL False vs entry_point.why emptied exit 2, V2 FAIL True -> ok
+K7b  verify_story: shipped V11 FAIL False vs drift[0].quote altered exit 2, V11 FAIL True -> ok
+K8   make_paper.py text-layer sha256: shipped 47a2aa796d1f7327 vs regenerated 47a2aa796d1f7327 -> ok
+controls: 10 of 10 ok

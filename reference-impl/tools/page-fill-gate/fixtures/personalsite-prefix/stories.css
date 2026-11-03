@@ -1,0 +1,84 @@
+/* Stories: watch page and overview. Tokens only; one accent hue. */
+.story-eyebrow{ font-size: var(--fs-small); color: var(--accent); font-weight: 700; margin: 0 0 var(--s2); letter-spacing: 0.04em; }
+
+.story-player{ margin: var(--s6) 0 var(--s5); }
+.story-player iframe{ display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: var(--line); border-radius: 4px; }
+.story-player figcaption{ display: flex; justify-content: space-between; gap: var(--s4); flex-wrap: wrap;
+  font-size: var(--fs-small); color: var(--muted); margin-top: var(--s2); }
+.story-player figcaption a{ color: var(--accent); }
+.story-cover{ position: relative; }
+.story-cover img{ display: block; width: 100%; height: auto; border-radius: 4px; }
+.story-cover p{ font-size: var(--fs-small); color: var(--muted); margin: var(--s2) 0 0; }
+
+.story-chapters{ list-style: none; padding: 0; margin: 0 0 var(--s5); display: grid; gap: 0; }
+.story-chapters li{ margin: 0; border-top: 1px solid var(--line); }
+.story-chapters li:last-child{ border-bottom: 1px solid var(--line); }
+.story-chapters a{ display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: var(--s3); padding: var(--s2) 0;
+  color: var(--ink); text-decoration: none; }
+.story-chapters a:hover{ color: var(--accent); }
+.story-chapters time{ color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.story-transcript details{ border-top: 1px solid var(--line); padding-top: var(--s3); }
+.story-transcript summary{ cursor: pointer; color: var(--accent); font-size: var(--fs-small); margin-bottom: var(--s4); }
+.story-transcript h3{ font-size: var(--fs-body); font-weight: 700; margin: var(--s6) 0 var(--s2); }
+
+.story-list{ list-style: none; margin: var(--s6) 0 0; padding: 0; }
+.story-list li{ display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: var(--s5); padding: var(--s5) 0; border-top: 1px solid var(--line); }
+.story-date{ display: grid; gap: var(--s2); align-content: start; }
+/* The cover is a raised, clickable card: a thin dark edge cuts it from the page, and it lifts on hover/focus. */
+.story-thumb{ display: block; border-radius: 4px; border: 1px solid var(--ink); background: var(--line); overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 4px 10px rgba(0, 0, 0, .12);
+  transition: transform .18s ease, box-shadow .18s ease; }
+.story-thumb:hover, .story-thumb:focus-visible{ transform: translateY(-3px); box-shadow: 0 2px 4px rgba(0, 0, 0, .2), 0 10px 22px rgba(0, 0, 0, .2); }
+.story-thumb:active{ transform: translateY(-1px); }
+.story-thumb img{ display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+@media (prefers-reduced-motion: reduce){ .story-thumb{ transition: none; } .story-thumb:hover, .story-thumb:focus-visible{ transform: none; } }
+.story-list li:last-child{ border-bottom: 1px solid var(--line); }
+.story-list time{ color: var(--muted); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+.story-list a{ color: var(--ink); text-decoration: none; font-weight: 700; font-size: 19px; line-height: var(--lh-head); }
+.story-list a:hover{ color: var(--accent); }
+.story-list .meta{ margin: var(--s2) 0 0; }
+
+/* .prose ul/ol carry a list indent; these two lists are row tables aligned to the text edge */
+.prose .story-list, .prose .story-chapters{ padding-left: 0; }
+.prose .story-list li, .prose .story-chapters li{ margin-bottom: 0; }
+
+#stories .story-list, #notes .story-list{ margin-top: 0; }
+#stories .story-list li:first-child, #notes .story-list li:first-child{ border-top: 0; padding-top: 0; }
+
+/* A row without a cover (a note with none) spans the whole row. */
+.story-list li.no-thumb{ grid-template-columns: minmax(0, 1fr); }
+.story-list .row-date{ display: block; margin-top: var(--s2); }
+
+/* Home 03/04, the enlarged variant (user ruling 2026-10-31): a bigger cover and title, the answer at body size. */
+.story-list.big li{ grid-template-columns: minmax(220px, 380px) minmax(0, 1fr); gap: var(--s7); align-items: center; }
+.story-list.big li.no-thumb{ grid-template-columns: minmax(0, 1fr); }
+.story-list.big a{ font-size: var(--fs-h1); }
+.story-list.big .story-eyebrow{ font-size: var(--fs-body); }
+.story-list.big .answer{ margin: var(--s3) 0 var(--s3); color: var(--ink-soft); font-size: 18px; }
+.story-list.big time{ display: block; }
+.feature-block .section-title{ font-size: var(--fs-h1); }
+
+/* Notes overview groups: a quiet heading with a count, on the stories rhythm */
+.prose .group-title{ display: flex; align-items: baseline; gap: var(--s3); margin-bottom: 0; padding-bottom: var(--s2); border-bottom: 1px solid var(--line-strong); }
+.prose .group-title span{ font-size: var(--fs-small); color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.prose .list-group .story-list{ margin-top: 0; }
+.prose .list-group .story-list li:first-child{ border-top: 0; }
+.prose .list-group .empty{ margin-top: var(--s4); }
+.more{ margin: var(--s4) 0 0; }
+.more a{ color: var(--accent); text-decoration: none; }
+
+/* /subscribe/: the feed URL, selectable, with a copy button beside it */
+.prose .feed-url{ display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); margin: 0 0 var(--s5);
+  padding: var(--s3) var(--s4); border: 1px solid var(--line-strong); border-radius: 4px; background: #fff; }
+.prose .feed-url code{ flex: 1 1 16em; font-size: var(--fs-body); overflow-wrap: anywhere; user-select: all; }
+
+.visually-hidden{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 640px){
+  .story-list li{ grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+}
+@media (max-width: 760px){
+  .story-list.big li{ grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+  .story-list.big a{ font-size: var(--fs-h2); }
+}

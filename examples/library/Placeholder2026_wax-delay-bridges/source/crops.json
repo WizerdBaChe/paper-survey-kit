@@ -1,0 +1,275 @@
+{
+ "schema": "paper-distill/crops@1",
+ "tag": "2026-11-03b",
+ "crop_py": "crop.py",
+ "moved": [
+  "F1.png",
+  "F2.png",
+  "F3.png",
+  "F4.png"
+ ],
+ "results": [
+  {
+   "caption_index": 0,
+   "label": "Fig. 1",
+   "kind": "figure",
+   "num": 1,
+   "page": 1,
+   "name": "F1",
+   "file": "figures/F1.png",
+   "exit": 0,
+   "result": {
+    "out": "examples\\library\\Placeholder2026_wax-delay-bridges\\figures\\F1.png",
+    "mode": "caption",
+    "anchor": {
+     "text": "Fig. 1. Device layout. A wax delay bridge of length L is printed acros",
+     "bbox": [
+      56.0,
+      581.0,
+      537.3,
+      603.9
+     ],
+     "source": "pdf-text"
+    },
+    "band": {
+     "column": "full",
+     "side": "above",
+     "x": [
+      0.0,
+      595.0
+     ],
+     "y": [
+      423.1,
+      582.1
+     ],
+     "top_set_by": {
+      "rule": "paragraph",
+      "y": 422.1,
+      "text": "We ask whether the wax printing step that already defines the channels"
+     }
+    },
+    "method": "ink",
+    "page": 1,
+    "rect_pt": [
+     114.5,
+     452.0,
+     480.5,
+     564.5
+    ],
+    "width": 1017,
+    "height": 314,
+    "gate": {
+     "verdict": "PASS",
+     "border_ink_pct": {
+      "top": 0.0,
+      "bottom": 0.0,
+      "left": 0.0,
+      "right": 0.0
+     },
+     "limit": "<= 1.0 % of each 2 px border darker than 170",
+     "controls": "ok"
+    },
+    "hint": "view the crop: text above the figure or a missing top panel is not visible to the gate; --above/--below (manual rectangle) or --bbox for an exact cut"
+   }
+  },
+  {
+   "caption_index": 1,
+   "label": "Fig. 2",
+   "kind": "figure",
+   "num": 2,
+   "page": 2,
+   "name": "F2",
+   "file": "figures/F2.png",
+   "exit": 0,
+   "result": {
+    "out": "examples\\library\\Placeholder2026_wax-delay-bridges\\figures\\F2.png",
+    "mode": "caption",
+    "anchor": {
+     "text": "Fig. 2. Delay time against bridge length. Points: mean ± standard devi",
+     "bbox": [
+      56.0,
+      476.5,
+      527.2,
+      499.4
+     ],
+     "source": "pdf-text"
+    },
+    "band": {
+     "column": "full",
+     "side": "above",
+     "x": [
+      0.0,
+      595.0
+     ],
+     "y": [
+      216.2,
+      477.6
+     ],
+     "top_set_by": {
+      "rule": "heading",
+      "y": 215.2,
+      "text": "3.1 Delay follows the square of the bridge length. The mean delay rose"
+     }
+    },
+    "method": "ink",
+    "page": 2,
+    "rect_pt": [
+     105.0,
+     229.0,
+     490.5,
+     461.0
+    ],
+    "width": 1072,
+    "height": 645,
+    "gate": {
+     "verdict": "PASS",
+     "border_ink_pct": {
+      "top": 0.0,
+      "bottom": 0.0,
+      "left": 0.0,
+      "right": 0.0
+     },
+     "limit": "<= 1.0 % of each 2 px border darker than 170",
+     "controls": "ok"
+    },
+    "hint": "view the crop: text above the figure or a missing top panel is not visible to the gate; --above/--below (manual rectangle) or --bbox for an exact cut"
+   }
+  },
+  {
+   "caption_index": 2,
+   "label": "Fig. 3",
+   "kind": "figure",
+   "num": 3,
+   "page": 3,
+   "name": "F3",
+   "file": "figures/F3.png",
+   "exit": 0,
+   "result": {
+    "out": "examples\\library\\Placeholder2026_wax-delay-bridges\\figures\\F3.png",
+    "mode": "caption",
+    "anchor": {
+     "text": "Fig. 3. Coefficient of variation of the delay for each bridge length, ",
+     "bbox": [
+      56.0,
+      294.8,
+      535.2,
+      317.7
+     ],
+     "source": "pdf-text"
+    },
+    "band": {
+     "column": "full",
+     "side": "above",
+     "x": [
+      0.0,
+      595.0
+     ],
+     "y": [
+      1.0,
+      295.9
+     ],
+     "top_set_by": {
+      "rule": "page-edge"
+     }
+    },
+    "method": "ink",
+    "page": 3,
+    "rect_pt": [
+     105.0,
+     63.0,
+     490.5,
+     278.0
+    ],
+    "width": 1072,
+    "height": 598,
+    "gate": {
+     "verdict": "PASS",
+     "border_ink_pct": {
+      "top": 0.0,
+      "bottom": 0.0,
+      "left": 0.0,
+      "right": 0.0
+     },
+     "limit": "<= 1.0 % of each 2 px border darker than 170",
+     "controls": "ok"
+    },
+    "hint": "view the crop: text above the figure or a missing top panel is not visible to the gate; --above/--below (manual rectangle) or --bbox for an exact cut"
+   }
+  },
+  {
+   "caption_index": 3,
+   "label": "Table 1",
+   "kind": "table",
+   "num": 1,
+   "page": 3,
+   "name": "T1",
+   "file": "figures/T1.png",
+   "exit": 1,
+   "result": null,
+   "error": "{\"error\": \"nothing painted between the caption and the bounding text block\", \"page\": 3, \"anchor\": {\"text\": \"Table 1. Timing elements for paper microfluidics. Wax delay bridge: de\", \"bbox\": [56.0, 331.3, 531.7, 372.0], \"source\": \"pdf-text\"}, \"band\": {\"column\": \"full\", \"side\": \"below\", \"x\": [0.0, 595.0], \"y\": [373.0, 380.6], \"bottom_set_by\": {\"rule\": \"heading\", \"y\": 381.6, \"text\": \"3.3 Timed release improves a two-step assay. With reagent B delayed by\"}}, \"hint\": \"pass --above/--below (manual rectangle) or --bbox\"}"
+  },
+  {
+   "caption_index": 4,
+   "label": "Fig. 4",
+   "kind": "figure",
+   "num": 4,
+   "page": 3,
+   "name": "F4",
+   "file": "figures/F4.png",
+   "exit": 0,
+   "result": {
+    "out": "examples\\library\\Placeholder2026_wax-delay-bridges\\figures\\F4.png",
+    "mode": "caption",
+    "anchor": {
+     "text": "Fig. 4. Two-step colour assay with simultaneous delivery and with reag",
+     "bbox": [
+      56.0,
+      682.7,
+      537.9,
+      705.7
+     ],
+     "source": "pdf-text"
+    },
+    "band": {
+     "column": "full",
+     "side": "above",
+     "x": [
+      0.0,
+      595.0
+     ],
+     "y": [
+      407.1,
+      683.9
+     ],
+     "top_set_by": {
+      "rule": "heading",
+      "y": 406.1,
+      "text": "3.3 Timed release improves a two-step assay. With reagent B delayed by"
+     }
+    },
+    "method": "ink",
+    "page": 3,
+    "rect_pt": [
+     106.5,
+     422.5,
+     489.0,
+     665.0
+    ],
+    "width": 1064,
+    "height": 675,
+    "gate": {
+     "verdict": "PASS",
+     "border_ink_pct": {
+      "top": 0.0,
+      "bottom": 0.0,
+      "left": 0.0,
+      "right": 0.0
+     },
+     "limit": "<= 1.0 % of each 2 px border darker than 170",
+     "controls": "ok"
+    },
+    "hint": "view the crop: text above the figure or a missing top panel is not visible to the gate; --above/--below (manual rectangle) or --bbox for an exact cut"
+   }
+  }
+ ]
+}

@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="zh-Hant" data-page-class="deck">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>簡報殼 deck-shell（換成你的標題）</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap">
+<style>
+  /* ==== 單一淺色視覺（刻意選擇：配合渲染圖淺灰底與白底走廊圖；投影用） ==== */
+  :root{
+    --paper:#f7f9fb;        /* 玻璃色調的冷白 */
+    --plate:#ffffff;        /* 圖版底 */
+    --ink:#1c2733;          /* 藍黑墨 */
+    --muted:#5c6b7a;        /* 冷灰藍 */
+    --line:#d5dde4;         /* 髮絲線 */
+    --glass:#3e7cab;        /* 基板藍（取自渲染） */
+    --glass-bg:#e9f1f8;
+    --gold:#a3720a;         /* 鍍膜金——僅用於「鍍膜」語義 */
+    --gold-bg:#faf3e0;
+    --pass:#1a7f4e;         /* PASS／背書 */
+    --pass-bg:#e8f4ee;
+    --fail:#c2491d;         /* FAIL／判死 */
+    --fail-bg:#faece5;
+    --ask:#7a4bb0;          /* 問老師（紫——不與任何物理語義撞色） */
+    --ask-bg:#f2ecfa;
+    --mono:"IBM Plex Mono","Consolas","Courier New",monospace;
+    --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  }
+  html{scroll-snap-type:y proximity;}
+  @media (prefers-reduced-motion:no-preference){ html{scroll-behavior:smooth;} }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+       font-weight:400;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+
+  /* ==== 版面吻合 (fit)：資產性質＝「一頁不得超出一螢幕」 ====
+     缺陷來源 2026-08-31：圖只有 max-width 沒有 max-height，圖高由欄寬決定、
+     與視窗高完全脫鉤 ⇒ 1280×610 下 18 頁有 14 頁溢出，配 scroll-snap 變成
+     「每頁都要滑一下」。三段式修法：
+       A 自適應（純 CSS，主力）——圖版吸收剩餘高度，塞不下先縮圖不撐版面；
+       B 等比縮放（JS，保底）——A 之後仍超出就整頁 scale，比例 ≥ MIN_SCALE；
+       C 自曝（JS）——連 B 都不夠時該頁轉可捲動並顯示警示，絕不靜默裁切。
+     預設（JS 失效）維持舊行為＝可捲動長頁，內容零損失。 */
+  .slide{min-height:100vh;min-height:100dvh;scroll-snap-align:start;
+         padding:clamp(14px,2.6vh,34px) clamp(20px,5vw,72px) clamp(34px,4.4vh,46px);
+         border-bottom:1px solid var(--line);position:relative;--fig-floor:150px;}
+  :is(.slide,.sfit){display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px);}
+  html.js-fit .slide{display:block;height:100dvh;max-height:100dvh;overflow:hidden;}
+  html.js-fit .slide.is-overflow{overflow-y:auto;}
+  .sfit{height:100%;min-height:0;}
+
+  /* A：圖版是彈性項，吸收剩餘高度；文字區塊不縮（min-height:auto 預設） */
+  :is(.slide,.sfit) > figure.fig,
+  :is(.slide,.sfit) > .fig-main,
+  :is(.slide,.sfit) > .grid2:has(figure.fig),
+  :is(.slide,.sfit) > .grid3:has(figure.fig){flex:1 1 auto;min-height:0;}
+  .fig-main:has(figure.fig),
+  .grid2:has(figure.fig),
+  .grid3:has(figure.fig){align-items:stretch;}
+  :is(.fig-main,.grid2,.grid3) > figure.fig{height:100%;}
+  /* 可辨識下限：圖不得被壓成看不見——踩到地板就讓它真的溢出，交給 B/C 處理，
+     不允許「圖縮到 0 但版面看起來很正常」這種靜默失敗 */
+  /* 圖不放大（flex:0 1 auto）⇒ 空間有餘時會在圖版框內留白：讓圖＋圖說一起置中，
+     而不是頂在上緣、底下一大塊空白 */
+  figure.fig{min-height:var(--fig-floor);justify-content:center;}
+  /* 橫向也要吻合——既有缺陷（2026-08-31 由回歸測具抓到，修改前的建置同樣 408 px）：
+     grid/flex 項目預設 min-width:auto ⇒ 內含的 .val/.chip（white-space:nowrap）
+     長數值把軌道撐爆，手機寬度出現 18 px 橫向捲軸，違反「單欄無橫捲」驗收項。 */
+  :is(.grid2,.grid3,.fig-main,.verdicts,.stack,.slots) > *{min-width:0;}
+  html.js-fit .slide.is-overflow figure.fig{min-height:0;}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--muted);
+           display:flex;gap:14px;align-items:baseline;}
+  .eyebrow .no{color:var(--glass);font-weight:600;}
+  h1,h2{margin:0;text-wrap:balance;}
+  h2{font-size:clamp(20px,2.6vw,30px);font-weight:700;letter-spacing:.01em;}
+  h3{margin:0 0 6px;font-size:14px;font-weight:700;}
+  p{margin:6px 0;}
+  .lead{font-size:clamp(14px,1.4vw,17px);}
+  .val{font-family:var(--mono);font-size:.92em;font-weight:500;white-space:nowrap;}
+  .small{font-size:12.5px;color:var(--muted);}
+  a{color:var(--glass);}
+
+  /* 圖版（metrology plate） */
+  figure.fig{margin:0;background:var(--plate);border:1px solid var(--line);
+             padding:10px 10px 6px;display:flex;flex-direction:column;gap:6px;}
+  /* 圖高不再只由欄寬決定：可被壓縮，壓縮時以 contain 保比例（fit 修法 A 的核心） */
+  figure.fig img{flex:0 1 auto;min-height:0;max-width:100%;width:100%;height:auto;
+                 object-fit:contain;display:block;margin:0 auto;}
+  figure.fig figcaption{font-family:var(--mono);font-size:11px;color:var(--muted);
+                        border-top:1px solid var(--line);padding-top:5px;}
+
+  /* 三件套 note：說明／背書／問老師 */
+  .note{border-left:3px solid var(--line);padding:6px 12px;background:var(--plate);}
+  .note .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;
+             text-transform:uppercase;display:block;margin-bottom:3px;}
+  .explain{border-left-color:var(--ink);}    .explain .tag{color:var(--ink);}
+  .evidence{border-left-color:var(--pass);background:var(--pass-bg);} .evidence .tag{color:var(--pass);}
+  .ask{border-left-color:var(--ask);background:var(--ask-bg);}        .ask .tag{color:var(--ask);}
+  .note p{margin:3px 0;font-size:13.5px;}
+  .note ul{margin:3px 0;padding-left:18px;font-size:13.5px;}
+  .note li{margin:2px 0;}
+
+  /* chips */
+  .chip{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;
+        padding:1px 8px;border-radius:2px;vertical-align:middle;white-space:nowrap;}
+  .c-pass{background:var(--pass-bg);color:var(--pass);border:1px solid var(--pass);}
+  .c-fail{background:var(--fail-bg);color:var(--fail);border:1px solid var(--fail);}
+  .c-gold{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold);}
+  .c-q{background:var(--ask-bg);color:var(--ask);border:1px solid var(--ask);}
+  .c-tag{background:var(--glass-bg);color:var(--glass);border:1px solid var(--glass);}
+  .c-mut{background:#eef1f4;color:var(--muted);border:1px solid var(--line);}
+
+  /* layout helpers */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:stretch;}
+  .fig-main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:16px;align-items:start;}
+  .stack{display:flex;flex-direction:column;gap:10px;}
+  @media (max-width:920px){
+    .grid2,.grid3,.fig-main{grid-template-columns:1fr;}
+  }
+
+  /* tables */
+  .twrap{overflow-x:auto;background:var(--plate);border:1px solid var(--line);}
+  table{border-collapse:collapse;width:100%;font-size:12.8px;}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+     color:var(--muted);text-align:left;font-weight:600;}
+  th,td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  td{font-variant-numeric:tabular-nums;}
+  td .val{font-size:.95em;}
+
+  /* verdict cards（結論頁） */
+  .verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media (max-width:920px){.verdicts{grid-template-columns:1fr;}}
+  .vcard{background:var(--plate);border:1px solid var(--line);border-top:3px solid var(--glass);
+         padding:14px 16px;display:flex;flex-direction:column;gap:6px;}
+  .vcard .k{font-family:var(--mono);font-size:11px;color:var(--glass);letter-spacing:.14em;}
+  .vcard h3{font-size:15.5px;}
+  .vcard p{font-size:13.5px;margin:0;}
+  .vcard .src{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:auto;padding-top:6px;}
+
+  .thesis{background:var(--plate);border:1px solid var(--line);border-left:4px solid var(--glass);
+          padding:16px 20px;font-size:clamp(16px,1.8vw,21px);font-weight:500;}
+  .thesis .small{font-weight:400;}
+
+  .dead{color:var(--fail);text-decoration:line-through;text-decoration-thickness:1.5px;}
+  .callout{border:1px dashed var(--ask);background:var(--ask-bg);padding:8px 14px;font-size:13.5px;}
+
+  /* 流程槽 */
+  .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--plate);
+         border:1px solid var(--line);}
+  .slot{padding:10px 12px;border-right:1px solid var(--line);font-size:12.5px;}
+  .slot:last-child{border-right:none;}
+  .slot b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+          color:var(--glass);margin-bottom:5px;text-transform:uppercase;}
+  .slot > span{display:block;color:var(--muted);padding:1px 0;}
+  @media (max-width:920px){.slots{grid-template-columns:1fr 1fr;}.slot{border-bottom:1px solid var(--line);}}
+
+  /* Q list */
+  .qgroup{background:var(--plate);border:1px solid var(--line);padding:10px 14px;}
+  .qgroup h3{color:var(--ask);font-size:13px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;}
+  .qgroup dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;}
+  .qgroup dt{font-family:var(--mono);font-weight:600;color:var(--ask);white-space:nowrap;}
+  .qgroup dd{margin:0;}
+
+  /* fixed chrome */
+  #bar{position:fixed;left:0;bottom:0;height:3px;background:var(--glass);width:0;z-index:50;}
+  #counter{position:fixed;right:14px;bottom:10px;font-family:var(--mono);font-size:11.5px;
+           color:var(--muted);background:var(--paper);padding:2px 8px;border:1px solid var(--line);z-index:50;}
+  #hint{position:fixed;left:14px;bottom:10px;font-family:var(--mono);font-size:11px;
+        color:var(--muted);z-index:50;background:var(--paper);padding:2px 8px;border:1px solid var(--line);}
+  #toc{position:fixed;inset:0;background:rgba(28,39,51,.55);display:none;z-index:100;}
+  #toc.open{display:flex;align-items:center;justify-content:center;}
+  #toc .panel{background:var(--plate);border:1px solid var(--line);max-height:86vh;overflow:auto;
+              padding:22px 30px;min-width:min(560px,92vw);}
+  #toc a{display:block;padding:3px 0;color:var(--ink);text-decoration:none;font-size:14px;}
+  #toc a:hover,#toc a:focus{color:var(--glass);}
+  #toc a .no{font-family:var(--mono);color:var(--muted);margin-right:10px;font-size:12px;}
+  :focus-visible{outline:2px solid var(--glass);outline-offset:2px;}
+
+  /* ==== 代號/符號 hover 定義卡＋跳轉返回＋詞彙表（可複用機制） ==== */
+  .ref{border-bottom:1px dotted var(--glass);cursor:pointer;}
+  .sym{border-bottom:1px dotted var(--muted);cursor:pointer;}
+  .chip .ref,.chip .sym{border-bottom:none;color:inherit;}
+  /* decoration spans are injected into arbitrary containers — pin them inline
+     so structural selectors (e.g. block-level option lists) can't reflow them */
+  span.ref,span.sym{display:inline;}
+  #refcard{position:fixed;z-index:120;max-width:360px;background:var(--plate);
+           border:1px solid var(--glass);box-shadow:0 6px 18px rgba(28,39,51,.14);
+           padding:10px 14px;font-size:12.5px;display:none;line-height:1.5;}
+  #refcard .rt{font-weight:700;font-size:13px;margin-bottom:2px;}
+  #refcard .rj{font-family:var(--mono);font-size:10.5px;color:var(--glass);margin-top:6px;}
+  #backpill{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;
+            font-family:var(--mono);font-size:11.5px;background:var(--ink);color:#f7f9fb;
+            padding:5px 16px;border-radius:15px;cursor:pointer;display:none;border:none;}
+  #gloss{position:fixed;inset:0;background:rgba(28,39,51,.55);display:none;z-index:100;}
+  #gloss.open{display:flex;align-items:center;justify-content:center;}
+  #gloss .panel{background:var(--plate);border:1px solid var(--line);max-height:86vh;overflow:auto;
+                padding:22px 30px;width:min(880px,94vw);}
+  #gloss h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--glass);margin:14px 0 6px;}
+  .gl-row{display:grid;grid-template-columns:72px 1fr;gap:12px;padding:3px 0;font-size:12.8px;
+          border-bottom:1px solid var(--line);}
+  .gl-row:last-child{border-bottom:none;}
+  .gl-row.jump{cursor:pointer;}
+  .gl-row.jump:hover .gl-k{text-decoration:underline;}
+  .gl-k{font-family:var(--mono);font-weight:600;color:var(--glass);white-space:nowrap;}
+
+  /* fit 的自曝層（修法 C）——失敗必須自己喊出來，不做靜默裁切 */
+  #fitwarn{position:fixed;left:50%;transform:translateX(-50%);top:8px;z-index:130;
+           font-family:var(--mono);font-size:11.5px;background:var(--fail-bg);color:var(--fail);
+           border:1px solid var(--fail);padding:3px 12px;display:none;}
+
+  @media print{
+    .slide{page-break-after:always;min-height:0;border-bottom:none;}
+    html.js-fit .slide{display:flex;height:auto;max-height:none;overflow:visible;}
+    .sfit{height:auto;transform:none !important;}
+    figure.fig{min-height:0;}
+    figure.fig img{height:auto;width:auto;max-width:100%;}
+    #bar,#counter,#hint,#toc,#refcard,#backpill,#gloss,#fitwarn{display:none;}
+    .ref,.sym{border-bottom:none;}
+  }
+</style>
+
+<!-- ============================================================
+     FILL POINT 1 — slides. Keep the class vocabulary:
+     .slide > .eyebrow + h1/h2 + content
+     .fig-main = figure-dominant layout; figure.fig = metrology plate
+     .note explain/evidence/ask = the three-block frame around every figure
+     .verdicts/.vcard = conclusion-first cards for the cover
+     Rules that survived UAT:
+       - conclusion-first: verdicts on slide 1, before any detail
+       - define-before-use: first mention of a coded ID carries an inline gloss;
+         a legend strip on the cover + a nomenclature slide before content
+       - never hardcode page numbers in body text (slides renumber via JS);
+         name pages instead ("見「稽核方法」頁")
+       - no text-transform:uppercase on anything that can contain units (µm → ΜM)
+       - structural selectors must never target bare <span> descendants: the
+         decorator INJECTS spans anywhere, so ".slot span{display:block}" broke
+         a token onto its own line — scope as ".slot > span" and keep the
+         span.ref/span.sym display:inline pin
+       - hard gates beat proof-reading: the origin build runs a canonical-
+         terminology lint across ALL sibling deliverables and a law-of-
+         reflection check on schematic SVG coordinates (GEOM-CHECK JSON),
+         each with an injected-violation control that fires every build
+     ============================================================ -->
+
+<!-- SLIDE 1: cover — conclusion first -->
+<section class="slide" id="s1">
+  <div class="eyebrow"><span class="no">01</span><span>專案代號 · 場合 · 日期</span></div>
+  <h1 style="font-size:clamp(26px,3.6vw,44px);font-weight:900;">範例簡報——結論放在第一頁</h1>
+  <div class="thesis">一句話主張放這裡：讀者只看這一頁也能帶走結論。</div>
+  <div class="note explain"><span class="tag">代號速記——先定義後使用（滑過虛線代號看定義，點擊跳頁）</span>
+    <p>X1 範例提案 · X2 另一提案——代號系統與符號圖例見下一頁。</p></div>
+  <p class="lead" style="margin-top:4px;"><b>結論先行：</b></p>
+  <div class="verdicts">
+    <div class="vcard">
+      <span class="k">VERDICT 1</span>
+      <h3>X1（範例提案）通過了範例判定</h3>
+      <p>正文第一次出現代號時括號給一行身分：X1（範例提案）。符號如 θ_x 同樣有定義卡；縮寫 ABC 只進 G 詞彙表。</p>
+      <span class="src">背書出處寫在卡底</span>
+    </div>
+    <div class="vcard">
+      <span class="k">VERDICT 2</span>
+      <h3>每個判決卡：主張一句＋數字＋出處</h3>
+      <p>判定用 <span class="chip c-pass">PASS</span>／<span class="chip c-fail">FAIL</span> 晶片；語義色不挪用（本殼：金=特殊語義保留位）。</p>
+      <span class="src">chips: c-pass / c-fail / c-gold / c-q / c-tag / c-mut</span>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 2: nomenclature — coding systems + symbols + how to operate -->
+<section class="slide" id="s1b">
+  <div class="eyebrow"><span class="no">02</span><span>如何讀這份簡報 · 代號 · 符號 · 操作</span></div>
+  <h2>先給座標系：代號、符號、操作</h2>
+  <div class="grid2">
+    <div class="twrap"><table>
+      <thead><tr><th>代號</th><th>意義</th></tr></thead>
+      <tbody>
+        <tr><td><span class="val">X1／X2</span></td><td>範例提案代號——換成你的編號系統，每一族一列</td></tr>
+        <tr><td><span class="val">θ_x</span></td><td>範例符號——幾何/參數符號在此頁或 SVG 總圖上定義</td></tr>
+      </tbody>
+    </table></div>
+    <div class="stack">
+      <div class="note explain"><span class="tag">操作（本頁之後全程有效）</span>
+        <p><b>虛線底的代號與符號：滑過看定義卡、點擊跳到完整頁、Backspace 返回。</b>G 開全域詞彙表；M 開目錄；←/→ 翻頁；Ctrl+P 列印。</p></div>
+      <div class="note explain" style="border-left-color:var(--muted);"><span class="tag" style="color:var(--muted);">建議</span>
+        <p class="small">符號多的簡報在這裡放一張 SVG 幾何總圖（標出每個符號的位置）；長註記放圖說，SVG 內標籤要留間距預算。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: content page — one figure/item per slide, three-block frame -->
+<section class="slide" id="sX1">
+  <div class="eyebrow"><span class="no">03</span><span>提案 X1</span></div>
+  <h2>X1 — 每頁一個圖/項目，三件套圍繞它</h2>
+  <div class="fig-main">
+    <figure class="fig">
+      <div style="height:300px;display:flex;align-items:center;justify-content:center;background:var(--glass-bg);color:var(--muted);font-family:var(--mono);">[ figure placeholder — embed as data URI for single-file offline ]</div>
+      <figcaption>圖說：檔名 · 驗證狀態（如 12 PASS）· 出處標記（[calc]/[gap]）</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="note explain"><span class="tag">說明</span>
+        <p>這張圖在講什麼、關鍵數字。符號 θ_x 與代號 X2 都帶定義卡。</p></div>
+      <div class="note evidence"><span class="tag">背書</span>
+        <p>證據與出處：腳本判定、文獻、一手/二手層級。</p></div>
+      <div class="note ask"><span class="tag">提問</span>
+        <p>留給決策者的問題——不代決，收尾頁彙總。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==== chrome ==== -->
+<div id="bar"></div>
+<div id="fitwarn" role="status"></div>
+<div id="counter">— / —</div>
+<div id="hint">←/→ 翻頁 · M 目錄 · G 詞彙 · 點虛線代號跳轉 · ⌫ 返回</div>
+<div id="toc" role="dialog" aria-label="目錄"><div class="panel"><div id="toclist"></div></div></div>
+<div id="gloss" role="dialog" aria-label="詞彙表"><div class="panel"><div id="glosslist"></div></div></div>
+<div id="refcard" role="tooltip"></div>
+<button id="backpill" type="button">↩ 返回（Backspace）</button>
+
+<script>
+(function(){
+  /* ============================================================
+     可複用機制（deck-shell）：
+     A. 翻頁/目錄/計數/進度（鍵盤 ←/→、M、Home/End）
+     B. 代號/符號 registry → 自動裝飾 → hover 定義卡（Wikipedia
+        page-previews 模式，350ms 延遲）→ 點擊跳轉 + Backspace 返回
+     C. G 全域詞彙表（含不裝飾、只入表的縮寫）
+     JS 全滅時退化為可捲動長頁——內容零損失。
+     ============================================================ */
+
+  /* ---- registry：編號代號（s=目標頁 id；n=1 表示只入詞彙表、不裝飾內文） ---- */
+  var REFS = {
+    /* Coded IDs used in your document. Every ID that appears in body text MUST
+       have an entry here (define-before-use is enforced by discipline, not code).
+       t = card title, d = one-line definition, s = target slide id (0 = card only). */
+    "X1": {t:"X1 — 範例提案", d:"示範用代號：hover 定義卡＋點擊跳轉的目標。", s:"sX1"},
+    "X2": {t:"X2 — 另一個範例", d:"沒有 s 目標的代號：只有定義卡，不跳轉。", s:0}
+  };
+  /* ---- registry：幾何/光束符號（n=1：只入詞彙表，不裝飾內文） ---- */
+  var SYMS = {
+    /* Parameters/symbols (θ_x, L1, ...). n:1 = glossary-only, body text NOT decorated
+       (use for abbreviations that appear everywhere — full-page dotted underline is noise). */
+    "θ_x": {t:"θ_x — 範例符號", d:"符號定義卡示範；點擊跳回圖例頁。", s:"s1b"},
+    "ABC": {t:"ABC — 範例縮寫", d:"n:1＝不裝飾內文、只進 G 詞彙表。", s:0, n:1}
+  };
+
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var bar = document.getElementById('bar');
+  var toc = document.getElementById('toc');
+  var toclist = document.getElementById('toclist');
+  var gloss = document.getElementById('gloss');
+  var card = document.getElementById('refcard');
+  var pill = document.getElementById('backpill');
+  var cur = 0, backStack = [];
+
+  slides.forEach(function(s,i){
+    var no = s.querySelector('.eyebrow .no');
+    if (no) no.textContent = String(i+1).padStart(2,'0');
+    var t = s.querySelector('h1,h2');
+    var a = document.createElement('a');
+    a.href = '#' + s.id;
+    a.innerHTML = '<span class="no">' + String(i+1).padStart(2,'0') + '</span>' + (t ? t.textContent : s.id);
+    a.addEventListener('click', function(){ toc.classList.remove('open'); });
+    toclist.appendChild(a);
+  });
+
+  function update(){
+    var y = window.scrollY + window.innerHeight/2;
+    for (var i=0;i<slides.length;i++){
+      var r = slides[i];
+      if (r.offsetTop <= y && y < r.offsetTop + r.offsetHeight){ cur = i; break; }
+    }
+    counter.textContent = String(cur+1).padStart(2,'0') + ' / ' + String(slides.length).padStart(2,'0');
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (max>0 ? (window.scrollY/max*100) : 0) + '%';
+  }
+  function go(i){
+    i = Math.max(0, Math.min(slides.length-1, i));
+    slides[i].scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  }
+  function goBack(){
+    if (!backStack.length) return;
+    var i = backStack.pop();
+    if (!backStack.length) pill.style.display = 'none';
+    go(i);
+  }
+  function jumpTo(sid){
+    for (var i=0;i<slides.length;i++) if (slides[i].id === sid){
+      backStack.push(cur); pill.style.display = 'block'; hideCard(); go(i); return;
+    }
+  }
+
+  /* ---- 自動裝飾：掃描文字節點，把 registry 代號包成 .ref/.sym ---- */
+  function entryFor(k){ return REFS[k] || SYMS[k]; }
+  function decorate(){
+    var keys = [];
+    Object.keys(REFS).forEach(function(k){ if(!REFS[k].n) keys.push(k); });
+    Object.keys(SYMS).forEach(function(k){ if(!SYMS[k].n) keys.push(k); });
+    keys.sort(function(a,b){ return b.length - a.length; });
+    var pat = keys.map(function(t){ return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('|');
+    var re = new RegExp('(' + pat + ')');
+    var reG = new RegExp('(' + pat + ')','g');
+    var bound = /[A-Za-z0-9_₀₁₂]/;
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: function(n){
+      for (var e = n.parentNode; e && e !== document.body; e = e.parentNode){
+        var tag = e.nodeName.toUpperCase();
+        if (tag==='SCRIPT'||tag==='STYLE'||tag==='SVG'||tag==='H1'||tag==='H2'||tag==='A') return NodeFilter.FILTER_REJECT;
+        if (e.id==='toc'||e.id==='gloss'||e.id==='refcard') return NodeFilter.FILTER_REJECT;
+        if (e.classList && (e.classList.contains('ref')||e.classList.contains('sym'))) return NodeFilter.FILTER_REJECT;
+      }
+      return re.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }});
+    var nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      var text = node.nodeValue, frag = document.createDocumentFragment(), last = 0, m, any = false;
+      reG.lastIndex = 0;
+      while ((m = reG.exec(text))){
+        var before = text[m.index-1], after = text[m.index + m[0].length];
+        if ((before && bound.test(before)) || (after && bound.test(after))) continue;
+        frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        var sp = document.createElement('span');
+        sp.className = REFS.hasOwnProperty(m[0]) ? 'ref' : 'sym';
+        sp.tabIndex = 0; sp.dataset.key = m[0]; sp.textContent = m[0];
+        frag.appendChild(sp);
+        last = m.index + m[0].length; any = true;
+      }
+      if (!any) return;
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  /* ---- hover 定義卡（350ms 延遲；focus 亦觸發） ---- */
+  var hoverTimer = null, hideTimer = null;
+  function showCard(sp){
+    var e = entryFor(sp.dataset.key); if (!e) return;
+    card.innerHTML = '<div class="rt">' + e.t + '</div><div>' + e.d + '</div>' +
+                     (e.s ? '<div class="rj">點擊跳至該頁 · Backspace 返回</div>' : '');
+    card.style.display = 'block';
+    var r = sp.getBoundingClientRect(), cw = card.offsetWidth, ch = card.offsetHeight;
+    var x = Math.min(Math.max(8, r.left), window.innerWidth - cw - 8);
+    var y = r.bottom + 8;
+    if (y + ch > window.innerHeight - 8) y = r.top - ch - 8;
+    card.style.left = x + 'px'; card.style.top = Math.max(8, y) + 'px';
+  }
+  function hideCard(){ card.style.display = 'none'; }
+  document.addEventListener('mouseover', function(e){
+    var sp = e.target.closest ? e.target.closest('.ref,.sym') : null;
+    clearTimeout(hoverTimer);
+    if (sp){ clearTimeout(hideTimer); hoverTimer = setTimeout(function(){ showCard(sp); }, 350); }
+  });
+  document.addEventListener('mouseout', function(e){
+    var sp = e.target.closest ? e.target.closest('.ref,.sym') : null;
+    if (sp){ clearTimeout(hoverTimer); hideTimer = setTimeout(hideCard, 150); }
+  });
+  document.addEventListener('focusin', function(e){
+    var sp = e.target.closest ? e.target.closest('.ref,.sym') : null;
+    if (sp) showCard(sp);
+  });
+  document.addEventListener('focusout', function(e){
+    var sp = e.target.closest ? e.target.closest('.ref,.sym') : null;
+    if (sp) hideCard();
+  });
+
+  /* ---- 點擊跳轉（代號→完整頁；詞彙表列→該頁） ---- */
+  document.addEventListener('click', function(e){
+    var sp = e.target.closest ? e.target.closest('.ref,.sym') : null;
+    if (sp){
+      var en = entryFor(sp.dataset.key);
+      if (en && en.s) jumpTo(en.s);
+      return;
+    }
+    var row = e.target.closest ? e.target.closest('.gl-row.jump') : null;
+    if (row){ gloss.classList.remove('open'); jumpTo(row.dataset.sid); }
+  });
+  document.addEventListener('keydown', function(e){
+    var sp = e.target.closest ? e.target.closest('.ref,.sym') : null;
+    if (sp && (e.key === 'Enter' || e.key === ' ')){
+      e.preventDefault();
+      var en = entryFor(sp.dataset.key);
+      if (en && en.s) jumpTo(en.s);
+    }
+  });
+  pill.addEventListener('click', goBack);
+
+  /* ---- G 詞彙表 ---- */
+  var glossBuilt = false;
+  function buildGloss(){
+    if (glossBuilt) return; glossBuilt = true;
+    var html = '<h3>編號代號（點列可跳頁 · Esc 關閉）</h3>';
+    function row(k, e){
+      var jump = e.s ? ' jump" data-sid="' + e.s : '';
+      return '<div class="gl-row' + jump + '"><span class="gl-k">' + k + '</span><span><b>' +
+             e.t.replace(k + ' — ','') + '</b>：' + e.d + '</span></div>';
+    }
+    Object.keys(REFS).forEach(function(k){ html += row(k, REFS[k]); });
+    html += '<h3>符號與縮寫</h3>';
+    Object.keys(SYMS).forEach(function(k){ html += row(k, SYMS[k]); });
+    document.getElementById('glosslist').innerHTML = html;
+  }
+
+  window.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update);
+  document.addEventListener('keydown', function(e){
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    /* a clicked token keeps focus (tabIndex=0): yield only its own Enter/Space (handled
+       above); every other key must still page, open G/M and Backspace-return */
+    if (e.target && e.target.closest && e.target.closest('.ref,.sym') && (e.key === 'Enter' || e.key === ' ')) return;
+    if (e.key === 'Escape'){ toc.classList.remove('open'); gloss.classList.remove('open'); return; }
+    switch(e.key){
+      case 'ArrowRight': case 'PageDown': case ' ': e.preventDefault(); go(cur+1); break;
+      case 'ArrowLeft': case 'PageUp': e.preventDefault(); go(cur-1); break;
+      case 'Home': e.preventDefault(); go(0); break;
+      case 'End': e.preventDefault(); go(slides.length-1); break;
+      case 'm': case 'M': gloss.classList.remove('open'); toc.classList.toggle('open'); break;
+      case 'g': case 'G': toc.classList.remove('open'); buildGloss(); gloss.classList.toggle('open'); break;
+      case 'Backspace': e.preventDefault(); goBack(); break;
+    }
+  });
+  toc.addEventListener('click', function(e){ if (e.target === toc) toc.classList.remove('open'); });
+  gloss.addEventListener('click', function(e){ if (e.target === gloss) gloss.classList.remove('open'); });
+
+  /* ---- fit-guard：一頁＝一螢幕（資產性質，見 CSS「版面吻合」段） ----
+     修法 A（圖版吸收剩餘高度）由 CSS 負責；這裡是 B（等比縮放保底）與
+     C（自曝）。量測時機：字體就緒、每張圖 decode 完、load、視窗改變（去抖）。
+     `window.__fitReport()` 是 build 端 fit-gate 與人工驗收共用的量測入口。 */
+  var MIN_SCALE = 0.72;
+  var fitwarn = document.getElementById('fitwarn');
+  slides.forEach(function(s){
+    var inner = document.createElement('div');
+    inner.className = 'sfit';
+    while (s.firstChild) inner.appendChild(s.firstChild);
+    s.appendChild(inner);
+  });
+  document.documentElement.classList.add('js-fit');
+
+  function fitAll(){
+    /* 手機／極小視窗不套用嚴格模式：退回「可捲動長頁、單欄」——那是已驗收的
+       既有行為，若在此掛警示條會每頁都是噪音。門檻＝版面決策，非量測值。 */
+    var narrow = window.innerWidth < 900 || window.innerHeight < 500;
+    document.documentElement.classList.toggle('js-fit', !narrow);
+    if (narrow){
+      slides.forEach(function(s){
+        var inner = s.firstElementChild;
+        if (inner) inner.style.transform = '';
+        s.classList.remove('is-overflow');
+      });
+      if (fitwarn) fitwarn.style.display = 'none';
+      return [];
+    }
+    var bad = [];
+    slides.forEach(function(s, i){
+      var inner = s.firstElementChild;
+      if (!inner) return;
+      inner.style.transform = '';
+      s.classList.remove('is-overflow');
+      var avail = inner.clientHeight;
+      if (!(avail > 0)) return;
+      var need = inner.scrollHeight;
+      if (need <= avail + 1) return;
+      var k = avail / need;
+      if (k >= MIN_SCALE){
+        inner.style.transformOrigin = 'top center';
+        inner.style.transform = 'scale(' + k.toFixed(4) + ')';
+      } else {
+        s.classList.add('is-overflow');
+        bad.push(String(i+1).padStart(2,'0'));
+      }
+    });
+    if (fitwarn){
+      if (bad.length){
+        fitwarn.textContent = '版面警示：第 ' + bad.join('、') +
+          ' 頁內容超出畫面，該頁可在頁內捲動（放大視窗可消除本警示）';
+        fitwarn.style.display = 'block';
+      } else {
+        fitwarn.style.display = 'none';
+      }
+    }
+    return bad;
+  }
+  window.__fitRun = fitAll;
+  window.__fitReport = function(){
+    return slides.map(function(s, i){
+      var inner = s.firstElementChild;
+      var tr = inner && inner.style.transform;
+      return {i: i + 1, id: s.id,
+              need: inner ? inner.scrollHeight : 0,
+              avail: inner ? inner.clientHeight : 0,
+              scale: tr ? parseFloat(tr.replace(/[^0-9.]/g, '')) : 1,
+              overflow: s.classList.contains('is-overflow')};
+    });
+  };
+  var fitTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(fitTimer); fitTimer = setTimeout(fitAll, 120);
+  });
+  window.addEventListener('load', fitAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+  Promise.all(Array.prototype.map.call(document.images, function(im){
+    return im.decode ? im.decode().catch(function(){}) : Promise.resolve();
+  })).then(fitAll);
+
+  decorate();
+  update();
+  fitAll();
+})();
+</script>
+</html>

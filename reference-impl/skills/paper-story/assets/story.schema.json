@@ -1,0 +1,1322 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "paper-story/story@1",
+ "title": "paper-story story.json",
+ "description": "Narrative reconstruction with whys (axis, storyline, drift), logic extraction (keypoint, chain with warrants), and the two presentation products' content (one-page lab format + multi-page deck) plus talk and terms.",
+ "type": "object",
+ "required": [
+  "schema",
+  "run",
+  "source",
+  "why_me",
+  "axis",
+  "storyline",
+  "logic",
+  "onepage",
+  "terms"
+ ],
+ "properties": {
+  "schema": {
+   "type": "string",
+   "enum": [
+    "paper-story/story@1",
+    "paper-story/story@2",
+    "paper-story/story@3",
+    "paper-story/story@4",
+    "paper-story/story@5",
+    "paper-story/story@6"
+   ],
+   "description": "@2 (2026-09-03): drift rows carry quote; quotes checked against source/paper.txt (S10); coverage.skipped honoured (S11). @3 (2026-09-03, co-upgrade round 1): drift[].kind from the narrative-axis.md §4 tell list + coverage.drift_checklist {kind: found|none} (S13); onepage.figures[].kind evidence|schematic|motivation — the one-page carries evidence figures only (S4c). Round-2 optional additions (2026-09-03, id unchanged): quote_source, coverage.checklist_provenance, logic.reused_from; Cover highlights ≤ 6. @4 (2026-09-04, user finding: the slogan alone was unreadable — its role nouns had no referent): logic.keypoint is the SLOGAN (not over-abstract), logic.keypoint_description is the 讀書心得終極詮釋, logic.bindings[] binds every role of the slogan to the paper's referent (S15), chain[].in_this_paper carries the concrete event sentence per step (S2); onepage.keypoint_box is gone (the strip prints the slogan verbatim); optional logic.patterns / logic.relations feed the library's KEYPOINTS index. @5 (2026-09-14, round 4 — the advisor's emphasis + the user's 「講稿生硬」 finding, three reference decks): brief {problem, approach, differs, conversation, methods[], verdicts[]} answers up front why read / every method / did it work / how judged (S18); deck.pages[] carry asks / bridge / takeaway / beat and figure_read {look, see, against, means} on figure pages, no_figure on content pages without one (S19); talk.story_arc {spine, craft[]} is how the paper tells its story (S20); notes open with their bridge and never recite a highlight (S20). @6 (user ruling 2026-11-03, the senior's ten-paper deck + a 3-paper blind test; @5 stays valid, readers accept both): onepage.figures[] are TILES grouped by argument step (step context|series|trend|mechanism|side-evidence, files[] for a multi-panel tile, why, necessity on a side-evidence tile, figure_read, notes) — story mode 3–4 tiles plus at most one side-evidence tile, deep mode keeps 3–6 (S4, S4d); onepage.fields four|five (default five) makes the Features cell optional; onepage.script {source_line, purpose_line} is the story-mode spoken walk. Behaviour of the new fields is only gated on @6 runs"
+  },
+  "run": {
+   "type": "object",
+   "required": [
+    "id",
+    "created",
+    "mode"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9][A-Za-z0-9_\\-]*$",
+     "description": "== the run folder name. Until 2026-09-04: YYYYMMDD_<Author><year>_<slug> (the ingest date); after the library migration (naming-over-routing, user ruling 2026-09-04): <FirstAuthor><Year>_<short-title-slug>, no date — the folder is the paper's identity, calibration copies live under _calibration/"
+    },
+    "created": {
+     "type": "string"
+    },
+    "mode": {
+     "enum": [
+      "deep",
+      "story",
+      "triage"
+     ],
+     "description": "deep = the next single-paper talk: every node, deck + talk REQUIRED; story = one page per paper for the ten-paper format: nodes N0–N3 + the one-page product, deck/talk optional (S5/S9 SKIP when absent); triage = axis card only (untested)"
+    },
+    "presenter": {
+     "type": "string"
+    },
+    "model": {
+     "type": "string"
+    },
+    "skill_version": {
+     "type": "string"
+    },
+    "distill_run": {
+     "type": "string",
+     "description": "run id of a paper-distill run for the same paper, or ''"
+    }
+   }
+  },
+  "source": {
+   "type": "object",
+   "required": [
+    "type",
+    "title",
+    "access"
+   ],
+   "properties": {
+    "type": {
+     "enum": [
+      "paper",
+      "preprint",
+      "patent",
+      "techdoc",
+      "popsci",
+      "other"
+     ]
+    },
+    "title": {
+     "type": "string",
+     "minLength": 1
+    },
+    "authors": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "venue": {
+     "type": "string"
+    },
+    "year": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "doi": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    },
+    "access": {
+     "enum": [
+      "full",
+      "partial",
+      "abstract"
+     ]
+    },
+    "file": {
+     "type": "string"
+    },
+    "pages": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "lang": {
+     "type": "string"
+    }
+   }
+  },
+  "why_me": {
+   "type": "object",
+   "required": [
+    "why_read",
+    "helps"
+   ],
+   "properties": {
+    "why_read": {
+     "type": "string",
+     "minLength": 1,
+     "description": "為什麼讀它 — spoken first on the Keypoint page"
+    },
+    "helps": {
+     "type": "string",
+     "minLength": 1,
+     "description": "對我有什麼幫助"
+    },
+    "project": {
+     "type": "string"
+    },
+    "question_i_bring": {
+     "type": "string"
+    }
+   }
+  },
+  "axis": {
+   "type": "object",
+   "required": [
+    "entry_point",
+    "central_claim",
+    "method_choice",
+    "evaluation_plan",
+    "presentation"
+   ],
+   "properties": {
+    "entry_point": {
+     "type": "object",
+     "required": [
+      "what",
+      "why",
+      "locator"
+     ],
+     "properties": {
+      "what": {
+       "type": "string",
+       "minLength": 1
+      },
+      "why": {
+       "type": "string",
+       "minLength": 1
+      },
+      "locator": {
+       "type": "string",
+       "minLength": 1
+      },
+      "quote": {
+       "type": "string",
+       "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+      },
+      "quote_source": {
+       "enum": [
+        "paper.txt",
+        "page-image"
+       ],
+       "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+      }
+     }
+    },
+    "central_claim": {
+     "type": "object",
+     "required": [
+      "what",
+      "why_matters",
+      "locator"
+     ],
+     "properties": {
+      "what": {
+       "type": "string",
+       "minLength": 1
+      },
+      "why_matters": {
+       "type": "string",
+       "minLength": 1
+      },
+      "locator": {
+       "type": "string",
+       "minLength": 1
+      },
+      "quote": {
+       "type": "string",
+       "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+      },
+      "quote_source": {
+       "enum": [
+        "paper.txt",
+        "page-image"
+       ],
+       "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+      }
+     }
+    },
+    "method_choice": {
+     "type": "object",
+     "required": [
+      "what",
+      "why",
+      "locator"
+     ],
+     "properties": {
+      "what": {
+       "type": "string",
+       "minLength": 1
+      },
+      "why": {
+       "type": "string",
+       "minLength": 1
+      },
+      "alternatives": {
+       "type": "string"
+      },
+      "necessity": {
+       "type": "string",
+       "description": "the counterfactual per load-bearing step (Day 08 Why layer, narrative-axis.md §2): if this step were swapped for the nearest alternative, what in the result or the argument fails — '換一種方式會失效嗎'; tagged [author]/[inferred]"
+      },
+      "dead_ends": {
+       "type": "string",
+       "description": "where the authors report having got stuck or an attempt that did not work (the Failure beat of the research journey, narrative-axis.md §2); 「未述」 when the paper tells none — that absence is itself a finding"
+      },
+      "locator": {
+       "type": "string",
+       "minLength": 1
+      },
+      "quote": {
+       "type": "string",
+       "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+      },
+      "quote_source": {
+       "enum": [
+        "paper.txt",
+        "page-image"
+       ],
+       "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+      }
+     }
+    },
+    "evaluation_plan": {
+     "type": "object",
+     "required": [
+      "what_to_show",
+      "metrics",
+      "why",
+      "locator"
+     ],
+     "properties": {
+      "what_to_show": {
+       "type": "string",
+       "minLength": 1
+      },
+      "metrics": {
+       "type": "string",
+       "minLength": 1
+      },
+      "criteria": {
+       "type": "string"
+      },
+      "controls": {
+       "type": "string"
+      },
+      "expected": {
+       "type": "string"
+      },
+      "why": {
+       "type": "string",
+       "minLength": 1
+      },
+      "locator": {
+       "type": "string",
+       "minLength": 1
+      },
+      "quote": {
+       "type": "string",
+       "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+      },
+      "quote_source": {
+       "enum": [
+        "paper.txt",
+        "page-image"
+       ],
+       "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+      }
+     }
+    },
+    "presentation": {
+     "type": "object",
+     "required": [
+      "stats",
+      "visuals",
+      "why",
+      "locator"
+     ],
+     "properties": {
+      "stats": {
+       "type": "string",
+       "minLength": 1
+      },
+      "visuals": {
+       "type": "string",
+       "minLength": 1
+      },
+      "order": {
+       "type": "string"
+      },
+      "why": {
+       "type": "string",
+       "minLength": 1
+      },
+      "locator": {
+       "type": "string",
+       "minLength": 1
+      },
+      "quote": {
+       "type": "string",
+       "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+      },
+      "quote_source": {
+       "enum": [
+        "paper.txt",
+        "page-image"
+       ],
+       "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+      }
+     }
+    }
+   }
+  },
+  "storyline": {
+   "type": "array",
+   "minItems": 6,
+   "items": {
+    "type": "object",
+    "required": [
+     "beat",
+     "what",
+     "why",
+     "locator"
+    ],
+    "properties": {
+     "beat": {
+      "type": "string",
+      "description": "①情境與痛點 ②缺口與提問 ③方法選擇 ④評估計畫 ⑤執行與呈現 ⑥詮釋與收束 (a second result adds another ⑤)"
+     },
+     "what": {
+      "type": "string",
+      "minLength": 1
+     },
+     "why": {
+      "type": "string",
+      "minLength": 1
+     },
+     "locator": {
+      "type": "string",
+      "minLength": 1
+     },
+     "quote": {
+      "type": "string",
+      "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+     },
+     "quote_source": {
+      "enum": [
+       "paper.txt",
+       "page-image"
+      ],
+      "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+     }
+    }
+   }
+  },
+  "drift": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "where",
+     "what_drifted",
+     "why_it_matters"
+    ],
+    "properties": {
+     "where": {
+      "type": "string"
+     },
+     "what_drifted": {
+      "type": "string"
+     },
+     "why_it_matters": {
+      "type": "string"
+     },
+     "locator": {
+      "type": "string"
+     },
+     "quote": {
+      "type": "string",
+      "description": "the paper's own words, verbatim, <= ~25 words, found in source/paper.txt (S10)"
+     },
+     "kind": {
+      "enum": [
+       "over-claim",
+       "grafted-result",
+       "no-criterion",
+       "method-after-the-fact",
+       "figure-unasked",
+       "limitation-aside",
+       "weaker-instrument",
+       "discussion-new-data",
+       "selective-condition",
+       "abstract-mismatch",
+       "other"
+      ],
+      "description": "the tell this row is (narrative-axis.md §4); 'other' covers no list kind and needs the tell named in what_drifted; required on schema @3 (S13)"
+     },
+     "quote_source": {
+      "enum": [
+       "paper.txt",
+       "page-image"
+      ],
+      "description": "where the quote was read: the text layer (default) or the page image when source/paper.txt lacks the block (round 2, Zhang 2021's abstract) — S10 then WARNs for the dispatcher to verify on source/pages instead of FAILing"
+     }
+    }
+   }
+  },
+  "logic": {
+   "type": "object",
+   "required": [
+    "keypoint",
+    "chain",
+    "fragile",
+    "portable"
+   ],
+   "properties": {
+    "keypoint": {
+     "type": "string",
+     "minLength": 1,
+     "description": "the SLOGAN: one sentence of abstracted construction logic, ≤ 90 CJK-eq (S16 WARN), no material names, no numbers, no figure numbers (Test 0: a rule, not an event) — but NOT over-abstract (user ruling 2026-09-04, Test 0c): every role noun carries the qualifier that tells a reader which kind of thing it stands for (製程副作用, 面型自由度, 沉積化學根源 — never bare 副作用, 自由度, 根源). Printed verbatim by every product; bindings[] binds each role to the paper's referent"
+    },
+    "keypoint_description": {
+     "type": "string",
+     "minLength": 1,
+     "description": "the 讀書心得的終極詮釋 (user ruling 2026-09-04): one or two narrative paragraphs, 200–700 CJK-eq (S16 WARN outside), that a reader who has NOT read the paper can follow — what the authors faced, what they did first / next / last with the paper's concrete nouns beside each abstract move, why each move follows, what the reader takes away. Required on @4; rendered under the strip's 展開解讀 toggle, on the one-page's 解讀 page, on the deck's Keypoint page and in the record §1"
+    },
+    "bindings": {
+     "type": "array",
+     "minItems": 3,
+     "items": {
+      "type": "object",
+      "required": [
+       "role",
+       "referent",
+       "locator"
+      ],
+      "properties": {
+       "role": {
+        "type": "string",
+        "minLength": 1,
+        "description": "a noun or verb phrase copied VERBATIM from keypoint (S15 checks the substring)"
+       },
+       "referent": {
+        "type": "string",
+        "minLength": 1,
+        "description": "what it stands for in THIS paper, with the paper's own nouns — the sentence Test 0 rejects AS the keypoint is exactly what belongs here"
+       },
+       "locator": {
+        "type": "string",
+        "minLength": 1
+       }
+      }
+     },
+     "description": "role → referent table (user finding 2026-09-04: 形狀, 載體, 自由度, 模型, 最低點 had no referent on the page and could not be resolved even after reading the paper). Every clause of the slogan (split on ；) carries ≥ 1 binding, ≥ 3 in total (S15 FAIL on @4); the one-page strip decorates each role with a hover card 在這篇＝referent"
+    },
+    "patterns": {
+     "type": "array",
+     "maxItems": 4,
+     "items": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+     },
+     "description": "1–3 kebab-case slugs naming the reusable logic pattern(s) the slogan instantiates (side-effect-as-boundary, one-free-variable-scan, replace-root-cause, …); the library's KEYPOINTS.md groups papers by them so Obsidian shows which papers share a construction logic (2026-09-04)"
+    },
+    "relations": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "run",
+       "why"
+      ],
+      "properties": {
+       "run": {
+        "type": "string",
+        "description": "run id (folder name) of another library run"
+       },
+       "why": {
+        "type": "string",
+        "description": "how the two logics meet: same pattern, the opposite move, the design side of the same device, the paper this one answers…"
+       }
+      }
+     },
+     "description": "explicit links to other library runs; the per-paper keypoint.md note renders them as wikilinks (2026-09-04)"
+    },
+    "chain": {
+     "type": "array",
+     "minItems": 3,
+     "maxItems": 5,
+     "items": {
+      "type": "object",
+      "required": [
+       "step",
+       "warrant",
+       "backing",
+       "qualifier"
+      ],
+      "properties": {
+       "step": {
+        "type": "string",
+        "minLength": 1,
+        "description": "the move in abstract form (a rule)"
+       },
+       "in_this_paper": {
+        "type": "string",
+        "minLength": 1,
+        "description": "the same move as the concrete event in THIS paper, with the paper's nouns (required on @4, S2 FAIL when empty or a restatement of step) — the explanatory text the user found missing on 2026-09-04"
+       },
+       "warrant": {
+        "type": "string",
+        "minLength": 1,
+        "description": "WHY this step follows (Toulmin warrant)"
+       },
+       "backing": {
+        "type": "string",
+        "minLength": 1
+       },
+       "qualifier": {
+        "type": "string",
+        "minLength": 1
+       }
+      }
+     }
+    },
+    "fragile": {
+     "type": "object",
+     "required": [
+      "what",
+      "why"
+     ],
+     "properties": {
+      "what": {
+       "type": "string"
+      },
+      "why": {
+       "type": "string"
+      }
+     }
+    },
+    "portable": {
+     "type": "object",
+     "required": [
+      "where",
+      "why",
+      "when_not"
+     ],
+     "properties": {
+      "where": {
+       "type": "string"
+      },
+      "why": {
+       "type": "string"
+      },
+      "when_not": {
+       "type": "string"
+      }
+     }
+    },
+    "reused_from": {
+     "type": "string",
+     "description": "run id of the deep (story) run whose key point / chain this run reuses — the rule for a story-mode page on a paper already in the library (round 2, run S1): the ten-paper page must agree with the single-paper talk"
+    }
+   }
+  },
+  "onepage": {
+   "type": "object",
+   "required": [
+    "table",
+    "figures"
+   ],
+   "if": {
+    "required": ["fields"],
+    "properties": {
+     "fields": {
+      "const": "four"
+     }
+    }
+   },
+   "else": {
+    "properties": {
+     "table": {
+      "required": ["features"]
+     }
+    }
+   },
+   "properties": {
+    "fields": {
+     "enum": ["four", "five"],
+     "description": "@6 (user ruling 2026-11-03 G2): the table has four fields (Structure / Method / Result / Conclusion, the senior's ten-paper pages) or five (+ Features, deck B / deck C pages). Absent = five. With four, table.features is not required and is not printed"
+    },
+    "script": {
+     "type": "object",
+     "description": "@6 story mode (user ruling 2026-11-03 G5): the senior's spoken pattern for a ten-paper page — one source line, one purpose line, then each tile's notes (axes -> what is seen -> what it means; never read the table aloud)",
+     "properties": {
+      "source_line": {
+       "type": "string",
+       "minLength": 1,
+       "description": "year + venue sentence, e.g. 這邊是 2021 年發表在 … 的文章"
+      },
+      "purpose_line": {
+       "type": "string",
+       "minLength": 1,
+       "description": "one sentence: what the paper set out to study (主要是探討 …)"
+      }
+     }
+    },
+    "table": {
+     "type": "object",
+     "required": [
+      "structure",
+      "method",
+      "result",
+      "conclusion"
+     ],
+     "properties": {
+      "structure": {
+       "type": "string",
+       "minLength": 1
+      },
+      "features": {
+       "type": "string",
+       "minLength": 1
+      },
+      "method": {
+       "type": "string",
+       "minLength": 1
+      },
+      "result": {
+       "type": "string",
+       "minLength": 1
+      },
+      "conclusion": {
+       "type": "string",
+       "minLength": 1
+      }
+     }
+    },
+    "figures": {
+     "type": "array",
+     "minItems": 3,
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "required": [
+       "caption",
+       "locator"
+      ],
+      "anyOf": [
+       {"required": ["file"]},
+       {"required": ["files"]}
+      ],
+      "if": {
+       "required": ["step"],
+       "properties": {
+        "step": {
+         "const": "side-evidence"
+        }
+       }
+      },
+      "then": {
+       "required": ["necessity"]
+      },
+      "properties": {
+       "file": {
+        "type": "string",
+        "minLength": 1,
+        "description": "one image file; a tile with several panels uses files[] (when both are present files[] wins and file is ignored)"
+       },
+       "files": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "string",
+         "minLength": 1
+        },
+        "description": "@6 (user ruling 2026-11-03 G1): every image of ONE tile in reading order; a series' sub-panels go into one tile"
+       },
+       "step": {
+        "enum": ["context", "series", "trend", "mechanism", "side-evidence"],
+        "description": "@6: the argument step this tile carries — context (process flow / structure), series (raw series across the knob), trend (extracted parameter vs the knob, fits), mechanism (explanatory schematic), side-evidence (not the argument's focus but a necessary condition of the claim or usable as argument evidence; user wording 2026-11-03: 重點旁證 … 還是可以加入圖片). S4d WARNs when a tile has no step"
+       },
+       "why": {
+        "type": "string",
+        "description": "@6: why this tile is on the page — the argument step it carries, in the audience's words"
+       },
+       "necessity": {
+        "type": "string",
+        "minLength": 1,
+        "description": "@6, required on step side-evidence: why the claim needs this figure (the necessary condition it establishes, or the argument it can serve as evidence for). A figure that only explains a side cause (sputter-target XRD) does not qualify and goes to the record"
+       },
+       "figure_read": {
+        "type": "object",
+        "description": "@6: the same look / see / against / means walk deep mode keeps on deck pages, for this tile",
+        "properties": {
+         "look": {"type": "string"},
+         "see": {"type": "string"},
+         "against": {"type": "string"},
+         "means": {"type": "string"}
+        }
+       },
+       "notes": {
+        "type": "string",
+        "description": "@6: the spoken walk for this tile — axes, what is seen, what it means (story-mode 口述稿; never reads the table aloud)"
+       },
+       "caption": {
+        "type": "string"
+       },
+       "locator": {
+        "type": "string"
+       },
+       "kind": {
+        "enum": [
+         "evidence",
+         "schematic",
+         "motivation"
+        ],
+        "description": "evidence = the data a claim rests on (plots, spectra, micrographs of the made thing, results tables); schematic = the paper's OWN process flow / device drawing (the picture behind the Structure / Method cells, may stay on the one-page); motivation = overview / application scenario — deck ONLY (S4c WARN). Rulings 2026-09-03 Gb9 narrowed by OQ-1; required on schema @3"
+       }
+      }
+     }
+    },
+    "keypoint_box": {
+     "type": "string",
+     "minLength": 1,
+     "description": "schema ≤ @3 only (≤ 80 CJK-eq, the keypoint sentence + optional 為什麼讀它 clause). Gone on @4: the field invited a SECOND compression of an already-abstract sentence (Bose 68 → 59 CJK-eq with the cap never reached; Zhang carried a duplicate 為什麼讀它) — user finding 2026-09-04. The strip now prints logic.keypoint verbatim; S4 WARNs when the field is still present on @4"
+    }
+   }
+  },
+  "deck": {
+   "type": "object",
+   "required": [
+    "pages"
+   ],
+   "properties": {
+    "minutes": {
+     "type": "number",
+     "description": "optional talk slot in minutes; absent = no slot, completeness wins and S17 skips the spoken estimate (user ruling round 5, 2026-09-14)"
+    },
+    "pages": {
+     "type": "array",
+     "minItems": 5,
+     "items": {
+      "type": "object",
+      "required": [
+       "section",
+       "title",
+       "highlights",
+       "notes"
+      ],
+      "properties": {
+       "section": {
+        "type": "string",
+        "description": "Keypoint | Cover | Introduction | Method | Results | Discussion | Conclusion | Closing (the paper's own section names may be used)"
+       },
+       "title": {
+        "type": "string",
+        "minLength": 1
+       },
+       "figure": {
+        "type": "string"
+       },
+       "highlights": {
+        "type": "array",
+        "minItems": 0,
+        "items": {
+         "type": "string"
+        },
+        "description": "≤ 3 on every page (a slide is a 重點提醒); the Cover page may list up to 6 = the N outline parts (S9 compares them)"
+       },
+       "notes": {
+        "type": "string",
+        "minLength": 1
+       },
+       "locator": {
+        "type": "string"
+       },
+       "layer": {
+        "enum": [
+         "A",
+         "B",
+         "C"
+        ],
+        "description": "time layer (researcher.tw B-12, user ruling R5 2026-09-14): A never cut (Keypoint, the main Results page), B compressed first (speak its first highlight only), C dropped first. Practice products only; S17 warns on partial declaration"
+       },
+       "asks": {
+        "type": "string",
+        "description": "@5: the one question this page answers, in the audience's words. Read in order, the asks[] of a deck ARE its storyline (the explainer's 口述稿 section prints the chain); S20 warns when a page after the Outline has none"
+       },
+       "bridge": {
+        "type": "string",
+        "description": "@5: the transition sentence that ties this page to the previous page's open question; must appear verbatim inside notes (S20) — the 0914 reference decks' 「因此／但是如果只…所以／為了進一步解釋…」 move"
+       },
+       "takeaway": {
+        "type": "string",
+        "description": "@5: the one-sentence so-what of the page, printed on the slide (class A and class B) — deck E's 「TBO improves Vth, but introduces an ON-state resistance penalty」 line"
+       },
+       "beat": {
+        "type": "string",
+        "description": "@5: which storyline beat (①–⑥, ⑤′…) this page carries"
+       },
+       "figure_read": {
+        "type": "object",
+        "description": "@5, required on a page with a figure (S19): the 這張圖怎麼看 walk — look (what the axes / panels / symbols are), see (the pattern, with numbers read off the figure), against (the comparison the figure makes: model, control, prior work, other condition — required on Results pages), means (what it proves and where it stops)",
+        "required": [
+         "look",
+         "see",
+         "means"
+        ],
+        "properties": {
+         "look": {"type": "string"},
+         "see": {"type": "string"},
+         "against": {"type": "string"},
+         "means": {"type": "string"}
+        }
+       },
+       "no_figure": {
+        "type": "string",
+        "description": "@5: why an Introduction / Method / Results page carries no figure (figures are the first thing a page gets — advisor, 2026-09-14); S19 warns when such a page has neither"
+       }
+      },
+      "if": {
+       "properties": {
+        "section": {
+         "pattern": "^[Cc]over$"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "highlights": {
+         "maxItems": 6
+        }
+       }
+      },
+      "else": {
+       "properties": {
+        "highlights": {
+         "maxItems": 3
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "talk": {
+   "type": "object",
+   "required": [
+    "opening",
+    "outline",
+    "closing"
+   ],
+   "properties": {
+    "opening": {
+     "type": "string",
+     "minLength": 1
+    },
+    "outline": {
+     "type": "string",
+     "minLength": 1
+    },
+    "closing": {
+     "type": "object",
+     "required": [
+      "basis",
+      "help"
+     ],
+     "properties": {
+      "basis": {
+       "type": "string",
+       "minLength": 1
+      },
+      "help": {
+       "type": "string",
+       "minLength": 1
+      },
+      "next": {
+       "type": "string"
+      }
+     }
+    },
+    "if_asked": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "q",
+       "a"
+      ],
+      "properties": {
+       "q": {
+        "type": "string"
+       },
+       "a": {
+        "type": "string"
+       },
+       "kind": {
+        "enum": [
+         "clarify",
+         "challenge",
+         "extend"
+        ],
+        "description": "question type (researcher.tw B-13): clarify = a fact the audience missed; challenge = the method or claim is questioned; extend = what it means beyond the paper"
+       },
+       "challenge": {
+        "type": "object",
+        "description": "for kind challenge: admit → reason (why this choice, from the axis card) → settle (the evidence that would decide it). The first two challenges become backup pages in the legacy talk-deck.html (--legacy-html); S17 warns on a missing part",
+        "properties": {
+         "admit": {
+          "type": "string"
+         },
+         "reason": {
+          "type": "string"
+         },
+         "settle": {
+          "type": "string"
+         },
+         "locator": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "story_arc": {
+     "type": "object",
+     "description": "@5 (advisor 2026-09-14: 能上頂級期刊的論文都很會說故事，這套流程值得學): how THIS paper tells a research story — spine = the And-But-Therefore sentence; craft[] = the moves a writer can copy, each with why it works on a reader and where it is. Printed as the explainer's 故事線 section (class A) and the Storyline page (class B); S20 warns under 4 craft steps or a step without why_it_works",
+     "required": [
+      "spine",
+      "craft"
+     ],
+     "properties": {
+      "spine": {"type": "string", "minLength": 1},
+      "craft": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "beat",
+         "move",
+         "why_it_works"
+        ],
+        "properties": {
+         "beat": {"type": "string"},
+         "move": {"type": "string"},
+         "why_it_works": {"type": "string"},
+         "locator": {"type": "string"}
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "brief": {
+   "type": "object",
+   "description": "@5 (advisor 2026-09-14: 一開始就說明為什麼要讀、所有方法是什麼、最終有沒有達到、怎麼判讀; Pratt's three note questions): problem = the concrete bottleneck, not the topic (Q1); approach = data / method / path in one sentence (Q2); differs = what separates it from the other approaches (Q3); conversation = the locator of the citation-dense paragraph that says which academic conversation it joins; methods[] = EVERY method with what it answers; verdicts[] = each goal with how it was judged, the result and a status. Printed on the Verdict page (class A + B) and spoken on the front pages (S18)",
+   "required": [
+    "problem",
+    "approach",
+    "differs",
+    "methods",
+    "verdicts"
+   ],
+   "properties": {
+    "problem": {"type": "string", "minLength": 1},
+    "approach": {"type": "string", "minLength": 1},
+    "differs": {"type": "string", "minLength": 1},
+    "conversation": {"type": "string"},
+    "methods": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "name",
+       "kind",
+       "answers",
+       "locator"
+      ],
+      "properties": {
+       "name": {"type": "string", "minLength": 1, "description": "the short name the presenter SAYS (S18 looks for it in the front notes)"},
+       "kind": {"enum": ["fabrication", "model", "simulation", "measurement", "analysis"]},
+       "answers": {"type": "string", "minLength": 1, "description": "the question this method answers — not what it is"},
+       "locator": {"type": "string"}
+      }
+     }
+    },
+    "verdicts": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "required": [
+       "goal",
+       "judged_by",
+       "result",
+       "status",
+       "locator"
+      ],
+      "properties": {
+       "goal": {"type": "string", "minLength": 1},
+       "judged_by": {"type": "string", "minLength": 1, "description": "the instrument / analysis / criterion that decides it — 怎麼判讀的"},
+       "result": {"type": "string", "minLength": 1},
+       "status": {"enum": ["achieved", "partly", "simulated-only", "not-shown"]},
+       "locator": {"type": "string"}
+      }
+     }
+    }
+   }
+  },
+  "terms": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "term",
+     "gloss"
+    ],
+    "properties": {
+     "term": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the exact surface form used on the pages (Chinese or English)"
+     },
+     "en": {
+      "type": "string"
+     },
+     "zh": {
+      "type": "string"
+     },
+     "gloss": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Wikipedia page-preview style: 1–2 sentences, what it is and why it matters here"
+     },
+     "aliases": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  },
+  "en": {
+   "type": "object",
+   "description": "English slide text for class B (lab_deck.py, 2026-09-04): keypoint (the slogan in English), table (five cells), figures {file: short caption} for the ten-papers page; for the single-paper deck also why_read, helps, keypoint_title, outline_parts[], pages {\"<n>\": {title, highlights[], caption}}, venue, date. Authored by the model at N4 so the formal deck can be built any time; never generated by machine translation",
+   "properties": {
+    "keypoint": {"type": "string"},
+    "why_read": {"type": "string"},
+    "helps": {"type": "string"},
+    "keypoint_title": {"type": "string"},
+    "venue": {"type": "string"},
+    "date": {"type": "string"},
+    "outline_parts": {"type": "array", "items": {"type": "string"}},
+    "pages": {"type": "object"},
+    "table": {"type": "object"},
+    "figures": {"type": "object"},
+    "problem": {"type": "string"},
+    "approach": {"type": "string"},
+    "methods": {"type": "array", "items": {"type": "string"}},
+    "verdicts": {"type": "array", "items": {"type": "object", "properties": {"goal": {"type": "string"}, "judged_by": {"type": "string"}, "result": {"type": "string"}, "status": {"type": "string"}}}},
+    "storyline": {"type": "object", "properties": {"spine": {"type": "string"}, "steps": {"type": "array", "items": {"type": "object"}}}}
+   }
+  },
+  "coverage": {
+   "type": "object",
+   "description": "units of source/structure.json the reading deliberately did not use, each with a why (S11); and the drift tell list walked, each kind found or none (S13)",
+   "properties": {
+    "skipped": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "unit",
+       "why"
+      ],
+      "properties": {
+       "unit": {
+        "type": "string"
+       },
+       "why": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "drift_checklist": {
+     "type": "object",
+     "description": "the narrative-axis.md §4 tell list walked: every kind marked found (a drift row carries it) or none (looked for, not present) — S13 warns for a kind neither found nor declared; required on schema @3",
+     "propertyNames": {
+      "enum": [
+       "over-claim",
+       "grafted-result",
+       "no-criterion",
+       "method-after-the-fact",
+       "figure-unasked",
+       "limitation-aside",
+       "weaker-instrument",
+       "discussion-new-data",
+       "selective-condition",
+       "abstract-mismatch"
+      ]
+     },
+     "additionalProperties": {
+      "enum": [
+       "found",
+       "none"
+      ]
+     }
+    },
+    "checklist_provenance": {
+     "enum": [
+      "authored",
+      "backfilled"
+     ],
+     "description": "authored (default) = the reader walked the list while reading; backfilled = the kinds were classified after the fact (OQ-2, 2026-09-03) and a none means 'no row of that kind', not a declared search — S13 says so"
+    }
+   }
+  }
+ },
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "schema": {
+      "enum": ["paper-story/story@5", "paper-story/story@6"]
+     },
+     "run": {
+      "properties": {
+       "mode": {
+        "const": "deep"
+       }
+      }
+     }
+    },
+    "required": ["schema", "run"]
+   },
+   "then": {
+    "required": [
+     "brief"
+    ],
+    "properties": {
+     "talk": {
+      "required": [
+       "story_arc"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "schema": {
+      "enum": ["paper-story/story@4", "paper-story/story@5", "paper-story/story@6"]
+     }
+    }
+   },
+   "then": {
+    "required": [
+     "coverage"
+    ],
+    "properties": {
+     "drift": {
+      "items": {
+       "required": [
+        "kind"
+       ]
+      }
+     },
+     "onepage": {
+      "properties": {
+       "figures": {
+        "items": {
+         "required": [
+          "kind"
+         ]
+        }
+       }
+      }
+     },
+     "coverage": {
+      "required": [
+       "drift_checklist"
+      ]
+     },
+     "logic": {
+      "required": [
+       "keypoint_description",
+       "bindings"
+      ],
+      "properties": {
+       "chain": {
+        "items": {
+         "required": [
+          "in_this_paper"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "schema": {
+      "const": "paper-story/story@3"
+     }
+    }
+   },
+   "then": {
+    "required": [
+     "coverage"
+    ],
+    "properties": {
+     "drift": {
+      "items": {
+       "required": [
+        "kind"
+       ]
+      }
+     },
+     "onepage": {
+      "properties": {
+       "figures": {
+        "items": {
+         "required": [
+          "kind"
+         ]
+        }
+       }
+      }
+     },
+     "coverage": {
+      "required": [
+       "drift_checklist"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "run": {
+      "properties": {
+       "mode": {
+        "const": "deep"
+       }
+      }
+     }
+    }
+   },
+   "then": {
+    "required": [
+     "deck",
+     "talk"
+    ]
+   }
+  }
+ ]
+}

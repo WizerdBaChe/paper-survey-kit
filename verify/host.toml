@@ -1,0 +1,9 @@
+# Machine roots for running the kit from a fresh clone (hooks/_lib/roots.py, schema hk-host/1).
+# Point HK_HOST_TOML at this file. Every optional root is unset ("none"): the kit needs none of them.
+# PAPER_DISTILL_HOME (env) sets the paper library; when it is unset ingest/library fall back to
+# NOTES_VAULT/literature/PaperSurvey, which is unset here, so set PAPER_DISTILL_HOME.
+schema = "hk-host/1"
+WORK_ROOT = "none"
+SHARE_ROOT = "none"
+DATA_ROOT = "none"
+NOTES_VAULT = "none"

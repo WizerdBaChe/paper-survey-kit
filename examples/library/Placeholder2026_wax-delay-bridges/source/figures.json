@@ -1,0 +1,135 @@
+{
+ "pages": 4,
+ "page_size_pt": [
+  595.0,
+  842.0
+ ],
+ "dpi": 110,
+ "caption_check": {
+  "rule": "verbatim in source/paper.txt and ends a line there (whitespace-normalised)",
+  "controls": "ok",
+  "failed": []
+ },
+ "captions": [
+  {
+   "page": 1,
+   "kind": "figure",
+   "label": "Fig. 1",
+   "num": 1,
+   "bbox": [
+    56.0,
+    581.0,
+    537.3,
+    603.9
+   ],
+   "caption": "Fig. 1. Device layout. A wax delay bridge of length L is printed across a 2 mm cellulose channel between the inlet and the detection zone and heated at 120 °C for 60 s.",
+   "caption_ok": true
+  },
+  {
+   "page": 2,
+   "kind": "figure",
+   "label": "Fig. 2",
+   "num": 2,
+   "bbox": [
+    56.0,
+    476.5,
+    527.2,
+    499.4
+   ],
+   "caption": "Fig. 2. Delay time against bridge length. Points: mean ± standard deviation of five devices; dashed line: quadratic fit t = k·L² with k = 24.6 s/mm².",
+   "caption_ok": true
+  },
+  {
+   "page": 3,
+   "kind": "figure",
+   "label": "Fig. 3",
+   "num": 3,
+   "bbox": [
+    56.0,
+    294.8,
+    535.2,
+    317.7
+   ],
+   "caption": "Fig. 3. Coefficient of variation of the delay for each bridge length, with the value reported for sugar barriers in ref. [3] (grey). Dotted line: 15 %.",
+   "caption_ok": true
+  },
+  {
+   "page": 3,
+   "kind": "table",
+   "label": "Table 1",
+   "num": 1,
+   "bbox": [
+    56.0,
+    331.3,
+    531.7,
+    372.0
+   ],
+   "caption": "Table 1. Timing elements for paper microfluidics. Wax delay bridge: delay 42-612 s, variation 9-13 %, no added material. Sugar barrier [3]: delay 60-900 s, variation about 25 %, added sugar layer. Mechanical valve [2]: delay set by the user, variation below 5 %, added parts and assembly.",
+   "caption_ok": true
+  },
+  {
+   "page": 3,
+   "kind": "figure",
+   "label": "Fig. 4",
+   "num": 4,
+   "bbox": [
+    56.0,
+    682.7,
+    537.9,
+    705.7
+   ],
+   "caption": "Fig. 4. Two-step colour assay with simultaneous delivery and with reagent B behind a 3 mm bridge (mean ± standard deviation, three devices each).",
+   "caption_ok": true
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "file": "source/images/p001_i00.png",
+   "width": 1152,
+   "height": 416,
+   "bbox": [
+    97.5,
+    428.5,
+    497.5,
+    573.0
+   ]
+  },
+  {
+   "page": 2,
+   "file": "source/images/p002_i00.png",
+   "width": 832,
+   "height": 512,
+   "bbox": [
+    97.5,
+    222.3,
+    497.5,
+    468.5
+   ]
+  },
+  {
+   "page": 3,
+   "file": "source/images/p003_i00.png",
+   "width": 832,
+   "height": 480,
+   "bbox": [
+    97.5,
+    56.0,
+    497.5,
+    286.8
+   ]
+  },
+  {
+   "page": 3,
+   "file": "source/images/p003_i01.png",
+   "width": 736,
+   "height": 480,
+   "bbox": [
+    97.5,
+    413.9,
+    497.5,
+    674.7
+   ]
+  }
+ ]
+}

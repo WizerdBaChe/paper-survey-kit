@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "assets": {
+    "research-site-shell": {
+      "source": "asset",
+      "mode": "sync",
+      "files": {
+        "site.css": {
+          "to": "vendor/site.css",
+          "base": "c4d2efa3bb"
+        },
+        "site.js": {
+          "to": "vendor/site.js",
+          "base": "c4d2efa3bb"
+        }
+      },
+      "test": "python -X utf8 ../build.py selftest",
+      "taken": "2026-10-18"
+    },
+    "prose-doc-layer": {
+      "source": "asset",
+      "mode": "sync",
+      "files": {
+        "prose-doc-layer.css": {
+          "to": "vendor/prose-doc-layer.css",
+          "base": "ee7e5063b6"
+        }
+      },
+      "test": "python -X utf8 ../build.py selftest",
+      "taken": "2026-10-18"
+    }
+  }
+}

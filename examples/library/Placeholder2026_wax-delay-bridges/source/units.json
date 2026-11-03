@@ -1,0 +1,826 @@
+{
+ "schema": "paper-distill/units@1",
+ "source": {
+  "pdf_sha256": "1f0dd83a6508f953428e456de5447767bd6ada4398e52612dc6af5a53352291d",
+  "pages": 4,
+  "pymupdf": "1.26.7",
+  "body_font_size": 10.0,
+  "body_font": "Times-Roman",
+  "indent_paper": false,
+  "indent_votes": [
+   0,
+   2
+  ],
+  "front_matter": "abstract/introduction line",
+  "probe_headings_not_taken": [],
+  "skipped_whitespace_lines": 0
+ },
+ "units": [
+  {
+   "id": "p1-y55-x56",
+   "kind": "title_block",
+   "section": null,
+   "page": 1,
+   "lines": [
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "raw": "Wax Delay Bridges for Timed Reagent Release in Paper Microfluidics",
+   "text": "Wax Delay Bridges for Timed Reagent Release in Paper Microfluidics",
+   "fixes": []
+  },
+  {
+   "id": "p1-y90-x56",
+   "kind": "title_block",
+   "section": null,
+   "page": 1,
+   "lines": [
+    [
+     1,
+     2,
+     0
+    ]
+   ],
+   "raw": "Ada Placeholder, Ben Fixture and Cleo Mockridge",
+   "text": "Ada Placeholder, Ben Fixture and Cleo Mockridge",
+   "fixes": []
+  },
+  {
+   "id": "p1-y108-x56",
+   "kind": "title_block",
+   "section": null,
+   "page": 1,
+   "lines": [
+    [
+     1,
+     3,
+     0
+    ]
+   ],
+   "raw": "Department of Imaginary Engineering, Example Institute (fictional)",
+   "text": "Department of Imaginary Engineering, Example Institute (fictional)",
+   "fixes": []
+  },
+  {
+   "id": "p1-y125-x56",
+   "kind": "title_block",
+   "section": null,
+   "page": 1,
+   "lines": [
+    [
+     1,
+     4,
+     0
+    ]
+   ],
+   "raw": "Journal of Imaginary Microfluidics 1, 101-108 (2026) · FICTIONAL TEST PAPER - not a real study",
+   "text": "Journal of Imaginary Microfluidics 1, 101-108 (2026) · FICTIONAL TEST PAPER - not a real study",
+   "fixes": []
+  },
+  {
+   "id": "p1-y152-x56",
+   "kind": "heading",
+   "section": "§Abstract",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     5,
+     0
+    ]
+   ],
+   "raw": "Abstract",
+   "text": "Abstract",
+   "fixes": []
+  },
+  {
+   "id": "p1-y175-x56",
+   "kind": "abstract",
+   "section": "§Abstract",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     6,
+     0
+    ],
+    [
+     1,
+     6,
+     1
+    ],
+    [
+     1,
+     6,
+     2
+    ],
+    [
+     1,
+     6,
+     3
+    ],
+    [
+     1,
+     6,
+     4
+    ]
+   ],
+   "raw": "Multi-step assays on paper need reagents to arrive in sequence, yet most paper devices deliver everything at once. We print a partially fused wax bridge across a cellulose channel and show that its length sets a reproducible delay. Bridges of 1 to 5 mm delay the fluid front by 42 to 612 s, the delay follows the square of the bridge length, and the variation stays below 15 %. The approach provides delays of up to 15 minutes, is robust across ambient humidity, and doubles the signal of a two-step colour assay. Wax delay bridges need no extra material and no moving part.",
+   "text": "Multi-step assays on paper need reagents to arrive in sequence, yet most paper devices deliver everything at once. We print a partially fused wax bridge across a cellulose channel and show that its length sets a reproducible delay. Bridges of 1 to 5 mm delay the fluid front by 42 to 612 s, the delay follows the square of the bridge length, and the variation stays below 15 %. The approach provides delays of up to 15 minutes, is robust across ambient humidity, and doubles the signal of a two-step colour assay. Wax delay bridges need no extra material and no moving part.",
+   "fixes": []
+  },
+  {
+   "id": "p1-y249-x56",
+   "kind": "heading",
+   "section": "§1",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     7,
+     0
+    ]
+   ],
+   "raw": "1. Introduction",
+   "text": "1. Introduction",
+   "fixes": []
+  },
+  {
+   "id": "p1-y272-x56",
+   "kind": "paragraph",
+   "section": "§1",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     8,
+     0
+    ],
+    [
+     1,
+     8,
+     1
+    ],
+    [
+     1,
+     8,
+     2
+    ]
+   ],
+   "raw": "Paper microfluidic devices are cheap and need no pump, which makes them attractive for testing outside a laboratory [1]. Many useful assays, however, are multi-step: a sample must meet one reagent, wait, and only then meet a second reagent. When all reagents wick at once, the steps overlap and the signal drops.",
+   "text": "Paper microfluidic devices are cheap and need no pump, which makes them attractive for testing outside a laboratory [1]. Many useful assays, however, are multi-step: a sample must meet one reagent, wait, and only then meet a second reagent. When all reagents wick at once, the steps overlap and the signal drops.",
+   "fixes": []
+  },
+  {
+   "id": "p1-y319-x56",
+   "kind": "paragraph",
+   "section": "§1",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     9,
+     0
+    ],
+    [
+     1,
+     9,
+     1
+    ],
+    [
+     1,
+     9,
+     2
+    ]
+   ],
+   "raw": "Two families of timing elements exist. Dissolvable sugar barriers dissolve after a while and let the fluid pass, but their delay varies strongly from device to device [3]. Mechanical or magnetic valves give precise timing but add parts and assembly steps that undo the low cost of paper [2].",
+   "text": "Two families of timing elements exist. Dissolvable sugar barriers dissolve after a while and let the fluid pass, but their delay varies strongly from device to device [3]. Mechanical or magnetic valves give precise timing but add parts and assembly steps that undo the low cost of paper [2].",
+   "fixes": []
+  },
+  {
+   "id": "p1-y367-x56",
+   "kind": "paragraph",
+   "section": "§1",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     10,
+     0
+    ],
+    [
+     1,
+     10,
+     1
+    ],
+    [
+     1,
+     10,
+     2
+    ],
+    [
+     1,
+     10,
+     3
+    ]
+   ],
+   "raw": "We ask whether the wax printing step that already defines the channels can also define the timing. A short region where wax is only partially melted into the paper lowers the local permeability without blocking the channel. If the fluid front slows in proportion to the bridge length squared, as a Washburn-type model predicts, the delay becomes a printed dimension rather than a material property.",
+   "text": "We ask whether the wax printing step that already defines the channels can also define the timing. A short region where wax is only partially melted into the paper lowers the local permeability without blocking the channel. If the fluid front slows in proportion to the bridge length squared, as a Washburn-type model predicts, the delay becomes a printed dimension rather than a material property.",
+   "fixes": []
+  },
+  {
+   "id": "p1-y580-x56",
+   "kind": "caption",
+   "section": "§1",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     12,
+     0
+    ],
+    [
+     1,
+     12,
+     1
+    ]
+   ],
+   "raw": "Fig. 1. Device layout. A wax delay bridge of length L is printed across a 2 mm cellulose channel between the inlet and the detection zone and heated at 120 °C for 60 s.",
+   "text": "Fig. 1. Device layout. A wax delay bridge of length L is printed across a 2 mm cellulose channel between the inlet and the detection zone and heated at 120 °C for 60 s.",
+   "fixes": []
+  },
+  {
+   "id": "p1-y617-x56",
+   "kind": "heading",
+   "section": "§2",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     13,
+     0
+    ]
+   ],
+   "raw": "2. Methods",
+   "text": "2. Methods",
+   "fixes": []
+  },
+  {
+   "id": "p1-y640-x56",
+   "kind": "paragraph",
+   "section": "§2",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     14,
+     0
+    ],
+    [
+     1,
+     14,
+     1
+    ],
+    [
+     1,
+     14,
+     2
+    ]
+   ],
+   "raw": "2.1 Device fabrication. Channels 2 mm wide and 40 mm long were wax-printed on chromatography paper and heated at 150 °C for 120 s to form full barriers. Delay bridges of length L = 1, 2, 3, 4 and 5 mm were then printed across the channel and heated at 120 °C for 60 s, which melts the wax only partly into the paper (Fig. 1).",
+   "text": "2.1 Device fabrication. Channels 2 mm wide and 40 mm long were wax-printed on chromatography paper and heated at 150 °C for 120 s to form full barriers. Delay bridges of length L = 1, 2, 3, 4 and 5 mm were then printed across the channel and heated at 120 °C for 60 s, which melts the wax only partly into the paper (Fig. 1).",
+   "fixes": []
+  },
+  {
+   "id": "p1-y688-x56",
+   "kind": "paragraph",
+   "section": "§2",
+   "page": 1,
+   "lines": [
+    [
+     1,
+     15,
+     0
+    ],
+    [
+     1,
+     15,
+     1
+    ],
+    [
+     1,
+     15,
+     2
+    ]
+   ],
+   "raw": "2.2 Delay measurement. A 20 µL drop of dyed buffer was placed at the inlet and the front was filmed at 30 frames per second. The delay time is the extra time the front needs to reach the detection zone compared with a channel without a bridge. Five devices were measured for each length at 23 °C and 45 % relative humidity.",
+   "text": "2.2 Delay measurement. A 20 µL drop of dyed buffer was placed at the inlet and the front was filmed at 30 frames per second. The delay time is the extra time the front needs to reach the detection zone compared with a channel without a bridge. Five devices were measured for each length at 23 °C and 45 % relative humidity.",
+   "fixes": []
+  },
+  {
+   "id": "p2-y56-x56",
+   "kind": "paragraph",
+   "section": "§2",
+   "page": 2,
+   "lines": [
+    [
+     2,
+     1,
+     0
+    ],
+    [
+     2,
+     1,
+     1
+    ],
+    [
+     2,
+     1,
+     2
+    ]
+   ],
+   "raw": "2.3 Model. Treating the bridge as a porous section of lower permeability, the Washburn relation gives a delay t = k·L², where k collects viscosity, surface tension and the effective pore radius. We fit k by least squares to the five mean delays.",
+   "text": "2.3 Model. Treating the bridge as a porous section of lower permeability, the Washburn relation gives a delay t = k·L², where k collects viscosity, surface tension and the effective pore radius. We fit k by least squares to the five mean delays.",
+   "fixes": []
+  },
+  {
+   "id": "p2-y103-x56",
+   "kind": "paragraph",
+   "section": "§2",
+   "page": 2,
+   "lines": [
+    [
+     2,
+     2,
+     0
+    ],
+    [
+     2,
+     2,
+     1
+    ],
+    [
+     2,
+     2,
+     2
+    ]
+   ],
+   "raw": "2.4 Two-step assay. A colour assay in which reagent A must bind before reagent B arrives was run with simultaneous delivery and with reagent B behind a 3 mm bridge, three devices each. Intensity was read from photographs in the green channel.",
+   "text": "2.4 Two-step assay. A colour assay in which reagent A must bind before reagent B arrives was run with simultaneous delivery and with reagent B behind a 3 mm bridge, three devices each. Intensity was read from photographs in the green channel.",
+   "fixes": []
+  },
+  {
+   "id": "p2-y151-x56",
+   "kind": "heading",
+   "section": "§3",
+   "page": 2,
+   "lines": [
+    [
+     2,
+     3,
+     0
+    ]
+   ],
+   "raw": "3. Results",
+   "text": "3. Results",
+   "fixes": []
+  },
+  {
+   "id": "p2-y174-x56",
+   "kind": "paragraph",
+   "section": "§3",
+   "page": 2,
+   "lines": [
+    [
+     2,
+     4,
+     0
+    ],
+    [
+     2,
+     4,
+     1
+    ],
+    [
+     2,
+     4,
+     2
+    ]
+   ],
+   "raw": "3.1 Delay follows the square of the bridge length. The mean delay rose from 42 s at L = 1 mm to 612 s at L = 5 mm (Fig. 2). The quadratic model with k = 24.6 s/mm² fits the means with R² = 0.97. The spread grows with length: the standard deviation is 4 s at 1 mm and 81 s at 5 mm.",
+   "text": "3.1 Delay follows the square of the bridge length. The mean delay rose from 42 s at L = 1 mm to 612 s at L = 5 mm (Fig. 2). The quadratic model with k = 24.6 s/mm² fits the means with R² = 0.97. The spread grows with length: the standard deviation is 4 s at 1 mm and 81 s at 5 mm.",
+   "fixes": []
+  },
+  {
+   "id": "p2-y476-x56",
+   "kind": "caption",
+   "section": "§3",
+   "page": 2,
+   "lines": [
+    [
+     2,
+     6,
+     0
+    ],
+    [
+     2,
+     6,
+     1
+    ]
+   ],
+   "raw": "Fig. 2. Delay time against bridge length. Points: mean ± standard deviation of five devices; dashed line: quadratic fit t = k·L² with k = 24.6 s/mm².",
+   "text": "Fig. 2. Delay time against bridge length. Points: mean ± standard deviation of five devices; dashed line: quadratic fit t = k·L² with k = 24.6 s/mm².",
+   "fixes": []
+  },
+  {
+   "id": "p2-y512-x56",
+   "kind": "paragraph",
+   "section": "§3",
+   "page": 2,
+   "lines": [
+    [
+     2,
+     7,
+     0
+    ],
+    [
+     2,
+     7,
+     1
+    ]
+   ],
+   "raw": "3.2 The delay is reproducible. The coefficient of variation stays between 9.3 % and 13.2 % for all lengths (Fig. 3), below the 25 % reported for sugar barriers [3]. Table 1 compares the three timing approaches.",
+   "text": "3.2 The delay is reproducible. The coefficient of variation stays between 9.3 % and 13.2 % for all lengths (Fig. 3), below the 25 % reported for sugar barriers [3]. Table 1 compares the three timing approaches.",
+   "fixes": []
+  },
+  {
+   "id": "p3-y294-x56",
+   "kind": "caption",
+   "section": "§3",
+   "page": 3,
+   "lines": [
+    [
+     3,
+     2,
+     0
+    ],
+    [
+     3,
+     2,
+     1
+    ]
+   ],
+   "raw": "Fig. 3. Coefficient of variation of the delay for each bridge length, with the value reported for sugar barriers in ref. [3] (grey). Dotted line: 15 %.",
+   "text": "Fig. 3. Coefficient of variation of the delay for each bridge length, with the value reported for sugar barriers in ref. [3] (grey). Dotted line: 15 %.",
+   "fixes": []
+  },
+  {
+   "id": "p3-y331-x56",
+   "kind": "caption",
+   "section": "§3",
+   "page": 3,
+   "lines": [
+    [
+     3,
+     3,
+     0
+    ],
+    [
+     3,
+     3,
+     1
+    ],
+    [
+     3,
+     3,
+     2
+    ]
+   ],
+   "raw": "Table 1. Timing elements for paper microfluidics. Wax delay bridge: delay 42-612 s, variation 9-13 %, no added material. Sugar barrier [3]: delay 60-900 s, variation about 25 %, added sugar layer. Mechanical valve [2]: delay set by the user, variation below 5 %, added parts and assembly.",
+   "text": "Table 1. Timing elements for paper microfluidics. Wax delay bridge: delay 42-612 s, variation 9-13 %, no added material. Sugar barrier [3]: delay 60-900 s, variation about 25 %, added sugar layer. Mechanical valve [2]: delay set by the user, variation below 5 %, added parts and assembly.",
+   "fixes": []
+  },
+  {
+   "id": "p3-y379-x56",
+   "kind": "paragraph",
+   "section": "§3",
+   "page": 3,
+   "lines": [
+    [
+     3,
+     4,
+     0
+    ],
+    [
+     3,
+     4,
+     1
+    ]
+   ],
+   "raw": "3.3 Timed release improves a two-step assay. With reagent B delayed by a 3 mm bridge the colour intensity was 0.38 ± 0.05 a.u., against 0.21 ± 0.04 a.u. for simultaneous delivery, an increase of 1.8 times (Fig. 4).",
+   "text": "3.3 Timed release improves a two-step assay. With reagent B delayed by a 3 mm bridge the colour intensity was 0.38 ± 0.05 a.u., against 0.21 ± 0.04 a.u. for simultaneous delivery, an increase of 1.8 times (Fig. 4).",
+   "fixes": []
+  },
+  {
+   "id": "p3-y682-x56",
+   "kind": "caption",
+   "section": "§3",
+   "page": 3,
+   "lines": [
+    [
+     3,
+     6,
+     0
+    ],
+    [
+     3,
+     6,
+     1
+    ]
+   ],
+   "raw": "Fig. 4. Two-step colour assay with simultaneous delivery and with reagent B behind a 3 mm bridge (mean ± standard deviation, three devices each).",
+   "text": "Fig. 4. Two-step colour assay with simultaneous delivery and with reagent B behind a 3 mm bridge (mean ± standard deviation, three devices each).",
+   "fixes": []
+  },
+  {
+   "id": "p4-y55-x56",
+   "kind": "heading",
+   "section": "§4",
+   "page": 4,
+   "lines": [
+    [
+     4,
+     1,
+     0
+    ]
+   ],
+   "raw": "4. Discussion",
+   "text": "4. Discussion",
+   "fixes": []
+  },
+  {
+   "id": "p4-y78-x56",
+   "kind": "paragraph",
+   "section": "§4",
+   "page": 4,
+   "lines": [
+    [
+     4,
+     2,
+     0
+    ],
+    [
+     4,
+     2,
+     1
+    ],
+    [
+     4,
+     2,
+     2
+    ],
+    [
+     4,
+     2,
+     3
+    ],
+    [
+     4,
+     2,
+     4
+    ]
+   ],
+   "raw": "The quadratic trend supports the picture of the bridge as a porous section of lower permeability. Longer bridges give longer delays but also a larger absolute spread, so very long delays will need a tighter control of the heating step. All measurements were made at one humidity; paper and wax both respond to moisture, and we expect the constant k to shift at other humidities. The sugar-barrier variation is taken from the literature rather than measured side by side with our devices.",
+   "text": "The quadratic trend supports the picture of the bridge as a porous section of lower permeability. Longer bridges give longer delays but also a larger absolute spread, so very long delays will need a tighter control of the heating step. All measurements were made at one humidity; paper and wax both respond to moisture, and we expect the constant k to shift at other humidities. The sugar-barrier variation is taken from the literature rather than measured side by side with our devices.",
+   "fixes": []
+  },
+  {
+   "id": "p4-y152-x56",
+   "kind": "heading",
+   "section": "§5",
+   "page": 4,
+   "lines": [
+    [
+     4,
+     3,
+     0
+    ]
+   ],
+   "raw": "5. Conclusion",
+   "text": "5. Conclusion",
+   "fixes": []
+  },
+  {
+   "id": "p4-y175-x56",
+   "kind": "paragraph",
+   "section": "§5",
+   "page": 4,
+   "lines": [
+    [
+     4,
+     4,
+     0
+    ],
+    [
+     4,
+     4,
+     1
+    ],
+    [
+     4,
+     4,
+     2
+    ]
+   ],
+   "raw": "A partially fused wax bridge turns timing into a printed length. Delays of 42 to 612 s with a variation below 15 % were obtained with no added material, and a two-step assay gave 1.8 times the signal of simultaneous delivery. Wax delay bridges are a practical way to sequence reagents on paper.",
+   "text": "A partially fused wax bridge turns timing into a printed length. Delays of 42 to 612 s with a variation below 15 % were obtained with no added material, and a two-step assay gave 1.8 times the signal of simultaneous delivery. Wax delay bridges are a practical way to sequence reagents on paper.",
+   "fixes": []
+  },
+  {
+   "id": "p4-y223-x56",
+   "kind": "reference_list",
+   "section": "§5",
+   "page": 4,
+   "lines": [
+    [
+     4,
+     5,
+     0
+    ],
+    [
+     4,
+     6,
+     0
+    ],
+    [
+     4,
+     7,
+     0
+    ],
+    [
+     4,
+     8,
+     0
+    ]
+   ],
+   "raw": "References [1] A. Placeholder, Paper devices outside the lab, J. Imag. Microfluid. 0, 1-9 (2025). (fictional) [2] B. Fixture, Magnetic valves on paper, Imag. Lab Chip 3, 10-18 (2024). (fictional) [3] C. Mockridge, Sugar barriers for delayed wicking, Imag. Anal. Methods 7, 55-61 (2023). (fictional)",
+   "text": "References [1] A. Placeholder, Paper devices outside the lab, J. Imag. Microfluid. 0, 1-9 (2025). (fictional) [2] B. Fixture, Magnetic valves on paper, Imag. Lab Chip 3, 10-18 (2024). (fictional) [3] C. Mockridge, Sugar barriers for delayed wicking, Imag. Anal. Methods 7, 55-61 (2023). (fictional)",
+   "fixes": []
+  }
+ ],
+ "removed": [
+  {
+   "kind": "header_footer",
+   "line": [
+    1,
+    0,
+    0
+   ],
+   "raw": "FICTIONAL TEST PAPER · page 1"
+  },
+  {
+   "kind": "header_footer",
+   "line": [
+    2,
+    0,
+    0
+   ],
+   "raw": "FICTIONAL TEST PAPER · page 2"
+  },
+  {
+   "kind": "header_footer",
+   "line": [
+    3,
+    0,
+    0
+   ],
+   "raw": "FICTIONAL TEST PAPER · page 3"
+  },
+  {
+   "kind": "header_footer",
+   "line": [
+    4,
+    0,
+    0
+   ],
+   "raw": "FICTIONAL TEST PAPER · page 4"
+  }
+ ],
+ "figures": [
+  {
+   "label": "Fig. 1",
+   "kind": "figure",
+   "num": 1,
+   "page": 1,
+   "caption_unit": "p1-y580-x56",
+   "caption_ok": null,
+   "file": "figures/F1.png",
+   "gate": "UNDET",
+   "rect": [
+    114.5,
+    452.0,
+    480.5,
+    564.5
+   ],
+   "text_units": []
+  },
+  {
+   "label": "Fig. 2",
+   "kind": "figure",
+   "num": 2,
+   "page": 2,
+   "caption_unit": "p2-y476-x56",
+   "caption_ok": null,
+   "file": "figures/F2.png",
+   "gate": "UNDET",
+   "rect": [
+    105.0,
+    229.0,
+    490.5,
+    461.0
+   ],
+   "text_units": []
+  },
+  {
+   "label": "Fig. 3",
+   "kind": "figure",
+   "num": 3,
+   "page": 3,
+   "caption_unit": "p3-y294-x56",
+   "caption_ok": null,
+   "file": "figures/F3.png",
+   "gate": "UNDET",
+   "rect": [
+    105.0,
+    63.0,
+    490.5,
+    278.0
+   ],
+   "text_units": []
+  },
+  {
+   "label": "Table 1",
+   "kind": "table",
+   "num": 1,
+   "page": 3,
+   "caption_unit": "p3-y331-x56",
+   "caption_ok": null,
+   "file": "figures/T1.png",
+   "gate": "ERROR",
+   "rect": null,
+   "text_units": []
+  },
+  {
+   "label": "Fig. 4",
+   "kind": "figure",
+   "num": 4,
+   "page": 3,
+   "caption_unit": "p3-y682-x56",
+   "caption_ok": null,
+   "file": "figures/F4.png",
+   "gate": "UNDET",
+   "rect": [
+    106.5,
+    422.5,
+    489.0,
+    665.0
+   ],
+   "text_units": []
+  }
+ ],
+ "checks": {
+  "lines_total": 71,
+  "lines_in_units": 67,
+  "lines_removed": 4,
+  "unaccounted": [],
+  "double": [],
+  "unknown": [],
+  "replay_mismatch": [],
+  "foreign_hits": [],
+  "lowercase_start": [],
+  "no_terminal_end": [],
+  "two_column_pages": [],
+  "order": [],
+  "headings_match": true,
+  "headings_not_taken": 0,
+  "chars": {
+   "title_block": 273,
+   "note": 0,
+   "figure_text": 0,
+   "table_region": 0,
+   "backmatter": 0
+  },
+  "figure_text_suspect": [],
+  "soft_hyphens": [],
+  "controls": {
+   "coverage": "ok",
+   "replay": "ok",
+   "foreign": "ok",
+   "proxies": "ok",
+   "order": "n/a: no two-column page"
+  }
+ }
+}

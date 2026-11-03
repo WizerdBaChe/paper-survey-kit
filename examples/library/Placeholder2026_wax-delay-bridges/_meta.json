@@ -1,0 +1,52 @@
+{
+ "run_id": "Placeholder2026_wax-delay-bridges",
+ "created": "2026-11-03T21:26:16+08:00",
+ "depth": "full",
+ "presenter": "Presenter",
+ "input": "examples/fictional-paper/paper.pdf",
+ "input_kind": "pdf",
+ "source_kind": "pdf",
+ "guess": {
+  "title": {
+   "value": "Wax Delay Bridges for Timed Reagent Release in Paper Microfluidics",
+   "guess": true
+  },
+  "title_how": {
+   "value": "font-size",
+   "guess": true
+  },
+  "doi": {
+   "value": "",
+   "guess": true
+  },
+  "arxiv": {
+   "value": "",
+   "guess": true
+  },
+  "year": {
+   "value": 2026,
+   "guess": true
+  },
+  "author_meta": {
+   "value": "Ada Placeholder",
+   "guess": true
+  }
+ },
+ "stats": {
+  "pages": 4,
+  "chars": 5891,
+  "images": 4,
+  "captions": 5,
+  "captions_unverified": 0,
+  "ocr_needed": false,
+  "encrypted_original": false,
+  "decrypted_copy": false
+ },
+ "status": "ingested",
+ "skill_version": "1.0",
+ "home": "<PAPER_DISTILL_HOME>",
+ "zotero_marks": {
+  "status": "not a Zotero storage path",
+  "count": null
+ }
+}

@@ -1,0 +1,78 @@
+<!-- p.1 -->
+FICTIONAL TEST PAPER  ·  page 1
+Wax Delay Bridges for Timed Reagent Release in Paper Microfluidics
+Ada Placeholder, Ben Fixture and Cleo Mockridge
+Department of Imaginary Engineering, Example Institute (fictional)
+Journal of Imaginary Microfluidics 1, 101-108 (2026)  ·  FICTIONAL TEST PAPER - not a real study
+Abstract
+Multi-step assays on paper need reagents to arrive in sequence, yet most paper devices deliver everything at once. We
+print a partially fused wax bridge across a cellulose channel and show that its length sets a reproducible delay. Bridges
+of 1 to 5 mm delay the fluid front by 42 to 612 s, the delay follows the square of the bridge length, and the variation
+stays below 15 %. The approach provides delays of up to 15 minutes, is robust across ambient humidity, and doubles
+the signal of a two-step colour assay. Wax delay bridges need no extra material and no moving part.
+1. Introduction
+Paper microfluidic devices are cheap and need no pump, which makes them attractive for testing outside a laboratory
+[1]. Many useful assays, however, are multi-step: a sample must meet one reagent, wait, and only then meet a second
+reagent. When all reagents wick at once, the steps overlap and the signal drops.
+Two families of timing elements exist. Dissolvable sugar barriers dissolve after a while and let the fluid pass, but their
+delay varies strongly from device to device [3]. Mechanical or magnetic valves give precise timing but add parts and
+assembly steps that undo the low cost of paper [2].
+We ask whether the wax printing step that already defines the channels can also define the timing. A short region where
+wax is only partially melted into the paper lowers the local permeability without blocking the channel. If the fluid front
+slows in proportion to the bridge length squared, as a Washburn-type model predicts, the delay becomes a printed
+dimension rather than a material property.
+Fig. 1. Device layout. A wax delay bridge of length L is printed across a 2 mm cellulose channel between the inlet and the detection zone and
+heated at 120 °C for 60 s.
+2. Methods
+2.1 Device fabrication. Channels 2 mm wide and 40 mm long were wax-printed on chromatography paper and heated at
+150 °C for 120 s to form full barriers. Delay bridges of length L = 1, 2, 3, 4 and 5 mm were then printed across the
+channel and heated at 120 °C for 60 s, which melts the wax only partly into the paper (Fig. 1).
+2.2 Delay measurement. A 20 µL drop of dyed buffer was placed at the inlet and the front was filmed at 30 frames per
+second. The delay time is the extra time the front needs to reach the detection zone compared with a channel without a
+bridge. Five devices were measured for each length at 23 °C and 45 % relative humidity.
+
+<!-- p.2 -->
+FICTIONAL TEST PAPER  ·  page 2
+2.3 Model. Treating the bridge as a porous section of lower permeability, the Washburn relation gives a delay t = k·L²,
+where k collects viscosity, surface tension and the effective pore radius. We fit k by least squares to the five mean
+delays.
+2.4 Two-step assay. A colour assay in which reagent A must bind before reagent B arrives was run with simultaneous
+delivery and with reagent B behind a 3 mm bridge, three devices each. Intensity was read from photographs in the green
+channel.
+3. Results
+3.1 Delay follows the square of the bridge length. The mean delay rose from 42 s at L = 1 mm to 612 s at L = 5 mm
+(Fig. 2). The quadratic model with k = 24.6 s/mm² fits the means with R² = 0.97. The spread grows with length: the
+standard deviation is 4 s at 1 mm and 81 s at 5 mm.
+Fig. 2. Delay time against bridge length. Points: mean ± standard deviation of five devices; dashed line: quadratic fit t = k·L² with k = 24.6
+s/mm².
+3.2 The delay is reproducible. The coefficient of variation stays between 9.3 % and 13.2 % for all lengths (Fig. 3),
+below the 25 % reported for sugar barriers [3]. Table 1 compares the three timing approaches.
+
+<!-- p.3 -->
+FICTIONAL TEST PAPER  ·  page 3
+Fig. 3. Coefficient of variation of the delay for each bridge length, with the value reported for sugar barriers in ref. [3] (grey). Dotted line: 15
+%.
+Table 1. Timing elements for paper microfluidics. Wax delay bridge: delay 42-612 s, variation 9-13 %, no added
+material. Sugar barrier [3]: delay 60-900 s, variation about 25 %, added sugar layer. Mechanical valve [2]: delay set by
+the user, variation below 5 %, added parts and assembly.
+3.3 Timed release improves a two-step assay. With reagent B delayed by a 3 mm bridge the colour intensity was 0.38 ±
+0.05 a.u., against 0.21 ± 0.04 a.u. for simultaneous delivery, an increase of 1.8 times (Fig. 4).
+Fig. 4. Two-step colour assay with simultaneous delivery and with reagent B behind a 3 mm bridge (mean ± standard deviation, three devices
+each).
+
+<!-- p.4 -->
+FICTIONAL TEST PAPER  ·  page 4
+4. Discussion
+The quadratic trend supports the picture of the bridge as a porous section of lower permeability. Longer bridges give
+longer delays but also a larger absolute spread, so very long delays will need a tighter control of the heating step. All
+measurements were made at one humidity; paper and wax both respond to moisture, and we expect the constant k to
+shift at other humidities. The sugar-barrier variation is taken from the literature rather than measured side by side with
+our devices.
+5. Conclusion
+A partially fused wax bridge turns timing into a printed length. Delays of 42 to 612 s with a variation below 15 % were
+obtained with no added material, and a two-step assay gave 1.8 times the signal of simultaneous delivery. Wax delay
+bridges are a practical way to sequence reagents on paper.
+References
+[1] A. Placeholder, Paper devices outside the lab, J. Imag. Microfluid. 0, 1-9 (2025). (fictional)
+[2] B. Fixture, Magnetic valves on paper, Imag. Lab Chip 3, 10-18 (2024). (fictional)
+[3] C. Mockridge, Sugar barriers for delayed wicking, Imag. Anal. Methods 7, 55-61 (2023). (fictional)

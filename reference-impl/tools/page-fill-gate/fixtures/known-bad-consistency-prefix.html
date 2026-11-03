@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant" data-page-class="document-short">
+<head>
+<meta charset="utf-8">
+<title>fill-gate consistency known-bad: PersonalSite home before the shared-layer fix</title>
+<!-- Real positive control for the in-page consistency checks (C2 siblings, S3 duplicate rules).
+     The four stylesheets are the PersonalSite CSS at commit a1cb5d7 (verbatim, read with `git show`),
+     the markup is the minimum that uses the classes the defect lived in:
+       C2  four h2.section-title, two inside .feature-block -> rendered 22/22/32/32 px
+       S3  .proj-thumb is a copy of .story-thumb with other values; .page-head .standfirst/.byline copy .prose ones -->
+<link rel="stylesheet" href="personalsite-prefix/tokens.css">
+<link rel="stylesheet" href="personalsite-prefix/site.css">
+<link rel="stylesheet" href="personalsite-prefix/stories.css">
+<link rel="stylesheet" href="personalsite-prefix/prose.css">
+</head>
+<body>
+<div class="wrap">
+<header class="site-head"><a class="site-name" href="#">示範站</a><nav class="site-nav" data-fill-content><a href="#" aria-current="page">首頁</a><a href="#">作品</a><a href="#">筆記</a></nav></header>
+
+<section class="block" id="about">
+  <h2 class="section-title" id="about-h"><span class="num">01</span>關於我</h2>
+  <p>這一段是關於我的介紹，長度足以在任何欄寬下換行。這一段是關於我的介紹，長度足以在任何欄寬下換行。這一段是關於我的介紹，長度足以在任何欄寬下換行。</p>
+</section>
+
+<section class="block" id="projects">
+  <h2 class="section-title" id="proj-h"><span class="num">02</span>作品</h2>
+  <ul class="proj-list">
+    <li class="proj">
+      <a class="proj-thumb" href="#"><img alt="" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='500' height='281'&gt;&lt;rect width='500' height='281' fill='%23dcd6c8'/&gt;&lt;/svg&gt;"></a>
+      <div class="proj-text"><p class="badge">工具・v1・2026-10</p><h3><a href="#">第一個作品</a></h3><p class="tagline">一句話說明這個作品。</p></div>
+    </li>
+    <li class="proj">
+      <a class="proj-thumb" href="#"><img alt="" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='500' height='281'&gt;&lt;rect width='500' height='281' fill='%23cfd8dc'/&gt;&lt;/svg&gt;"></a>
+      <div class="proj-text"><p class="badge">網站・v2・2026-09</p><h3><a href="#">第二個作品</a></h3><p class="tagline">另一句說明。</p></div>
+    </li>
+  </ul>
+</section>
+
+<section class="block feature-block" id="stories">
+  <h2 class="section-title" id="stories-h"><span class="num">03</span>影片</h2>
+  <ul class="story-list big">
+    <li>
+      <a class="story-thumb" href="#"><img alt="" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='380' height='214'&gt;&lt;rect width='380' height='214' fill='%23d7ccc8'/&gt;&lt;/svg&gt;"></a>
+      <div><p class="story-eyebrow">系列・影片・5 分鐘</p><a href="#">第一支影片的標題</a><p class="answer">這支影片回答的問題。</p><time class="meta" datetime="2026-10-01">2026-10-01</time></div>
+    </li>
+  </ul>
+</section>
+
+<section class="block feature-block" id="notes">
+  <h2 class="section-title" id="notes-h"><span class="num">04</span>筆記</h2>
+  <ul class="story-list big">
+    <li>
+      <a class="story-thumb" href="#"><img alt="" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='380' height='214'&gt;&lt;rect width='380' height='214' fill='%23cfd8dc'/&gt;&lt;/svg&gt;"></a>
+      <div><p class="story-eyebrow">筆記・3 分鐘</p><a href="#">第一篇筆記的標題</a><p class="answer">這篇筆記的摘要。</p><time class="meta" datetime="2026-09-20">2026-09-20</time></div>
+    </li>
+  </ul>
+</section>
+
+<div class="prose">
+  <h1>文字頁的標題</h1>
+  <p class="standfirst">文字頁的導言，一句話交代這頁在說什麼。</p>
+  <p class="byline">作者・2026-10-31</p>
+</div>
+
+<div class="page-head">
+  <h1>作品總覽</h1>
+  <p class="standfirst">總覽頁的導言，一句話交代這頁在說什麼。</p>
+  <p class="byline">共 12 件作品</p>
+</div>
+</div>
+</body>
+</html>

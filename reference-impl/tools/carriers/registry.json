@@ -1,0 +1,38 @@
+{
+  "schema": "carrier-registry/1",
+  "_note": "One row per carrier. A carrier is a folder tools/carriers/<id>/ holding CARRIER.md (its own rules + change log), render.py (render(content, content_dir, out_path) -> None), gates.py (gates(out_path) -> list of (name, ok, detail)) and vendor/ (copies of upstream files, provenance below). build.py reads only this file to find a carrier; a folder without a row, or a row without a folder, fails `build.py selftest`. Retire a carrier by status, never by deleting its folder. Change a carrier = edit its folder, bump version, add a CARRIER.md change-log line, run `build.py selftest`.",
+  "carriers": [
+    {
+      "id": "html-explainer",
+      "version": 10,
+      "status": "active",
+      "consumes": ["explainer/1"],
+      "output_suffix": ".html",
+      "label": "說明網頁（單一 HTML 檔，可查閱、跳讀）",
+      "reading_mode": "look-up",
+      "page_class": "document-long",
+      "gates": ["content", "fill_gate", "main_fill", "structure", "stamp"],
+      "upstream": [
+        {"what": "reading shell (side nav, 本節速查 rail, resizable/collapsible columns, hover glossary/ref cards)",
+         "from": "<WORK_ROOT>/AssetVault/assets/pattern-template/html-css/research-site-shell", "class": "pattern-template/html-css",
+         "origin": "<SHARE_ROOT>/_packs/Claude系統工程演進研究_20261003"}
+      ],
+      "review_when": "AssetVault `consumers.py check tools/carriers/html-explainer` reports vault-ahead (a newer research-site-shell or prose-doc-layer), or the page-fill-gate class registry changes document-long"
+    },
+    {
+      "id": "pptx-explainer",
+      "version": 1,
+      "status": "active",
+      "consumes": ["explainer/1"],
+      "output_suffix": ".pptx",
+      "label": "說明簡報（PPTX，從頭讀到尾、報告用）",
+      "reading_mode": "read-through",
+      "gates": ["content", "type_audit", "structure", "geometry", "stamp"],
+      "upstream": [
+        {"what": "python-pptx helpers (CJK typeface, lang tags, no-orphan wrap, type tiers P5, figure cards)",
+         "from": "<WORK_ROOT>/AssetVault/assets/pattern-template/python/pptx-deck-builder", "class": "pattern-template/python"}
+      ],
+      "review_when": "rules/office-deck-deliverables.md changes a P-rule or a type tier, or the AssetVault pptx-deck-builder asset gains a measured pitfall fix"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-TW" data-page-class="figure">
+<head>
+<meta charset="utf-8">
+<title>paper-survey-kit hero</title>
+<style>
+  :root { --ink:#1f2328; --mute:#5b6470; --paper:#fbfaf7; --a:#2b5d8a; --b:#9a5a1d; }
+  html, body { margin:0; background:var(--paper); }
+  body { width:1600px; height:800px; position:relative; overflow:hidden; color:var(--ink);
+         font-family:"Noto Serif TC","Source Han Serif TC","PMingLiU",Georgia,serif; }
+  .lab { position:absolute; font-size:19px; color:var(--mute); }
+  .lab b { color:var(--ink); font-size:22px; display:block; margin-bottom:4px; }
+  .paper { position:absolute; left:70px; top:90px; height:640px; box-shadow:0 6px 24px rgba(0,0,0,.14);
+           border:1px solid #d5d9de; background:#fff; }
+  .shot { position:absolute; left:720px; top:150px; width:820px; box-shadow:0 10px 32px rgba(0,0,0,.18);
+          border:1px solid #c8ccd2; border-radius:8px; }
+  .arrow { position:absolute; left:600px; top:400px; }
+  .tag { position:absolute; font-size:16px; padding:6px 12px; border-radius:999px; background:#fff;
+         border:1.5px solid var(--b); color:var(--b); box-shadow:0 2px 8px rgba(0,0,0,.08); }
+</style>
+</head>
+<body>
+  <div class="lab" style="left:70px; top:30px"><b>輸入：一篇論文 PDF</b>示範用虛構論文（作者、期刊、數據皆為虛構）</div>
+  <img class="paper" src="_shots/paper-p001.png" alt="">
+  <svg class="arrow" width="110" height="60" viewBox="0 0 110 60"><path d="M5 30 H90" stroke="#5b6470" stroke-width="4"/><path d="M84 14 L104 30 L84 46 z" fill="#5b6470"/></svg>
+  <div class="lab" style="left:720px; top:30px"><b>輸出：說明頁裡的偏移表，作者說過頭的地方</b>每列附原文引句與出處，引句由腳本逐字比對全文</div>
+  <img class="shot" src="_shots/explainer-drift.png" alt="">
+  <div class="tag" style="left:720px; top:690px; white-space:nowrap">第一列：摘要寫「最長 15 分鐘」，實測最大只有 612 秒</div>
+</body>
+</html>

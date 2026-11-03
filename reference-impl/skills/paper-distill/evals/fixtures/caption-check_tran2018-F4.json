@@ -1,0 +1,11 @@
+{
+ "what": "controls for ingest.py caption_fault: 'truncated' must fail as 'ends mid-line in paper.txt', 'full' must pass, both against 'paper_txt'",
+ "source": {
+  "paper": "Minh A. Tran, Duanni Huang, Tin Komljenovic, Jonathan Peters, Aditya Malik, John E. Bowers (2018). Ultra-Low-Loss Silicon Waveguides for Heterogeneously Integrated Silicon/III-V Photonics. Applied Sciences (MDPI), Appl. Sci. 2018, 8, 1139. doi:10.3390/app8071139",
+  "licence": "CC BY 4.0 (the paper's own licence line); excerpt = source/paper.txt lines 187-196 of run Tran2018_ultra-low-loss-si-waveguides-hetero-si-iii-v",
+  "made": "2026-09-26"
+ },
+ "truncated": "Figure 4. (a) Mask layout of spiral delay lines with 52.2 cm total length and 850 µm minimum bend\nradius (b) Optical Backscatter Reﬂectometry (OBR) data from th",
+ "full": "Figure 4. (a) Mask layout of spiral delay lines with 52.2 cm total length and 850 µm minimum bend radius (b) Optical Backscatter Reﬂectometry (OBR) data from the spiral with 1.8 µm width. A linear ﬁt of the waveguide backscatter is shown with the dashed red line. The propagation loss of the waveguide can be approximated as 1/2 of the slope of the ﬁtted line. (c) Wavelength dependence of the propagation loss (mean and standard deviation) of waveguides with different widths (1.8 µm, 3.0 µm and 8.0 µm).",
+ "paper_txt": "surface roughness is therefore signiﬁcant and results in the discrepancy between the experimental and\ntheoretical waveguide loss.\nFigure 4. (a) Mask layout of spiral delay lines with 52.2 cm total length and 850 µm minimum bend\nradius (b) Optical Backscatter Reﬂectometry (OBR) data from the spiral with 1.8 µm width. A linear\nﬁt of the waveguide backscatter is shown with the dashed red line. The propagation loss of the\nwaveguide can be approximated as 1/2 of the slope of the ﬁtted line. (c) Wavelength dependence of the\npropagation loss (mean and standard deviation) of waveguides with different widths (1.8 µm, 3.0 µm\nand 8.0 µm).\n\n<!-- p.6 -->\n"
+}

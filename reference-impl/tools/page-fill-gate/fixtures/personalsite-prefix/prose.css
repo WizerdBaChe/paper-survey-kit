@@ -1,0 +1,55 @@
+/* Note/page prose rules copied from design/samples/site.css (.prose follows AssetVault prose-doc-layer). */
+/* ---- text page: toc rail | prose (centred) | gutter ---- */
+.article-grid{
+  display: grid;
+  grid-template-columns: minmax(13rem, 1fr) minmax(0, var(--measure)) minmax(0, 1fr);
+  gap: var(--s8); padding-top: var(--s8);
+}
+.article-grid .sticky{ position: sticky; top: var(--s6); max-height: calc(100vh - 2 * var(--s6)); overflow-y: auto; }
+
+/* rail: three levels, each one step quieter than the last — title (ink, bold) > label (small, spaced,
+   muted) > items (muted; the current one ink + accent mark; read ones ink-soft) */
+.rail{ font-size: var(--fs-small); }
+.rail-title{ font-weight: 700; color: var(--ink); line-height: 1.5; margin: 0 0 var(--s5); }
+.rail-label{ font-size: 12px; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 var(--s2); }
+.toc ol{ list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+.toc li{ margin: 0; }
+.toc a{
+  display: block; padding: 5px 0 5px var(--s3); margin-left: -2px; border-left: 2px solid transparent;
+  color: var(--muted); text-decoration: none; line-height: 1.5;
+  transition: color .15s ease, border-color .15s ease;
+}
+.toc a[data-state="read"]{ color: var(--ink-soft); }
+.toc a[data-state="current"]{ color: var(--ink); font-weight: 700; border-left-color: var(--accent); }
+.toc a:hover{ color: var(--accent); }
+.progress{ display: flex; align-items: center; gap: var(--s2); margin-top: var(--s5); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.progress .bar{ flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; max-width: 9rem; }
+.progress .bar > span{ display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform .2s ease; }
+@media (prefers-reduced-motion: reduce){ .toc a, .progress .bar > span{ transition: none; } }
+
+/* page facts: one row under the title, label above value */
+.prose .meta-row{
+  display: flex; flex-wrap: wrap; gap: var(--s3) var(--s7);
+  margin: var(--s5) 0 0; padding: var(--s4) 0 0; border-top: 1px solid var(--line);
+  font-size: var(--fs-small);
+}
+.prose .meta-row div{ display: grid; gap: 2px; }
+.prose .meta-row dt{ font-size: 12px; letter-spacing: 0.12em; color: var(--muted); }
+.prose .meta-row dd{ margin: 0; color: var(--ink-soft); }
+
+.prose h1{ font-size: var(--fs-h1); }
+.prose .standfirst{ font-size: 19px; color: var(--ink-soft); margin-top: var(--s4); }
+.prose .byline{ font-size: var(--fs-small); color: var(--muted); margin-top: var(--s4); }
+.prose h2{ font-size: var(--fs-h2); margin: var(--s8) 0 var(--s3); }
+.prose p{ margin: 0 0 var(--s5); }
+.prose ul, .prose ol{ margin: 0 0 var(--s5); padding-left: 1.4em; }
+.prose li{ margin-bottom: var(--s1); }
+.prose strong{ font-weight: 700; }
+.prose table{ border-collapse: collapse; width: 100%; margin: 0 0 var(--s5); font-size: var(--fs-small); }
+.prose th, .prose td{ text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); vertical-align: top; }
+.prose th{ color: var(--muted); font-weight: 500; border-bottom-color: var(--line-strong); }
+.prose [data-callout]{ background: var(--accent-tint); padding: var(--s3) var(--s4); border-radius: 4px; margin: 0 0 var(--s5); }
+.prose [data-callout] b{ display: block; font-size: var(--fs-small); color: var(--accent); margin-bottom: var(--s1); }
+.prose .sources{ font-size: var(--fs-small); color: var(--muted); border-top: 1px solid var(--line); padding-top: var(--s5); margin-top: var(--s8); }
+.prose .sources ol{ padding-left: 1.2em; }
+.prose .after{ border-top: 1px solid var(--line); margin-top: var(--s7); padding-top: var(--s5); font-size: var(--fs-small); color: var(--muted); display: grid; gap: var(--s3); }

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer/1",
+  "title": "explainer/1 — carrier-neutral content of an explanatory deliverable",
+  "description": "The designed output data format every carrier in tools/carriers reads. It holds WHAT the deliverable says; no carrier layout lives here. Inline markup inside any text field: **bold**, [[g:<glossary id>]], [[r:<ref id>]], [[s:<section id>]] (parsed by common/inline.py, identically for every carrier).",
+  "type": "object",
+  "required": ["schema", "meta", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "explainer/1"},
+    "meta": {
+      "type": "object",
+      "required": ["title", "date", "audience", "lang"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "subtitle": {"type": "string"},
+        "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+        "audience": {"enum": ["audience", "builder"], "description": "naming-and-placement §1 CONSUMER; audience = no paths, ids or gate counts in the text"},
+        "lang": {"type": "string", "minLength": 2},
+        "author": {"type": "string"},
+        "purpose": {"type": "string", "description": "one line: what the reader should be able to do after reading"},
+        "source_note": {"type": "string", "description": "where the content came from (shown on the colophon / last slide)"}
+      }
+    },
+    "glossary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "term", "gloss"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "term": {"type": "string", "minLength": 1},
+          "en": {"type": "string"},
+          "gloss": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "label": {"type": "string", "minLength": 1},
+          "detail": {"type": "string"},
+          "href": {"type": "string"}
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "heading", "blocks"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "heading": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "description": "one line; HTML: rail 本節速查 head; PPTX: slide description line"},
+          "takeaways": {"type": "array", "items": {"type": "string"}, "description": "HTML: rail body; PPTX: closing bullets of the section"},
+          "blocks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/block"}}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,40}$"},
+    "block": {
+      "oneOf": [
+        {"type": "object", "required": ["type", "text"], "additionalProperties": false,
+         "description": "a paragraph a reader reads through: planned and checked per ~/.claude/references/writing-norms/paragraph-plan.md; its claims stay in reach per ~/.claude/references/writing-norms/claim-reach.md",
+         "properties": {"type": {"const": "para"}, "text": {"type": "string", "minLength": 1}}},
+        {"type": "object", "required": ["type", "items"], "additionalProperties": false,
+         "properties": {"type": {"const": "bullets"}, "items": {"type": "array", "minItems": 1, "items": {"type": "string"}}}},
+        {"type": "object", "required": ["type", "items"], "additionalProperties": false,
+         "properties": {"type": {"const": "steps"}, "items": {"type": "array", "minItems": 1, "items": {
+           "type": "object", "required": ["title"], "additionalProperties": false,
+           "properties": {"title": {"type": "string"}, "text": {"type": "string"}}}}}},
+        {"type": "object", "required": ["type", "columns", "rows"], "additionalProperties": false,
+         "properties": {"type": {"const": "table"}, "caption": {"type": "string"},
+           "columns": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+           "rows": {"type": "array", "minItems": 1, "items": {"type": "array", "items": {"type": "string"}}}}},
+        {"type": "object", "required": ["type", "src", "caption", "shows"], "additionalProperties": false,
+         "properties": {"type": {"const": "figure"}, "src": {"type": "string", "description": "image path relative to the content file"},
+           "caption": {"type": "string"}, "shows": {"type": "string", "description": "what the figure shows"},
+           "not_drawn": {"type": "string", "description": "what the figure does not show (naming-and-placement §1 audience caption rule)"}}},
+        {"type": "object", "required": ["type", "kind", "text"], "additionalProperties": false,
+         "properties": {"type": {"const": "callout"}, "kind": {"enum": ["key", "note", "warn"]}, "title": {"type": "string"},
+           "text": {"type": "string", "minLength": 1}}},
+        {"type": "object", "required": ["type", "items"], "additionalProperties": false,
+         "properties": {"type": {"const": "metrics"}, "items": {"type": "array", "minItems": 1, "items": {
+           "type": "object", "required": ["label", "value"], "additionalProperties": false,
+           "properties": {"label": {"type": "string"}, "value": {"type": "string"}, "unit": {"type": "string"}, "note": {"type": "string"}}}}}},
+        {"type": "object", "required": ["type", "text"], "additionalProperties": false,
+         "properties": {"type": {"const": "quote"}, "text": {"type": "string", "minLength": 1}, "source": {"type": "string"}}}
+      ]
+    }
+  }
+}

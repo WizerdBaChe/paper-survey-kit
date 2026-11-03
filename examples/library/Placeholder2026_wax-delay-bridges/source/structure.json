@@ -1,0 +1,85 @@
+{
+ "schema": "paper-distill/structure@1",
+ "body_font_size": 10.0,
+ "units": [
+  {
+   "id": "§Abstract",
+   "kind": "section",
+   "page": 1,
+   "text": "Abstract"
+  },
+  {
+   "id": "§1",
+   "kind": "section",
+   "page": 1,
+   "text": "1. Introduction"
+  },
+  {
+   "id": "§2",
+   "kind": "section",
+   "page": 1,
+   "text": "2. Methods"
+  },
+  {
+   "id": "§3",
+   "kind": "section",
+   "page": 2,
+   "text": "3. Results"
+  },
+  {
+   "id": "§4",
+   "kind": "section",
+   "page": 4,
+   "text": "4. Discussion"
+  },
+  {
+   "id": "§5",
+   "kind": "section",
+   "page": 4,
+   "text": "5. Conclusion"
+  },
+  {
+   "id": "Fig. 1",
+   "kind": "figure",
+   "page": 1,
+   "text": "Fig. 1. Device layout. A wax delay bridge of length L is printed across a 2 mm c"
+  },
+  {
+   "id": "Fig. 2",
+   "kind": "figure",
+   "page": 2,
+   "text": "Fig. 2. Delay time against bridge length. Points: mean ± standard deviation of f"
+  },
+  {
+   "id": "Fig. 3",
+   "kind": "figure",
+   "page": 3,
+   "text": "Fig. 3. Coefficient of variation of the delay for each bridge length, with the v"
+  },
+  {
+   "id": "Table 1",
+   "kind": "table",
+   "page": 3,
+   "text": "Table 1. Timing elements for paper microfluidics. Wax delay bridge: delay 42-612"
+  },
+  {
+   "id": "Fig. 4",
+   "kind": "figure",
+   "page": 3,
+   "text": "Fig. 4. Two-step colour assay with simultaneous delivery and with reagent B behi"
+  }
+ ],
+ "subheadings": [],
+ "anomalies": [],
+ "abstract": {
+  "chars": 576,
+  "numbers_checked": 3
+ },
+ "figure_refs": {
+  "Fig. 1": 1,
+  "Fig. 2": 1,
+  "Fig. 3": 1,
+  "Table 1": 1,
+  "Fig. 4": 1
+ }
+}

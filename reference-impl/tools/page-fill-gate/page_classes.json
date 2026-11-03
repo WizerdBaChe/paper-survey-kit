@@ -1,0 +1,144 @@
+{
+  "schema": 1,
+  "as_of": "2026-10-02",
+  "owner": "user ruling 2026-09-04 (width-void diagnosis) — classes are DATA: add a row + a fixture, never a code branch",
+  "declaration": {
+    "attribute": "data-page-class",
+    "on": "html",
+    "root_override": "data-page-root (optional: marks the page container when it is not <main>)",
+    "rail_marker": "data-rail (optional: a fixed right column that COUNTS AS CONTENT, not chrome)"
+  },
+  "reference_viewports": {
+    "gating": [
+      [
+        1707,
+        830
+      ],
+      [
+        1920,
+        950
+      ]
+    ],
+    "advisory": [
+      [
+        1280,
+        610
+      ]
+    ],
+    "source": "ops/environment.md § Display & UI-build premise — 2560x1440 @150% maximised Chrome, external FHD; re-measure when the screen or scaling changes"
+  },
+  "unknown_policy": {
+    "severity": "WARN",
+    "infer": true,
+    "promotion_trigger": "a page that shipped on an INFERRED class draws a second human layout report -> add the class row (with its fixture) and the page declares it; until then the gate may not FAIL what it cannot determine"
+  },
+  "defect_left_anchored_cap": {
+    "definition": "right void exceeds left void by more than `asymmetry_frac` of the content width — the page container (or a painted, row-alone block) is capped and hugs the left edge",
+    "asymmetry_frac": 0.15,
+    "severity_container": "FAIL",
+    "severity_block": "WARN",
+    "block_promotion_trigger": "the same block class (selector) reported by a human once after shipping -> FAIL for that selector via `block_fail_selectors`"
+  },
+  "block_fail_selectors": [],
+  "sibling_fail_selectors": [],
+  "defect_sibling_style_drift": {
+    "definition": "visible elements that share (tag, class list, declared aria-current/selected/pressed/expanded/checked state) and are not inside an <svg> render with different font-size / font-weight / font-family / line-height / letter-spacing: a class that names one component looks like two (PersonalSite 2026-10-31: four h2.section-title at 22/22/32/32 px because a contextual rule enlarged only two)",
+    "props": ["font-size", "font-weight", "font-family", "line-height", "letter-spacing"],
+    "severity": "WARN",
+    "suppressed_and_counted": "svg descendants (user units, per-node by design); a property whose values are equal in their RELATIVE reading (0.9em, unitless line-height meeting different parents); a property every element merely inherits from its parent. Each is counted in the finding block, none is dropped silently",
+    "promotion_trigger": "the same class (selector) reported by a human once after shipping -> its selector prefix goes into `sibling_fail_selectors` and the drift becomes FAIL for that selector",
+    "added": "2026-10-31, user ruling (shared-layer bypass proposal, hole 3, C2)"
+  },
+  "defect_duplicate_rules": {
+    "definition": "two style rules under different selectors declare (nearly) the same declarations, read from the page's own CSSOM: a component declared twice under two names (PersonalSite 2026-10-31: .proj-thumb copied .story-thumb, .page-head .standfirst/.byline copied .prose ones). Concept from csscss ('X and Y share N rules', min-match threshold); csscss itself is not used (archived 2024, Ruby)",
+    "min_shared": 5,
+    "min_ratio": 0.8,
+    "same_target_min_shared": 2,
+    "same_target_min_ratio": 0.6,
+    "severity": "WARN",
+    "channels": "copy = >= min_shared identical declarations covering >= min_ratio of the shorter rule; same-target = the same class/id (final compound) styled in two contexts, which needs far less because sharing the name is itself most of the evidence",
+    "not_reported": "a pair that shares a selector, a pair whose selector names are equal (state or media variant of one component), a pair where one side's names contain the other's (contextual override)",
+    "calibration": "2026-10-31, 33 human-facing pages / 24 distinct CSS families, see README 'In-page consistency': K=5 R=0.8 keeps the real PersonalSite thumb fork (shared 5 of 6 and 5 of 5; K=6 loses it, so the real positive sits on the edge) at 1.0 groups per CSS family (24 groups, 8 distinct forks, 6 judged real); K=4 R=0.6 is 5.4 per family, K=3 R=0.6 19.6",
+    "promotion": "none: WARN only, a fork is a code-structure judgment the gate cannot make for the author",
+    "added": "2026-10-31, user ruling (shared-layer bypass proposal, hole 3, S3)"
+  },
+  "defect_clipped_overflow": {
+    "definition": "a display-formula block whose content is wider than its own box (scrollWidth - clientWidth > tolerance_px): the tail of the line, usually the boxed answer, sits behind a horizontal scroll or spills past the column — page reach cannot see it",
+    "selectors": ["math[display=block]", ".katex-display", "mjx-container[display=true]"],
+    "tolerance_px": 2,
+    "severity": "FAIL",
+    "applies_to": "every class (a property of the block, not of the page shape); advisory viewports downgrade it to WARN like every other finding",
+    "added": "2026-10-13, fb row on tool:page-fill-gate — Silicon Photonics HW2/4/5 passed the gate while 17 calculation lines hid their answers at 1707 px; positive control = the pre-fix HW5-5 d0 line (1104/931 px)"
+  },
+  "classes": {
+    "document-short": {
+      "zh": "短篇閱讀頁（報告、前後對照、owner-view）",
+      "mode": "centered",
+      "symmetry_px": 8,
+      "min_fill": 0.35,
+      "notes": "one centred column with symmetric margins; the reading measure is the point, so a wide viewport shows equal void on both sides (an 820px report column is 43% of 1920 — still a deliberate measure, hence the low floor)",
+      "content": "prose"
+    },
+    "dialog": {
+      "zh": "單一置中對話框（解鎖、登入、確認）",
+      "mode": "centered",
+      "symmetry_px": 8,
+      "min_fill": 0,
+      "notes": "one card centred on an empty page; a fill floor is meaningless (the card is small by design), so only symmetry and the left-anchored defect rule (fb:86425480, 2026-10-13: document-short FAILed a login card on fill 30% at 1707)",
+      "content": "node"
+    },
+    "document-long": {
+      "zh": "長篇參考文件（教科書、案卷、討論包）",
+      "mode": "fill",
+      "min_fill": 0.85,
+      "notes": "fluid main column plus a right rail (data-rail) that carries figures / notes / registry cards; the rail counts as content",
+      "content": "prose"
+    },
+    "deck": {
+      "zh": "一頁一螢幕簡報",
+      "mode": "fill",
+      "min_fill": 0.85,
+      "scope": ".slide",
+      "max_scopes": 8,
+      "notes": "each slide is its own area; a text block may not sit narrower than the slide while alone in its row",
+      "content": "figure-led"
+    },
+    "tool": {
+      "zh": "操作型 GUI（Chromium 開啟的 web tool、lobby 工具）",
+      "mode": "fill",
+      "min_fill": 0.9,
+      "notes": "no page-level cap below the reference viewports; panels allocated proportionally (fr / % / cqw / minmax) and clamped in px only for intrinsic sizes; a cap above 1920px is a clamp, not a cap",
+      "content": "node"
+    },
+    "diagram": {
+      "zh": "圖為主載體（SVG 佔第一屏 ≥ 40%）",
+      "mode": "centered-or-fill",
+      "symmetry_px": 8,
+      "min_fill": 0.6,
+      "notes": "the SVG scales to its container; a centred container with symmetric margins is fine, an off-centre one is not",
+      "content": "diagram"
+    },
+    "dashboard": {
+      "zh": "卡片與表格儀表",
+      "mode": "fill",
+      "min_fill": 0.85,
+      "notes": "auto-fit card grids; content sets row height, column count fills the width; a portal / launcher page (design-style-testbed T6 VIEWS, 5/5 PASS) is measured here",
+      "content": "node"
+    },
+    "showcase": {
+      "zh": "圖主展示頁（專案介紹、作品展示：滿版色帶＋置中內容，圖可出格）",
+      "content": "figure-led",
+      "mode": "centered-or-fill",
+      "symmetry_px": 8,
+      "min_fill": 0.6,
+      "backdrop_bands": true,
+      "notes": "full-bleed painted bands without own text are backdrops and do not count as content (else every band page reads reach 100% and a left-capped column inside hides); content must be centred or reach >= 85% (a figure bleeding to the right edge reaches it); added 2026-10-02 with the figure-led page rule"
+    }
+  },
+  "content_classes": {
+    "prose": "read top to bottom; styling = AssetVault prose-doc-layer (rules/deliverable-doc-refs.md, prose bullet)",
+    "node": "scan and compare entities; a box per entity, colour per entity class (same rule, node bullet); NOT a presentation medium, outside references/design-axes",
+    "figure-led": "one claim + one evidence figure per unit (rules/deliverable-doc-refs.md figure-led page; decks add office-deck-deliverables P1-P5); cross-medium forms in references/design-axes",
+    "diagram": "the figure IS the page; representation chosen per diagram-authoring"
+  }
+}

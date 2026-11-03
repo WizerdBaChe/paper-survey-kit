@@ -1,0 +1,39 @@
+# paper-survey-kit
+
+> Two Claude Code skills for reading one research paper: paper-distill audits its evidence (IMRaD skeleton, claim audit with calibrated verdict words, figure cards) and paper-story rebuilds its story with a why on every step (axis, storyline, drift with verbatim quotes, key point as reusable logic), rendered to a practice explainer page and an optional formal English deck on a template-free blank base. Every step is gated by scripts. Ships with a fictional demo paper and a full worked run. Tested on Windows 11 and Python 3.12.
+
+Start at AGENTS.md. Pin a release tag, not main. Code MIT, documentation CC BY 4.0.
+
+## Read-only route (no command execution)
+
+- [docs/EVIDENCE.md](docs/EVIDENCE.md): read first; its "Enforcement map" says which rules code enforces (with file:line) and which are process only, and "Not claimed" lists known gaps
+- [verify/controls_run.txt](verify/controls_run.txt): the recorded acceptance run; read it as the result instead of running the controls
+- [examples/library/Placeholder2026_wax-delay-bridges/](examples/library/Placeholder2026_wax-delay-bridges/): a finished run on the fictional paper (cards.json, story.json, reading-record.md, narrative-record.md, story-gates.txt, paper-explainer.html, lab-deck.pptx)
+- [reference-impl/skills/paper-distill/SKILL.md](reference-impl/skills/paper-distill/SKILL.md) and [reference-impl/skills/paper-story/SKILL.md](reference-impl/skills/paper-story/SKILL.md): the two methods
+- [AGENTS.md](AGENTS.md): its first section is facts about the repo; the rest is installation steps for an agent whose user asked for an install
+
+## Entry points
+
+- [AGENTS.md](AGENTS.md): reading order, first command, install table into ~/.claude, adaptation rules, what not to adopt
+- [docs/BUILD-SPEC.md](docs/BUILD-SPEC.md): the contract; §2 reading, §3 story, §4 run folder, §5 gate design, §7 acceptance K1-K8, §8 environment adaptation, §9 declared edits
+- [docs/EVIDENCE.md](docs/EVIDENCE.md): what this release measured, origin records behind each rule, what is not claimed
+
+## Run
+
+- [verify/run_controls.py](verify/run_controls.py): `python -X utf8 verify/run_controls.py <new-empty-dir>`; two-sided controls, every line must end in `-> ok`
+- [verify/host.toml](verify/host.toml): the machine-roots file a fresh clone runs with (set HK_HOST_TOML)
+- [examples/fictional-paper/make_paper.py](examples/fictional-paper/make_paper.py): regenerates the fictional demo paper
+
+## Reference implementation
+
+- [reference-impl/skills/paper-distill/references/](reference-impl/skills/paper-distill/references/): reading method, claim audit, figure reading, writing craft, output spec, design rationale
+- [reference-impl/skills/paper-story/references/](reference-impl/skills/paper-story/references/): narrative axis, logic extraction, presentation formats, talk conventions, formal deck, bridge between the skills
+- [reference-impl/tools/carriers/README.md](reference-impl/tools/carriers/README.md): content file to stamped HTML / PPTX
+- [reference-impl/tools/page-fill-gate/README.md](reference-impl/tools/page-fill-gate/README.md): page fill measurement
+
+## Optional
+
+- [docs/DEVELOPER.md](docs/DEVELOPER.md): structure tree, component and workflow diagrams, design choices, limits, manual acceptance (Traditional Chinese)
+- [README.en.md](README.en.md): English overview; [README.md](README.md): Traditional Chinese overview
+- [CHANGELOG.md](CHANGELOG.md): versions
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): CC BY fixtures, runtime dependency licences
