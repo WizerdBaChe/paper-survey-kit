@@ -29,5 +29,10 @@
       "test": "python -X utf8 ../build.py selftest",
       "taken": "2026-10-18"
     }
+  },
+  "deferred": {
+    "ruling": "user 2026-11-06: 先不動，之後動到再解除 (asked as the third, diverged consumer)",
+    "pin": "e759dab88e0a2bbcdf765de02c6a55908cf94806",
+    "at": "2026-11-06"
   }
 }
