@@ -29,6 +29,22 @@ TEXT = "<p>" + "本段是量測用的內文，長度足以在任何欄寬下換�
 
 CASES = {
     # name: (class attr, css, body, expected status)
+    # canvas (2026-11-04): a fixed 1920x1080 card matches blank-space-gauge's 16:9 layout -> PASS; a 4:3 card matches
+    # no layout -> WARN; a fixed-width 4:5 body (film pages) is its own frame -> PASS. Asserted value: the frame aspect.
+    "canvas 16:9 card": ("canvas", "section.card{width:1920px;height:1080px;position:relative}",
+        f"<section class='card'><h1>標題</h1>{TEXT}</section><section class='card'><h1>二</h1></section>", "PASS"),
+    "canvas 4:3 card matches no layout": ("canvas", "section.card{width:1600px;height:1200px;position:relative}",
+        f"<section class='card'><h1>標題</h1>{TEXT}</section>", "WARN"),
+    "canvas fixed-width 4:5 body": ("canvas", "body{width:1080px;height:1350px;overflow:hidden;margin:0}",
+        f"<h1>標題</h1>{TEXT}", "PASS"),
+    # a plain page declared canvas: its body is the viewport (minus a scrollbar), not a frame -> WARN
+    "canvas declared on a fluid page": ("canvas", "main{padding:20px}", f"<main><h1>標題</h1>{TEXT * 6}</main>", "WARN"),
+    # a max-width body is not a frame (review 2026-11-04): it shrinks with its root, so the probe reads it fluid
+    "canvas declared on a max-width body": ("canvas", "body{max-width:1200px;margin:0 auto}",
+        f"<h1>標題</h1>{TEXT * 6}", "WARN"),
+    # a fixed 1920 body, the case that read WARN at the 1920 viewport under the old |w - W| > 30 test
+    "canvas fixed 1920x1080 body": ("canvas", "body{width:1920px;height:1080px;overflow:hidden;margin:0}",
+        f"<h1>標題</h1>{TEXT}", "PASS"),
     "document-short centred 900": ("document-short",
         ".wrap{max-width:900px;margin:0 auto;padding:40px 20px}",
         f"<main class='wrap'><h1>標題</h1>{TEXT}<div class='box'>note</div>{TEXT}</main>", "PASS"),
@@ -148,7 +164,7 @@ CASES = {
     # its PASS is an artifact of the inference and must not be reported as
     # evidence. Before this, an undeclared page could print "0 FAIL / 0 WARN"
     # and that number would be carried forward
-    # (outputs/diagram-authoring/mfp-audit-f5-owner-view.html, measured).
+    # (view-pages/diagram-authoring/mfp-audit-f5-owner-view.html, measured).
     "undeclared but well laid out -> STILL WARN, not PASS": (None,
         "main{padding:16px} .box{width:100%}",
         f"<main><div class='box'><h1>標題</h1>{TEXT}{TEXT}</div></main>", "WARN"),
@@ -840,7 +856,10 @@ def main() -> int:
     failures = []
     # registry shape: every class has a mode and at least one threshold
     for name, row in REG["classes"].items():
-        if row.get("mode") not in ("centered", "fill", "centered-or-fill") or not (row.get("min_fill") or row.get("symmetry_px")):
+        if row.get("mode") == "canvas":
+            if not (row.get("scope") and row.get("layouts_from")):
+                failures.append(f"registry row {name!r}: canvas needs scope and layouts_from")
+        elif row.get("mode") not in ("centered", "fill", "centered-or-fill") or not (row.get("min_fill") or row.get("symmetry_px")):
             failures.append(f"registry row {name!r} lacks mode/threshold")
     covered = {c[0] for c in CASES.values() if c[0]}
     for name in REG["classes"]:
@@ -895,8 +914,39 @@ def main() -> int:
     failures += check_consistency_error_keeps_width_verdict()
     failures += check_unitless_line_height_inherits()
     failures += check_width_status_paths()
+    failures += check_phone_verdict()
     print("\n".join(failures) if failures else "test_fill_gate: PASS (all classes two-sided, controls fired)")
     return 1 if failures else 0
+
+
+def check_phone_verdict():
+    """Rung 1 over phone_verdict's branch table (pure, no browser): exempt mode, exempt class, stylesheet not loaded,
+    no viewport tag, overflow at the tolerance edge and one past it, under both severities. The asserted value is the
+    status plus the reason kind; the severity comes from the registry, never a literal in the code."""
+    import copy
+    out = []
+    base = {"over": 0, "sw": 375, "unloaded": [], "vpMeta": "width=device-width", "cls": "document-short", "culprits": []}
+    tol = REG["defect_page_overflow"]["tolerance_px"]
+    for sev in ("WARN", "FAIL"):
+        reg = copy.deepcopy(REG); reg["defect_page_overflow"]["severity"] = sev
+        cases = [
+            ("canvas mode exempt", {"cls": "canvas", "over": 900}, "PASS", "fixed-size"),
+            ("deck class exempt", {"cls": "deck", "over": 900}, "PASS", "fixed-size"),
+            ("stylesheet not loaded", {"unloaded": ["/_astro/a.css"], "over": 600}, "WARN", "NOT measurable"),
+            ("no viewport tag", {"vpMeta": None, "over": 606}, "WARN", "viewport"),
+            ("at tolerance", {"over": tol}, "PASS", ""),
+            ("one past tolerance", {"over": tol + 1, "sw": 375 + tol + 1}, sev, "scrolls sideways"),
+            ("named culprit", {"over": 542, "sw": 917, "culprits": [{"sel": "table", "w": 900, "right": 916}]}, sev, "table 900px"),
+        ]
+        for name, delta, want, why in cases:
+            m = {**base, **delta}
+            v = fill_gate.phone_verdict(m, reg)
+            text = " ".join(v["reasons"] + v["notes"])
+            ok = v["status"] == want and why in text
+            print(f"{'ok  ' if ok else 'MISS'} phone {sev} {name:24s} want {want:4s} got {v['status']:4s}")
+            if not ok:
+                out.append(f"phone_verdict {sev} {name}: want {want} with '{why}', got {v['status']} '{text}'")
+    return out
 
 
 def check_restore():
@@ -947,6 +997,9 @@ if pytest is not None:
 
     def test_registry_rows_have_mode_and_threshold():
         for name, row in REG["classes"].items():
+            if row.get("mode") == "canvas":
+                assert row.get("scope") and row.get("layouts_from"), name
+                continue
             assert row.get("mode") in ("centered", "fill", "centered-or-fill") and (row.get("min_fill") or row.get("symmetry_px")), name
 
     def test_every_class_has_a_two_sided_pair():
@@ -997,6 +1050,37 @@ if pytest is not None:
             assert fill_gate.consistency_control_problems(label, r) == [], label
         assert _vals(_sib(got["consistency-bad"], "h2.section-title"), "font-size") == {"22px": 2, "32px": 2}
 
+    def test_squeeze_controls_read_the_right_values():
+        # rung 0 (two fixtures); asserted on wrapped-label count and void, recorded 2026-11-17: bad 5 / 354 px, good 0 / 32 px
+        pytest.importorskip("playwright")
+        try:
+            rows = fill_gate.gate_paths([], viewports=[(1707, 830)], controls=True)
+        except RuntimeError as exc:
+            pytest.skip(f"instrument unavailable: {exc}")
+        reg = fill_gate.load_registry()
+        got = {r["control"]: r for r in rows if r["control"] in fill_gate.SQUEEZE_CONTROLS.values()}
+        assert set(got) == {"squeeze-bad", "squeeze-good"}
+        for label, r in got.items():
+            assert fill_gate.squeeze_control_problems(label, r, reg) == [], label
+        assert got["squeeze-bad"]["squeeze"]["wrapped"] >= 1 and got["squeeze-good"]["squeeze"]["wrapped"] == 0
+        # the fixed corner panel is an overlay, not a squeezed column
+        fixed = next(r for r in rows if r["control"] == "known-good-fixed-panel")
+        assert fixed["squeeze"]["panels"] == 0 and fixed["status"] == "PASS"
+
+    def test_squeeze_verdict_needs_both_wrap_and_void():
+        # rung 1 over the 2x2 of (wrapped?, void at/below the floor): only wrapped + void >= floor lifts PASS to WARN
+        reg = fill_gate.load_registry()
+        floor = reg["defect_squeezed_side_panel"]["min_void_px"]
+        page = {"n": 5, "leftVoid": 300, "rightVoid": 300, "areaW": 1707, "fill": 0.6, "reach": 0.8,
+                "findings": [], "findings_total": 0}
+        for wrapped in (0, 2):
+            for void in (floor - 1, floor):
+                meas = {"cls": "document-short", "declared": "document-short", "page": page,
+                        "squeeze": {"panels": 1, "labels": 4, "wrapped": wrapped, "void": void,
+                                    "items": [{"text": "x", "lines": 2, "panel": "nav"}] * wrapped}}
+                want = "WARN" if (wrapped and void >= floor) else "PASS"
+                assert fill_gate.verdict(meas, reg)["status"] == want, (wrapped, void)
+
     def test_forks_pure_function():
         assert check_forks_pure() == []
 
@@ -1030,6 +1114,9 @@ if pytest is not None:
     def test_each_c2_filter_is_load_bearing():
         pytest.importorskip("playwright")
         assert check_filters_are_load_bearing() == []
+
+    def test_phone_verdict_branch_table():
+        assert check_phone_verdict() == []
 
     def test_sibling_promotion_is_per_selector_and_off_by_default():
         pytest.importorskip("playwright")

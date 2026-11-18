@@ -25,7 +25,9 @@ ASSET = (hkroots.path("WORK_ROOT", "AssetVault", "assets", "pattern-template", "
 sys.path.insert(0, str(CARRIERS))
 
 from PIL import Image  # noqa: E402
-from pptx import Presentation  # noqa: E402
+from typing import Any, cast  # noqa: E402
+from pptx import Presentation as _Presentation  # noqa: E402
+Presentation: Any = _Presentation   # python-pptx types every shape as BaseShape; the tests probe shape kinds at run time
 from pptx.enum.shapes import MSO_SHAPE_TYPE  # noqa: E402
 from pptx.oxml.ns import qn  # noqa: E402
 from pptx.util import Emu, Inches, Pt  # noqa: E402
@@ -35,6 +37,7 @@ from common import content as content_mod  # noqa: E402
 
 def _load(name):
     spec = importlib.util.spec_from_file_location(f"pe_test_{name}", PE / f"{name}.py")
+    assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -108,18 +111,61 @@ class SampleDeck(unittest.TestCase):
     # -------------------------------------------------------------- structure
     def test_slide_count_and_determinism(self):
         n_sections = len(self.content["sections"])
-        floor = 1 + n_sections + 3          # cover + sections + glossary + refs + colophon
+        floor = 1 + 2 + n_sections + 3      # cover + guide + overview + sections + glossary + refs + colophon
         n = len(self.prs.slides)
         self.assertGreaterEqual(n, floor)
-        self.assertEqual(n, 9)               # golden sample: cover + 4 sections (5 slides) + glossary + refs + colophon - see CARRIER.md
+        self.assertEqual(n, 11)              # golden sample: cover + guide + 4 sections (5 slides) + overview + glossary + refs + colophon - see CARRIER.md
         again = self.tmp / "again.pptx"
         render.render(self.content, SAMPLE.parent, again)
         self.assertEqual(all_text(self.out), all_text(again), "same content must give the same slide texts")
 
+    # -------------------------------------------------------------- start guide / end overview (D4, 2026-11-16)
+    def _slide_texts(self, prs, i):
+        s = prs.slides[i]
+        parts = [sh.text_frame.text for sh in s.shapes if sh.has_text_frame]
+        parts += [c.text_frame.text for sh in s.shapes if getattr(sh, "has_table", False) and sh.has_table
+                  for r in sh.table.rows for c in r.cells]
+        return "\n".join(parts)
+
+    def test_guide_is_a_route_without_answers(self):
+        """Example test (rung 0): slide 2 lists every section heading and its summary, and no takeaway."""
+        txt = self._slide_texts(self.prs, 1)
+        self.assertIn("這份簡報的路線", txt)
+        for i, sec in enumerate(self.content["sections"], 1):
+            self.assertIn(f"第 {i} 節", txt)
+            self.assertIn(render.Ctx(self.content).plain(sec["heading"]), txt)
+        for sec in self.content["sections"]:
+            for t in sec.get("takeaways", []):
+                self.assertNotIn(t, txt, "the start guide carries the route, never the answers")
+
+    def test_overview_is_a_take_home_map(self):
+        """Example test (rung 0): the slide before the glossary restates the purpose and every section's takeaways."""
+        idx = next(i for i, s in enumerate(self.prs.slides)
+                   if any(sh.has_text_frame and sh.text_frame.text == "全貌：帶回去用" for sh in s.shapes))
+        txt = self._slide_texts(self.prs, idx)
+        self.assertIn("讀完能做到", txt)
+        for sec in self.content["sections"]:
+            for t in sec.get("takeaways", []):
+                self.assertIn(t, txt)
+        self.assertIn("詞彙", self._slide_texts(self.prs, idx + 1))
+
+    def test_negative_one_section_has_no_menus(self):
+        one = json.loads(json.dumps(self.content))
+        one["sections"] = one["sections"][:1]
+        out = self.tmp / "one.pptx"
+        render.render(one, SAMPLE.parent, out)
+        texts = "\n".join(self._slide_texts(Presentation(str(out)), i) for i in range(len(Presentation(str(out)).slides)))
+        sample = "\n".join(self._slide_texts(self.prs, i) for i in range(len(self.prs.slides)))
+        counts = (sample.count("這份簡報的路線"), sample.count("全貌：帶回去用"))
+        print(f"\n  menus: sample={counts}  one-section={(texts.count('這份簡報的路線'), texts.count('全貌：帶回去用'))}")
+        self.assertEqual(counts, (1, 1))
+        self.assertNotIn("這份簡報的路線", texts)
+        self.assertNotIn("全貌：帶回去用", texts)
+
     def test_each_block_type_produced_its_shape(self):
         prs, sample = self.prs, self.content
         want = {"para": ".para", "bullets": ".bullets", "steps": ".step1", "table": ".table", "figure": ".figure",
-                "callout": ".callout", "metrics": ".metric1", "quote": ".quote"}
+                "callout": ".callout", "metrics": ".metric1", "quote": ".quote", "code": ".code"}
         seen = set()
         for sec in sample["sections"]:
             for bi, b in enumerate(sec["blocks"], 1):
@@ -332,6 +378,7 @@ class SampleDeck(unittest.TestCase):
     def test_end_to_end_build_and_stamp(self):
         sys.path.insert(0, str(CARRIERS))
         spec = importlib.util.spec_from_file_location("carriers_build_for_test", CARRIERS / "build.py")
+        assert spec is not None and spec.loader is not None
         bmod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bmod)
         out = self.tmp / "e2e.pptx"
@@ -437,6 +484,128 @@ class OversizeBlock(unittest.TestCase):
             self.assertFalse(g["geometry"][0])
             self.assertRegex(g["geometry"][1], r"outside the slide|page-number band")
             self.assertTrue(g["structure"][0] and g["type_audit"][0])
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+# explainer/2 `code` block (v2): the literal text reaches the slide character for character. Control pair: the
+# real renderer passes the literal check, a mutant that tokenises inline markup in code text fails the same check.
+CODE_LITERAL = ('powershell -ExecutionPolicy Bypass -File "$HOME\\Downloads\\x"\n'
+                "Write-Host '**not bold**' & <b>tag</b> \"q\"\n"
+                "\n"
+                "\t$a = @{ k = 'v' }[0]  # [x] [[g:nope]] [[r:nope]]")
+CODE_LITERAL_NO_BRACKET_MARKERS = CODE_LITERAL.replace("[[g:nope]] [[r:nope]]", "")
+
+
+def _code_content(text, extra=None, schema="explainer/2"):
+    blocks = [{"type": "code", "text": text, "lang": "powershell", "caption": "指令範例"}]
+    if extra:
+        blocks += extra
+    return {"schema": schema,
+            "meta": {"title": "程式碼測試", "date": "2026-11-04", "audience": "audience", "lang": "zh-TW"},
+            "sections": [{"id": "c1", "heading": "指令", "summary": "照抄執行。", "blocks": blocks}]}
+
+
+def _code_shape_text(path):
+    """The text of the shape named c1.1.code, plus its runs' typefaces and sizes."""
+    prs = Presentation(str(path))
+    hits = shapes_named(prs, "c1.1.code")
+    if not hits:
+        return None, set(), set()
+    tf = hits[0][1].text_frame
+    runs = [r for p in tf.paragraphs for r in p.runs]
+    return tf.text, {r.font.name for r in runs}, {r.font.size.pt for r in runs}
+
+
+class CodeBlockDeck(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = Path(tempfile.mkdtemp(prefix="pptx-explainer-code-"))
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def build(self, name, content):
+        self.assertEqual(content_mod.validate(content, self.tmp), [])
+        out = self.tmp / f"{name}.pptx"
+        render.render(content, self.tmp, out)
+        return out
+
+    def test_literal_survives_character_for_character_in_consolas(self):
+        out = self.build("good", _code_content(CODE_LITERAL))
+        text, fonts, sizes = _code_shape_text(out)
+        print(f"\n  [literal] expected={CODE_LITERAL!r}\n  [literal] deck    ={text!r}  fonts={fonts} sizes={sizes}")
+        self.assertEqual(text, CODE_LITERAL)
+        self.assertEqual(fonts, {"Consolas"})
+        self.assertEqual(sizes, {14.0})                       # the body floor: nothing shrinks, long lines wrap
+        g = gate_map(out)
+        for name in ("type_audit", "structure", "geometry"):
+            self.assertTrue(g[name][0], f"{name}: {g[name][1]}")      # incl. a literal [[g:..]] in code text
+        fill = [sh for _, sh in shapes_named(Presentation(str(out)), "c1.1.code-bg")]
+        self.assertEqual(len(fill), 1)
+        self.assertEqual(str(fill[0].fill.fore_color.rgb), "F1F3F5")   # the light fill
+
+    def test_negative_control_inline_markup_mutant_is_caught(self):
+        content = _code_content(CODE_LITERAL_NO_BRACKET_MARKERS)
+        real_text, _, _ = _code_shape_text(self.build("real", content))
+        original = render.prepare
+
+        def mutant(b, c, tag):
+            n = original(b, c, tag)
+            if n["k"] == "code":      # the defect under test: code text run through the inline tokeniser
+                n["lines"] = [c.plain(ln) for ln in n["lines"]]
+            return n
+        setattr(render, "prepare", mutant)
+        try:
+            mut_text, _, _ = _code_shape_text(self.build("mutant", content))
+        finally:
+            setattr(render, "prepare", original)
+        print(f"\n  [mutant] real  ={real_text!r}\n  [mutant] mutant={mut_text!r}")
+        self.assertEqual(real_text, CODE_LITERAL_NO_BRACKET_MARKERS)
+        self.assertNotEqual(mut_text, CODE_LITERAL_NO_BRACKET_MARKERS, "the literal check did not notice inline markup")
+        self.assertNotIn("**not bold**", cast(str, mut_text))
+
+    def test_long_line_wraps_inside_the_box_and_keeps_every_character(self):
+        long_line = "Get-ChildItem " + " ".join(f"-Path C:\\Users\\x\\folder{i}" for i in range(40))
+        out = self.build("long", _code_content(long_line))
+        text, _, sizes = _code_shape_text(out)
+        self.assertEqual(text, long_line)
+        self.assertEqual(sizes, {14.0})
+        self.assertNotIn("overflow", [f["gate"] for f in render.FINDINGS_LAST])
+        self.assertTrue(gate_map(out)["geometry"][0], gate_map(out)["geometry"][1])
+
+    def test_tall_code_splits_across_slides_without_losing_a_line(self):
+        lines = [f"Write-Output 'line {i}'" for i in range(1, 61)]
+        out = self.build("tall", _code_content("\n".join(lines)))
+        prs = Presentation(str(out))
+        parts = [sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.name == "c1.1.code"]
+        self.assertGreaterEqual(len(parts), 2, "60 lines cannot fit one slide")
+        self.assertEqual("\n".join(parts), "\n".join(lines))
+        self.assertTrue(all(ok for ok, _ in gate_map(out).values()), gate_map(out))
+
+
+V1_FIXTURE = {"schema": "explainer/1",
+              "meta": {"title": "舊格式", "date": "2026-10-09", "audience": "audience", "lang": "zh-TW"},
+              "sections": [{"id": "old", "heading": "第一版內容", "summary": "只用第一版的區塊。",
+                            "blocks": [{"type": "para", "text": "這份內容宣告 explainer/1，**照舊**可以建。"},
+                                       {"type": "bullets", "items": ["不含 code 區塊"]}]}]}
+
+
+class V1BackwardCompat(unittest.TestCase):
+    """Backward-compat control: explainer/1 content validates, renders and passes every gate as before v2."""
+
+    def test_v1_validates_renders_and_passes_every_gate(self):
+        tmp = Path(tempfile.mkdtemp(prefix="pptx-explainer-v1-"))
+        try:
+            self.assertEqual(content_mod.validate(V1_FIXTURE, tmp), [])
+            out = tmp / "v1.pptx"
+            render.render(V1_FIXTURE, tmp, out)
+            g = gate_map(out)
+            self.assertEqual(sorted(g), ["geometry", "structure", "type_audit"])
+            for name, (ok, detail) in g.items():
+                self.assertTrue(ok, f"{name}: {detail}")
+            self.assertIn("照舊", " ".join(sum(all_text(out), [])))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 

@@ -21,7 +21,7 @@ cap used to apply to FAIL only, which meant an undeclared page could report a
 clean PASS — a PASS that is an artifact of the guessed ruler, not a measurement
 of the page, and one that gets carried forward as evidence. Corrected
 2026-09-08 on a measured case:
-`outputs/diagram-authoring/mfp-audit-f5-owner-view.html` reads reach 74 % with
+`view-pages/diagram-authoring/mfp-audit-f5-owner-view.html` reads reach 74 % with
 symmetric voids, which PASSES as the inferred `document-short` and FAILS as
 `document-long` — the class an audit page with diagrams plausibly is. The
 promotion trigger that turns an inferred class into a declared one is written in
@@ -85,6 +85,16 @@ Two checks, both WARN-only (a WARN keeps exit 0), both read the page's OWN compu
   asserted on those VALUES, not on the status label. Known residue: the thumb fork passes at exactly
   min_shared=5 (K=6 loses it); the width MEASURE_JS is untouched, so width output is unchanged.
 
+Phone width (2026-11-15, proposal 提案單_填滿閘門加手機寬度_20261115): five live PersonalSite notes scrolled sideways
+at 375 px while every desktop viewport passed. Registry row `defect_page_overflow`: one extra measurement at 375x812
+with touch + mobile emulation, `scrollWidth - 375` (never innerWidth: emulation widens the layout viewport to fit an
+overflowing page), tolerance 1 px, severity from the row. DETERMINABLE: the overflow and the box sticking out past its
+parent. Declined, reported as WARN, never PASS: a page without a viewport tag (laid out at desktop width and shrunk:
+a different defect) and a page whose linked stylesheet is missing (file:// with root-absolute hrefs). Fixed-size
+classes are exempt. A long unbreakable string has no box of its own, so when no box sticks out the innermost box
+whose content spills is named "text in <sel>". Runs with the default viewports, `--phone`, or alone with `--phone-only`; five controls
+(PHONE_CONTROLS) asserted on values. Library: `phone_rows(browser, targets, reg)`; rows carry kind="phone".
+
 Library use: `from fill_gate import gate_paths; rows = gate_paths([...])`; each row also carries
 `sibling_drift` (C2 block) and `duplicate_rules` (S3 block, None at the viewports where it is not computed).
 
@@ -122,7 +132,187 @@ CONTROLS = {"known-bad-left-cap.html": "known-bad", "known-good-fill.html": "kno
 CONSISTENCY_CONTROLS = {"known-bad-consistency-prefix.html": "consistency-bad",
                         "known-good-consistency-postfix.html": "consistency-good",
                         "known-good-consistency-clean.html": "consistency-clean"}
-ALL_CONTROLS = {**CONTROLS, **CONSISTENCY_CONTROLS}
+# Squeezed-side-panel pair (2026-11-17): the same three-column page (nameplate | prose | TOC), capped at 1000 px
+# (bad: side labels wrap, voids >= 300 px at 1707) or spanning the window (good). Asserted on the wrapped-label
+# count and the void, not on the label (squeeze_control_problems).
+SQUEEZE_CONTROLS = {"known-bad-side-squeeze.html": "squeeze-bad", "known-good-side-wide.html": "squeeze-good"}
+ALL_CONTROLS = {**CONTROLS, **CONSISTENCY_CONTROLS, **SQUEEZE_CONTROLS}
+# Phone-width pair (2026-11-15): measured at the phone viewport only, so kept apart from the desktop controls.
+# The bad one is a bare 900 px table, the good one the same table inside an overflow-x:auto box. Asserted on the
+# overflow VALUE (bad > phone_control_min_px, good <= tolerance), not on the label (phone_control_problems).
+PHONE_CONTROLS = {"known-bad-page-overflow.html": "phone-bad", "known-good-page-overflow.html": "phone-good",
+                  "known-bad-no-viewport-meta.html": "phone-no-meta", "known-bad-unloaded-sheet.html": "phone-unloaded",
+                  "known-bad-text-overflow.html": "phone-text"}
+
+PHONE_JS = r"""(opts) => {
+  const W = opts.w, tol = opts.tol, html = document.documentElement;
+  // a stylesheet that did not load (root-absolute href opened from file://) leaves an unstyled page: not measurable.
+  // Chromium keeps a sheet object for a missing file:// stylesheet, so the file check is done in Python (phone_rows)
+  const sheets = [...document.querySelectorAll('link[rel~="stylesheet"]')].filter(l => !l.disabled).map(l => l.href);
+  const unloaded = [...document.querySelectorAll('link[rel~="stylesheet"]')].filter(l => !l.sheet && !l.disabled).map(l => l.getAttribute('href'));
+  // measured against the device width, never innerWidth: under mobile emulation an overflowing page widens the
+  // layout viewport (PersonalSite measured innerWidth 375 -> 917), so scrollWidth - innerWidth reads 0 on the defect
+  // without <meta name=viewport> a phone lays the page out at ~980 px and shrinks it to fit: no sideways scroll,
+  // but the text is unreadably small. A different defect, so the overflow figure is not ruled on in that case.
+  const meta = document.querySelector('meta[name="viewport" i]');
+  const vpMeta = meta ? (meta.getAttribute('content') || '') : null;
+  const over = html.scrollWidth - W;
+  const culprits = [];
+  if (over > tol && vpMeta !== null) {
+    const clips = el => { for (let p = el.parentElement; p && p !== html; p = p.parentElement) {
+      const ox = getComputedStyle(p).overflowX; if (ox !== 'visible') return true; } return false; };
+    const all = document.body ? document.body.querySelectorAll('*') : [];
+    const found = [];
+    for (let i = 0; i < all.length && i < 20000; i++) {
+      const el = all[i], r = el.getBoundingClientRect(), p = el.parentElement;
+      if (!p || r.right <= W + tol) continue;
+      const pr = p.getBoundingClientRect();
+      // the box that sticks out past its own parent is the cause; its ancestors are wide only because of it
+      if (r.right > pr.right + tol && r.width > 0 && !clips(el)) found.push({el, w: Math.round(r.width), right: Math.round(r.right)});
+    }
+    const outer = found.filter(c => !found.some(d => d !== c && d.el.contains(c.el)));
+    // text has no box of its own: a long unbreakable string shows only as a box whose content is wider than it
+    // (scrollWidth > clientWidth with overflow visible). Keep the innermost such box, named "text in <sel>".
+    if (!outer.length) {
+      const spill = [];
+      for (let i = 0; i < all.length && i < 20000; i++) {
+        const el = all[i];
+        if (el.scrollWidth > el.clientWidth + tol && el.clientWidth > 0 && getComputedStyle(el).overflowX === 'visible' && !clips(el)) {
+          const r = el.getBoundingClientRect();
+          spill.push({el, w: el.scrollWidth, right: Math.round(r.left + el.scrollWidth), text: true});
+        }
+      }
+      outer.push(...spill.filter(c => !spill.some(d => d !== c && c.el.contains(d.el))));
+    }
+    outer.sort((a, b) => b.right - a.right);
+    for (const c of outer.slice(0, 4)) {
+      const e = c.el, cls = (e.getAttribute('class') || '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
+      const sel = e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + cls.map(x => '.' + x).join('');
+      culprits.push({sel: c.text ? 'text in ' + sel : sel, w: c.w, right: c.right});
+    }
+  }
+  return {over, sw: html.scrollWidth, sheets, unloaded, vpMeta, cls: html.getAttribute('data-page-class'), culprits};
+}"""
+
+
+def phone_rule(reg: dict) -> dict:
+    """The phone-width defect row; a missing row means the check is off (old registry), never a silent PASS."""
+    return reg.get("defect_page_overflow") or {}
+
+
+def phone_exempt(cls: str | None, reg: dict) -> bool:
+    """A fixed-size class (a 1920 canvas, a slide frame, a film frame) does not reflow by design."""
+    rule = phone_rule(reg)
+    if cls in set(rule.get("exempt_classes", [])):
+        return True
+    return reg["classes"].get(cls or "", {}).get("mode") in set(rule.get("exempt_modes", []))
+
+
+def phone_verdict(meas: dict, reg: dict, forced_class: str | None = None) -> dict:
+    """Pure: phone measurement + registry -> {status, cls, reasons, notes}."""
+    rule = phone_rule(reg)
+    cls = forced_class or meas.get("cls")
+    tol = rule.get("tolerance_px", 1)
+    if phone_exempt(cls, reg):
+        return {"status": "PASS", "cls": cls, "reasons": [],
+                "notes": [f"phone width not ruled on: class '{cls}' is a fixed-size frame by design"]}
+    if meas.get("unloaded"):
+        return {"status": "WARN", "cls": cls, "notes": [],
+                "reasons": ["phone width NOT measurable: stylesheet(s) did not load ("
+                            + ", ".join(str(h) for h in meas["unloaded"][:3])
+                            + "); a root-absolute href opened from file:// leaves an unstyled page. Serve the built folder "
+                              "on a loopback http server and pass the URL"]}
+    if meas.get("vpMeta") is None:
+        return {"status": rule.get("no_viewport_meta_severity", "WARN"), "cls": cls, "notes": [],
+                "reasons": ["no <meta name=\"viewport\">: a phone lays the page out at desktop width and shrinks it to fit, so the "
+                            "text is too small to read (sideways overflow not ruled on). Add "
+                            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> and re-run"]}
+    if meas["over"] <= tol:
+        return {"status": "PASS", "cls": cls, "reasons": [], "notes": []}
+    why = (f"page scrolls sideways at phone width: {meas['sw']}px wide on a {rule['viewport'][0]}px screen (+{meas['over']}px)"
+           + ("; widest box(es): " + ", ".join(f"{c['sel']} {c['w']}px" for c in meas["culprits"]) if meas.get("culprits") else
+              "; no single box wider than the screen (look for negative margins, transforms or absolutely placed items)"))
+    return {"status": rule.get("severity", "WARN"), "cls": cls, "reasons": [why], "notes": []}
+
+
+def missing_file_sheets(hrefs: list[str]) -> list[str]:
+    """file:// stylesheet URLs whose file does not exist (a root-absolute href resolved against the drive root)."""
+    out = []
+    for h in hrefs:
+        if not h.startswith("file:"):
+            continue
+        p = pathlib.Path(urllib.request.url2pathname(urllib.parse.urlsplit(h).path))
+        if not p.is_file():
+            out.append(h)
+    return out
+
+
+def phone_control_problems(label: str, meas: dict, reg: dict) -> list[str]:
+    rule = phone_rule(reg)
+    tol, floor = rule.get("tolerance_px", 1), rule.get("phone_control_min_px", 300)
+    if label == "phone-unloaded":
+        return [] if any("__page-fill-gate-missing__" in h for h in meas.get("unloaded") or []) else [
+            f"the missing root-absolute stylesheet must be named unloaded; got {meas.get('unloaded')}"]
+    if meas.get("unloaded"):
+        return [f"control stylesheet did not load: {meas['unloaded']}"]
+    if label == "phone-no-meta":
+        return [] if meas.get("vpMeta") is None else [f"page without a viewport tag must read vpMeta None; got {meas.get('vpMeta')!r}"]
+    if meas.get("vpMeta") is None:
+        return ["control lost its viewport tag"]
+    if label == "phone-text":
+        ok = meas["over"] > tol and any(c["sel"] == "text in p.hash" for c in meas.get("culprits", []))
+        return [] if ok else [f"80-char hash must overflow and be named 'text in p.hash'; got {meas['over']}px {meas.get('culprits')}"]
+    if label == "phone-bad":
+        if meas["over"] <= floor:
+            return [f"bare 900 px table must overflow by > {floor}px; got {meas['over']}px"]
+        return [] if any(c["sel"] == "table" for c in meas.get("culprits", [])) else [f"culprit must be the table; got {meas.get('culprits')}"]
+    return [] if meas["over"] <= tol else [f"wrapped table must not overflow; got {meas['over']}px"]
+
+
+def phone_rows(browser, targets, reg: dict, forced_class=None, controls=True) -> list[dict]:
+    """Measure every target once at the registry's phone viewport with touch + mobile emulation."""
+    rule = phone_rule(reg)
+    if not rule:
+        return []
+    w, h = rule["viewport"]
+    ctx = browser.new_context(viewport={"width": w, "height": h}, is_mobile=bool(rule.get("mobile", True)),
+                              has_touch=bool(rule.get("mobile", True)))
+    ctx.route("http://**", route_local_only); ctx.route("https://**", route_local_only)
+    page = ctx.new_page()
+    opts = {"w": w, "tol": rule.get("tolerance_px", 1)}
+    rows = []
+    n_ctl = len(PHONE_CONTROLS) if controls else 0
+    work = ([str(FIXTURES / f) for f in PHONE_CONTROLS] if controls else []) + list(targets)
+    for idx, t in enumerate(work):
+        is_ctl = idx < n_ctl   # a fixture passed as a target is measured as a target, not counted as a control twice
+        try:
+            page.goto(to_url(t), wait_until="load", timeout=60000)
+            page.wait_for_timeout(150)
+            meas = page.evaluate(PHONE_JS, opts)
+            meas["unloaded"] = (meas.get("unloaded") or []) + missing_file_sheets(meas.get("sheets") or [])
+            v = phone_verdict(meas, reg, None if is_ctl else forced_class)
+            err = None
+        except Exception as exc:
+            meas, err = {"over": None, "sw": None, "culprits": []}, f"could not measure at phone width: {exc}"
+            v = {"status": "WARN", "cls": "?", "reasons": [err], "notes": []}
+        rows.append({"target": t, "control": PHONE_CONTROLS[pathlib.Path(t).name] if is_ctl else None, "kind": "phone",
+                     "viewport": f"{w}x{h}m", "class": v["cls"], "inferred": False, "status": v["status"],
+                     "width_status": v["status"], "consistency_status": "PASS", "consistency_reasons": [],
+                     "overflow_px": meas.get("over"), "scroll_width": meas.get("sw"), "culprits": meas.get("culprits", []),
+                     "reach": 0, "fill": 0, "left_void": 0, "right_void": 0, "areas": [], "chrome": [],
+                     "sibling_drift": None, "duplicate_rules": None, "reasons": v["reasons"], "notes": v["notes"],
+                     "_meas": None if not is_ctl else meas})
+    ctx.close()
+    if controls:
+        for name, label in PHONE_CONTROLS.items():
+            got = [r for r in rows if r["target"] == str(FIXTURES / name)]
+            bad = phone_control_problems(label, got[0]["_meas"], reg) if got and got[0]["_meas"] else ["no measurement"]
+            if bad:
+                raise RuntimeError(f"fill-gate calibration: {label} phone control read the wrong VALUE ({bad[0]})"
+                                   " — instrument fault, no verdict is valid")
+    for r in rows:
+        r.pop("_meas", None)
+    return rows
 
 
 def control_want(label: str) -> tuple:
@@ -131,7 +321,21 @@ def control_want(label: str) -> tuple:
     every duplicate in that author's CSS (its values are asserted instead); everything else PASSes."""
     if label.startswith("known-bad"):
         return ("FAIL",)
-    return {"consistency-bad": ("WARN",), "consistency-good": ("PASS", "WARN")}.get(label, ("PASS",))
+    return {"consistency-bad": ("WARN",), "consistency-good": ("PASS", "WARN"), "squeeze-bad": ("WARN",)}.get(label, ("PASS",))
+
+
+def squeeze_control_problems(label: str, row: dict, reg: dict) -> list[str]:
+    """Value-level assertions for the squeezed-side-panel pair. Both must have MEASURED labels (an absent
+    wrap on a page whose panel was never found proves nothing); bad: >= 1 wrapped and void >= min_void_px;
+    good: 0 wrapped."""
+    sq = row.get("squeeze") or {}
+    floor = (reg.get("defect_squeezed_side_panel") or {}).get("min_void_px", 120)
+    got = f"panels {sq.get('panels')}, labels {sq.get('labels')}, wrapped {sq.get('wrapped')}, void {sq.get('void')}px"
+    if not sq.get("panels") or not sq.get("labels"):
+        return [f"the check did not measure ({got})"]
+    if label == "squeeze-bad":
+        return [] if (sq["wrapped"] >= 1 and sq["void"] >= floor) else [f"want wrapped >= 1 and void >= {floor}px; got {got}"]
+    return [] if sq["wrapped"] == 0 else [f"want wrapped 0; got {got}"]
 
 
 def consistency_control_problems(label: str, row: dict) -> list[str]:
@@ -306,6 +510,13 @@ MEASURE_JS = r"""(opts) => {
   };
   const cls = declared || infer();
   const out = {declared, inferred: declared ? null : cls, cls, W, H, chrome, rail: railsIn.length > 0, rails: railsIn.length};
+  { const br = document.body.getBoundingClientRect(), root = document.documentElement, was = root.getAttribute('style');
+    // shrink the root: a fluid or max-width body shrinks with it, a fixed-width body (a frame) does not
+    root.style.width = Math.max(200, Math.round(br.width) - 357) + 'px';
+    const w2 = Math.round(document.body.getBoundingClientRect().width);
+    root.getAttribute('style');   // flush the lazily-synced attribute, then put back exactly what was there
+    if (was === null) root.removeAttribute('style'); else root.setAttribute('style', was);
+    out.bodyBox = {w: Math.round(br.width), h: Math.round(Math.max(br.height, document.body.scrollHeight)), fixed: w2 === Math.round(br.width)}; }
   // ---- paged decks (L-125): a scope is measured the way it looks WHEN SHOWN ----
   // A deck that shows one slide at a time hides the others (display:none, visibility:hidden, [hidden],
   // or a hidden wrapper); a hidden box has no layout, so measure() found nothing and the slide read WARN.
@@ -334,7 +545,7 @@ MEASURE_JS = r"""(opts) => {
     out.scopes = scopes.map((sc, i) => {
       const f = showScope(sc, shownDisplay);
       try { const r = sc.getBoundingClientRect(), s = cs(sc);
-        const m = measure(sc, r.left + parseFloat(s.paddingLeft), r.right - parseFloat(s.paddingRight), null); m.index = i + 1; m.id = sc.id || null; m.forced = f.forced; return m;
+        const m = measure(sc, r.left + parseFloat(s.paddingLeft), r.right - parseFloat(s.paddingRight), null); m.index = i + 1; m.id = sc.id || null; m.forced = f.forced; m.w = Math.round(r.width); m.h = Math.round(r.height); return m;
       } finally { f.undo(); } });
     if (!scopes.length) out.page = measure(document.body, areaL, areaR, H * 3);
   } else {
@@ -344,6 +555,27 @@ MEASURE_JS = r"""(opts) => {
       out.page.minL = Math.min(out.page.minL ?? Infinity, Math.round(railEdgeL));
       out.page.leftVoid = Math.max(0, Math.round(out.page.minL - areaL));
       if (out.page.maxR != null) out.page.fill = +((out.page.maxR - out.page.minL) / (areaR - areaL)).toFixed(3);
+    }
+    // ---- squeezed side panel (2026-11-17): short labels wrapped while the page leaves both sides empty ----
+    // Lines are counted from the text's own line boxes (Range.getClientRects, distinct tops), not from height,
+    // so padding, icons and line-height cannot fake a wrap. Only visible leaves with their own text count.
+    if (opts.squeezeSel) {
+      // A fixed box floats over the page (a corner panel, a drawer): it is not a column the page cap squeezed.
+      const overlay = p => { for (let e = p; e && e !== html; e = e.parentElement) if (cs(e).position === 'fixed') return true; return false; };
+      const panels = Array.from(document.querySelectorAll(opts.squeezeSel)).filter(p => !p.closest('[hidden]') && !overlay(p) && p.getBoundingClientRect().width >= 40);
+      const items = []; let labels = 0;
+      for (const p of panels) for (const el of p.querySelectorAll('*')) {
+        if (!ownText(el)) continue;
+        const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t.length < 2 || t.length > opts.squeezeMax) continue;
+        const r = el.getBoundingClientRect(); if (r.width < 1 || r.height < 1) continue;
+        const rg = document.createRange(); rg.selectNodeContents(el);
+        const tops = new Set(Array.from(rg.getClientRects()).filter(q => q.width > 0.5).map(q => Math.round(q.top / 3)));
+        labels++;
+        if (tops.size >= 2) items.push({text: t.slice(0, 24), lines: tops.size, panel: p.tagName.toLowerCase() + (p.className && typeof p.className === 'string' ? '.' + p.className.trim().split(/\s+/)[0] : '')});
+      }
+      out.squeeze = {panels: panels.length, labels, wrapped: items.length, items: items.slice(0, 6),
+                     void: Math.min(out.page.leftVoid, out.page.rightVoid)};
     }
   }
   // ---- clipped overflow (2026-10-13): a display formula wider than its own box ----
@@ -754,6 +986,36 @@ def to_url(target: str) -> str:
     return pathlib.Path(target).resolve().as_uri()
 
 
+def canvas_layouts(rule: dict) -> tuple[dict, float]:
+    """The fixed-canvas vocabulary lives in blank-space-gauge (one home); this gate only reads it."""
+    p = (REGISTRY_PATH.parent / rule["layouts_from"]).resolve()
+    d = json.loads(p.read_text(encoding="utf-8"))
+    return {k: v["ratio"][0] / v["ratio"][1] for k, v in d["layouts"].items()}, d.get("ratio_tolerance", 0.03)
+
+
+def canvas_width(meas: dict, rule: dict) -> tuple[str, list, list]:
+    """The width part of a canvas verdict. A fixed-size frame has no width to use: rule only on what is
+    determinable (each frame's aspect matches a named blank-space-gauge layout) and forward empty space there."""
+    frames = [(s.get("w") or 0, s.get("h") or 0) for s in (meas.get("scopes") or [])]
+    bb = meas.get("bodyBox") or {}
+    if not frames and bb.get("fixed") and bb.get("w") and bb.get("h"):   # the frame is a fixed-width body (film pages)
+        frames = [(bb["w"], bb["h"])]
+    if not frames:
+        return "WARN", [f"declared canvas but no fixed frame found ({rule['scope']}, or a body whose width ignores its root)"], []
+    layouts, tol = canvas_layouts(rule)
+    names, bad = set(), []
+    for w, h in frames:
+        hit = [k for k, r in layouts.items() if h and abs(w / h - r) / r <= tol]
+        names.update(hit)
+        if not hit:
+            bad.append(f"{w}x{h}")
+    if bad:
+        return "WARN", [f"frame(s) {', '.join(bad[:4])} match no blank-space-gauge layout "
+                        f"({', '.join(layouts)}): add a layout row there"], []
+    return "PASS", [], [f"canvas: only the frame aspect was ruled on ({', '.join(sorted(names))}, {len(frames)} frame(s)); "
+                        "width use does not apply and empty space is blank-space-gauge's call"]
+
+
 def verdict(meas: dict, reg: dict, forced_class: str | None = None) -> dict:
     """Pure function: measurement + registry -> {status, class, reasons...}. No browser here."""
     classes = reg["classes"]
@@ -766,7 +1028,10 @@ def verdict(meas: dict, reg: dict, forced_class: str | None = None) -> dict:
         return {"status": "WARN", "width_status": "WARN", "cls": cls, "inferred": inferred,
                 "reasons": [f"class '{cls}' is not in page_classes.json — add a row; measured only"],
                 "consistency_status": "PASS", "consistency_reasons": []}
-    areas = meas.get("scopes") or [meas["page"]]
+    notes = []
+    if rule["mode"] == "canvas":
+        status, reasons, notes = canvas_width(meas, rule)
+    areas = [] if rule["mode"] == "canvas" else (meas.get("scopes") or [meas["page"]])
     worst = None
     for a in areas:
         st, why = "PASS", []
@@ -806,7 +1071,8 @@ def verdict(meas: dict, reg: dict, forced_class: str | None = None) -> dict:
         if worst is None or rank[st] > rank[worst[0]]:
             worst = (st, why)
         reasons += why
-    status = worst[0] if worst else "WARN"
+    if rule["mode"] != "canvas":
+        status = worst[0] if worst else "WARN"
     ov = meas.get("overflow") or {}
     if ov.get("total"):
         sev = reg.get("defect_clipped_overflow", {}).get("severity", "FAIL")
@@ -814,12 +1080,20 @@ def verdict(meas: dict, reg: dict, forced_class: str | None = None) -> dict:
             status = sev
         reasons.append(f"{ov['total']} display formula(s) wider than their box (content hidden behind a scroll): "
                        + "; ".join(f"#{i['near'] or '?'} {i['sw']}/{i['cw']}px '{i['text'][:24]}'" for i in ov["items"][:4]))
+    sq, sq_rule = meas.get("squeeze") or {}, reg.get("defect_squeezed_side_panel") or {}
+    if rule["mode"] != "canvas" and sq.get("wrapped") and sq.get("void", 0) >= sq_rule.get("min_void_px", 120):
+        sev = sq_rule.get("severity", "WARN")
+        if sev == "FAIL" or status == "PASS":
+            status = sev
+        reasons.append(f"{sq['wrapped']} short side-panel label(s) wrap while both page voids are >= {sq['void']}px "
+                       f"(widen the side columns or lift the page cap): "
+                       + "; ".join(f"{i['panel']} '{i['text']}' {i['lines']} lines" for i in sq["items"][:3]))
     if inferred:
         # An inferred class caps the verdict at WARN in BOTH directions, fixed
         # 2026-09-08. The downgrade used to apply only to FAIL, so a page whose
         # class nobody declared could report a clean PASS -- and that PASS is an
         # artifact of the guess, not a measurement of the page. Measured case:
-        # `outputs/diagram-authoring/mfp-audit-f5-owner-view.html` reads
+        # `view-pages/diagram-authoring/mfp-audit-f5-owner-view.html` reads
         # reach 74% with symmetric 436/436 voids, which PASSES as the inferred
         # `document-short` and FAILS as `document-long`, the class an audit page
         # with diagrams plausibly is. The run printed "0 FAIL / 0 WARN" and that
@@ -842,7 +1116,7 @@ def verdict(meas: dict, reg: dict, forced_class: str | None = None) -> dict:
         elif c_status == "WARN" and status == "PASS":
             status = "WARN"
     return {"status": status, "width_status": width_status, "cls": cls, "inferred": inferred, "reasons": reasons,
-            "consistency_status": c_status if c_reasons else "PASS", "consistency_reasons": c_reasons}
+            "consistency_status": c_status if c_reasons else "PASS", "consistency_reasons": c_reasons, "notes": notes}
 
 
 def _fmt_vals(drift: dict) -> str:
@@ -900,9 +1174,27 @@ def consistency_verdict(cons: dict | None, reg: dict) -> tuple[str, list[str]]:
     return status, lines
 
 
-def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=True, advisory=None):
-    """Measure every target at every viewport. Returns rows; raises RuntimeError(2) when the instrument is missing."""
+def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=True, advisory=None, phone=None):
+    """Measure every target at every viewport. Returns rows; raises RuntimeError(2) when the instrument is missing.
+    phone: None = the phone-width check runs when the default viewports run (an explicit --viewport list is a
+    desktop-only question); True = always; "only" = the phone check alone (a sweep of a whole built site); False = off."""
     reg = reg or load_registry()
+    if phone is None:
+        phone = viewports is None
+    if phone == "only":
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as exc:
+            raise RuntimeError(f"instrument unavailable: {exc}") from exc
+        with sync_playwright() as pw:
+            try:
+                browser = pw.chromium.launch()
+            except Exception as exc:
+                raise RuntimeError(f"instrument unavailable: {exc}") from exc
+            try:
+                return phone_rows(browser, targets, reg, forced_class, controls)
+            finally:
+                browser.close()
     gating = [tuple(v) for v in reg["reference_viewports"]["gating"]]
     adv = [tuple(v) for v in reg["reference_viewports"]["advisory"]]
     viewports = viewports or (gating + adv)
@@ -929,7 +1221,9 @@ def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=Tr
                 try:
                     page.goto(to_url(t), wait_until="load", timeout=60000)
                     page.wait_for_timeout(300)
-                    cls_hint = forced_class
+                    # a control keeps its own class: forcing --class onto it voids every forced run
+                    forced = None if is_ctl else forced_class
+                    cls_hint = forced
                     probe = page.evaluate("() => document.documentElement.getAttribute('data-page-class')")
                     cls_for_scope = cls_hint or probe
                     rule = reg["classes"].get(cls_for_scope or "", {})
@@ -937,7 +1231,9 @@ def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=Tr
                             "scope": rule.get("scope"), "maxScopes": rule.get("max_scopes", 8),
                             "backdrop": bool(rule.get("backdrop_bands")),
                             "overflowSel": ", ".join(reg.get("defect_clipped_overflow", {}).get("selectors", [])),
-                            "overflowTol": reg.get("defect_clipped_overflow", {}).get("tolerance_px", 2)}
+                            "overflowTol": reg.get("defect_clipped_overflow", {}).get("tolerance_px", 2),
+                            "squeezeSel": ", ".join(reg.get("defect_squeezed_side_panel", {}).get("selectors", [])),
+                            "squeezeMax": reg.get("defect_squeezed_side_panel", {}).get("max_label_chars", 24)}
                     meas = page.evaluate(MEASURE_JS, opts)
                     if not cls_for_scope and reg["classes"].get(meas["cls"], {}).get("scope"):
                         opts["scope"] = reg["classes"][meas["cls"]]["scope"]; meas = page.evaluate(MEASURE_JS, opts)
@@ -951,7 +1247,7 @@ def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=Tr
                     except Exception as exc2:
                         meas["consistency"] = {}
                         cons_err = f"consistency not computed: {exc2}"
-                    v = verdict(meas, reg, forced_class)
+                    v = verdict(meas, reg, forced)
                     if cons_err:
                         # a check that did not run is never a PASS: WARN, and the reason travels with the field
                         v["reasons"].append(cons_err)
@@ -979,13 +1275,14 @@ def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=Tr
                                  "left_void": summary["leftVoid"], "right_void": summary["rightVoid"],
                                  "areas": [{k: x.get(k) for k in ("index", "id", "n", "reach", "fill", "findings_total", "forced")} for x in (meas.get("scopes") or [])],
                                  "overflow": (meas.get("overflow") or {}).get("items", []),
+                                 "squeeze": meas.get("squeeze"),
                                  # in-page consistency findings under their own keys (None = not computed at this viewport)
                                  "sibling_drift": cons.get("siblings"),
                                  "duplicate_rules": None if dup is None else {
                                      **{k: dup[k] for k in ("sheets", "unread", "rules", "pairs", "not_checked")},
                                      "groups": [{**g, "pairs": g["pairs"][:5]} for g in dup["groups"]]},
                                  "consistency_error": cons_err,
-                                 "chrome": meas["chrome"], "reasons": v["reasons"]})
+                                 "chrome": meas["chrome"], "reasons": v["reasons"], "notes": v.get("notes", [])})
                 except Exception as exc:
                     rows.append({"target": t, "control": None, "viewport": f"{w}x{h}", "class": "?", "inferred": True,
                                  "status": "WARN", "width_status": "WARN", "consistency_status": "PASS", "consistency_reasons": [],
@@ -994,6 +1291,8 @@ def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=Tr
                                  "reasons": [f"could not measure: {exc}"]})
                 finally:
                     page.close()
+        if phone:
+            rows += phone_rows(browser, targets, reg, forced_class, controls)
         browser.close()
     if controls:
         for name, label in ALL_CONTROLS.items():
@@ -1004,6 +1303,11 @@ def gate_paths(targets, viewports=None, forced_class=None, reg=None, controls=Tr
                                    f" (want {'/'.join(want)}, got {got[0]['status'] if got else 'no row'}) — instrument fault, no verdict is valid")
             if label in CONSISTENCY_CONTROLS.values():
                 bad = consistency_control_problems(label, got[0])
+                if bad:
+                    raise RuntimeError(f"fill-gate calibration: {label} control read the wrong VALUES ({bad[0]})"
+                                       " — instrument fault, no verdict is valid")
+            if label in SQUEEZE_CONTROLS.values():
+                bad = squeeze_control_problems(label, got[0], reg)
                 if bad:
                     raise RuntimeError(f"fill-gate calibration: {label} control read the wrong VALUES ({bad[0]})"
                                        " — instrument fault, no verdict is valid")
@@ -1019,9 +1323,16 @@ def fmt(r: dict) -> str:
         p = pathlib.Path(r["target"])
         who = p.name if p.name.lower() not in ("index.html", "index.htm") else f"{p.parent.name}/{p.name}"
     cls = ("inferred:" if r["inferred"] else "") + str(r["class"])
+    if r.get("kind") == "phone":
+        line = (f"fill-gate: {r['status']:4s} {r['viewport']:9s} class={cls:24s} phone overflow="
+                f"{'?' if r.get('overflow_px') is None else str(r['overflow_px']) + 'px'}  {who}")
+        line += "".join("\n           - " + x for x in r["reasons"]) + "".join("\n           note: " + x for x in r.get("notes") or [])
+        return line
     line = f"fill-gate: {r['status']:4s} {r['viewport']:9s} class={cls:24s} reach={r['reach']:.0%} fill={r['fill']:.0%} void L/R={r['left_void']}/{r['right_void']}px  {who}"
     if r["reasons"]:
         line += "\n" + "\n".join("           - " + x for x in r["reasons"])
+    for x in r.get("notes") or []:   # what the verdict did NOT rule on (canvas): printed even on a PASS
+        line += "\n           note: " + x
     return line
 
 
@@ -1033,10 +1344,15 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--no-controls", action="store_true")
     ap.add_argument("--quiet", action="store_true", help="only non-PASS lines")
+    ph = ap.add_mutually_exclusive_group()
+    ph.add_argument("--phone", action="store_true", help="add the phone-width check to an explicit --viewport list")
+    ph.add_argument("--phone-only", action="store_true", help="only the phone-width check (a whole-site sweep)")
+    ph.add_argument("--no-phone", action="store_true", help="skip the phone-width check")
     a = ap.parse_args(argv)
     vps = [tuple(int(x) for x in v.lower().split("x")) for v in a.viewport] if a.viewport else None
+    phone = "only" if a.phone_only else True if a.phone else False if a.no_phone else None
     try:
-        rows = gate_paths(a.targets, viewports=vps, forced_class=a.cls, controls=not a.no_controls)
+        rows = gate_paths(a.targets, viewports=vps, forced_class=a.cls, controls=not a.no_controls, phone=phone)
     except RuntimeError as exc:
         print(f"fill-gate: SKIP — {exc}. Downgrade-and-forward: the width property is UNVERIFIED for these files.", file=sys.stderr)
         return 2
@@ -1053,6 +1369,14 @@ def main(argv=None) -> int:
                "consistency-bad WARN with the 22/32 px drift + thumb and standfirst forks named, consistency-good neither of them, "
                "consistency-clean PASS with no finding)"
                if not a.no_controls else "controls SKIPPED")
+        phone_ctl = [r for r in rows if r.get("control") in PHONE_CONTROLS.values()]
+        if phone_ctl:
+            vals = ", ".join(f"{r['control']} {r['overflow_px']}px" for r in phone_ctl if r["control"] in ("phone-bad", "phone-good"))
+            txt = next((f"{r['overflow_px']}px" for r in phone_ctl if r["control"] == "phone-text"), "?")
+            pc = (f"phone controls fired (bare 900 px table overflows and is named, wrapped one does not: {vals}; "
+                  f"unbreakable 80-char string named as text ({txt}); page without a viewport tag and page with an "
+                  "unloadable stylesheet reported as such)")
+            ctl = pc if phone == "only" else f"{ctl}; {pc}"
         print(f"fill-gate: {'FAIL' if n_fail else 'PASS'} — {n_fail} FAIL / {n_warn} WARN over {len([r for r in rows if not r['control']])} file×viewport rows; {ctl}")
     return 1 if any(r["status"] == "FAIL" and not r["control"] for r in rows) else 0
 

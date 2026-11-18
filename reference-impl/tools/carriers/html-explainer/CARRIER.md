@@ -1,7 +1,7 @@
 # html-explainer — carrier card
 
-Version: **9** (registry row `html-explainer` in `tools/carriers/registry.json`; the two must agree)
-Consumes: `explainer/1` (`tools/carriers/schema/explainer-1.schema.json`). Produces: one self-contained `.html` file.
+Version: **12** (registry row `html-explainer` in `tools/carriers/registry.json`; the two must agree)
+Consumes: `explainer/1` and `explainer/2` (`tools/carriers/schema/explainer-1.schema.json`, `explainer-2.schema.json`; v2 = v1 + the `code` block). Produces: one self-contained `.html` file.
 Page class: `document-long` (declared on `<html data-page-class>`), reading mode `look-up`.
 
 ## What it is for
@@ -27,6 +27,8 @@ classes with other carriers).
 | section | `main > section.ch#<id>[data-kind=content]` with `h2`; one `#side a.l1[data-sec]` link |
 | section `summary` | `.chsub` under the h2 and the first line of that section's rail entry |
 | section `takeaways` | rail entry list 本節重點 (added by the carrier script, see below) |
+| start guide (2+ sections) | `div.guide[role=navigation]` after the 閱讀目的 box: tag 先看路線, an `ol` of section links + each `summary`; no takeaways (goal: choose where to read) |
+| end overview (2+ sections) | `section.ch#x_overview[data-kind=overview]` 「全貌：帶回去用」 after the last content section, before the glossary: `meta.purpose` as 讀完能做到, one card per section with its `takeaways` (its `summary` when it has none); one `#side` link (goal: take back to work) |
 | `para` | `<p>` |
 | `bullets` | `<ul><li>` |
 | `steps` | `<ol class="steps">`, one `li` per step: `span.st-t` title + `span.st-d` text, counter-numbered |
@@ -35,6 +37,7 @@ classes with other carriers).
 | `callout` key / note / warn | `div.box.def` / `.src` / `.warn` with `data-kind`; tag = `title` or 重點 / 備註 / 注意 |
 | `metrics` | `div.metrics > div.metric` (value in `.val`, `.mu` unit, `.ml` label, `.mn` note) |
 | `quote` | `blockquote.quote > p` + `footer` (source) |
+| `code` (explainer/2) | `div.codeblock` > optional `div.codecap` (caption, inline markup allowed) + `div.codebar` (`span.codelang` = `lang`, `button.copy-feedback-button[hidden]`) + `pre[tabindex=0] > code[.language-<lang>]`. The code text is LITERAL: HTML-escaped only (`[` written as `&#91;` so a literal `[[g:x]]` is not read as a leftover marker), never passed through `common/inline.py`. `pre` is `overflow-x:auto; max-width:100%`, so a long line scrolls inside its own box and never widens the page (checked at 375 px). Monospace at the existing 14 px meta tier (literal code is the prose rule's monospace exception). The copy asset (CSS + module script) is inlined only when the content has a `code` block |
 | `**bold**` | `<b>` |
 | `[[g:id]]` | `span.sym[tabindex=0][data-key]` showing the term; card from `SITE_SYMS` |
 | `[[r:id]]` | `span.ref[tabindex=0][data-key]` showing the label; card from `SITE_REFS` |
@@ -86,7 +89,9 @@ promoted 2026-10-18 under D-40 from the candidate of class `reading-shell:docume
 2026-10-04; behaviour contract `CONTRACT.md` SH-1..SH-13), origin repo `<share>/_packs/Claude系統工程演進研究_20261003` (at `<share>/` until 2026-10-21).
 Prose layer: AssetVault asset `prose-doc-layer`.
 
-`vendor/` holds byte-identical copies of three files (never edit them). They are DECLARED in
+Copy button: AssetVault asset `copy-feedback-button` (`assets/ui-component/vanilla-js/copy-feedback-button`, vendored v11 via `consumers.py take ... --dir vendor --mode sync`). Its JS is an ES module, so it is inlined VERBATIM as `<script type="module">` followed by the carrier's mount snippet (`CODE_MOUNT_JS`), which un-hides each `.codeblock` button and mounts it with `getText` = the `<code>` textContent (the copied text is the displayed text, no second copy in an attribute). Labels 複製 / 已複製 / 複製失敗，請手動選取. JS dead: the button stays `hidden` and the `<pre>` is plain selectable text. Module scripts run deferred, which is harmless here (nothing else reads the button).
+
+`vendor/` holds byte-identical copies of five files (never edit them). They are DECLARED in
 `asset-choices.json` (mode sync) and kept by AssetVault `tools/consumers.py`: `consumers.py check <this folder>`
 says whether they match the asset, `consumers.py sync <this folder> --pull` re-vendors. No hash is copied
 here: `tests/test_html_explainer.py` compares each vendor file (LF-normalised) with the asset file at the
@@ -115,6 +120,10 @@ capped `<main>` -> `main_fill` False). The width tests drive headless Chromium a
 - v8 (2026-10-31): re-vendored `site.css` from `research-site-shell` ee7e506 (SH-19 card pager, SH-20 chapter-link block styles). An explainer page is one page with no pager or chapter links, so no output changes its look; `site_links.py` is not vendored for the same reason.
 - v9 (2026-11-02): `fill_gate` blocks on a FAIL row or a width WARN (left-anchored blocks, control e unchanged); a consistency-only WARN goes into the gate detail (user ruling, decision sheet feedback-review B2). Since 2026-10-31 the fill gate's same-class / duplicate-rule checks emitted WARNs on the vendored `site.css`, and this carrier treated every WARN as a failure, so no explainer page could be stamped. The CSS duplicates are fixed upstream in `research-site-shell`, not in this vendor copy.
 - v10 (2026-11-02): re-vendored `site.css` from `research-site-shell` c4d2efa (the card, list-link and hint-button looks each declared once; every computed style on the asset demos unchanged). The `span.val` line-height WARN was a fill-gate false positive (each span inherits its parent's unitless line-height, 1.3 in a metric, 1.8 in the meta line), fixed in `page-fill-gate` 68ca7f14/28ef0de7, not here. The vendor test now compares each file with the asset at the `base` that `consumers.py` records in `asset-choices.json`; the hand-copied sha256 table is gone (fb:38c88250).
+
+- v11 (2026-11-04): consumes `explainer/2`; new block `code` (literal monospace `pre > code` in a bordered, horizontally scrolling box, optional caption and `lang` label) with a copy button taken from the AssetVault asset `copy-feedback-button` (vendored, declared in `asset-choices.json`, inlined verbatim as a module script). Copy CSS/JS and the code-block CSS are emitted only when the content has a `code` block, so explainer/1 content builds the page it built at v10 (the stamp's version number aside). Tests: literal byte-exact after HTML-unescape plus a mutant renderer that applies inline markup (must fail the same assertion), v1 fixture still builds, v1 content carrying a code block is refused. Card header corrected (it still said 9 while the registry said 10).
+
+- v12 (2026-11-16): two menus from fields the content already has, no schema change (user ruling D4, R24 cross-domain borrow): a START guide (route: headings + summaries, links, no answers) under the title block and an END overview section 「全貌：帶回去用」 (purpose + every section's takeaways as cards) before the glossary, both only when the content has 2+ sections. `structure` gate admits at most one `overview` section. Tests: guide carries no takeaway, overview carries every takeaway, one-section content builds neither (sample (1,1) vs (0,0)), a second overview section fails `structure`.
 
 ## Maintenance
 

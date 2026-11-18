@@ -48,4 +48,25 @@ skills/paper-story/evals/dispatch-brief-2026-09-03c.md
 skills/paper-story/evals/readback-brief-2026-09-04.md
 skills/paper-story/references/lab-template.md
 tools/carriers/samples/built/sample.explainer.html
+# Added at v1.1.0: origin files that shipped text cites but that are not shipped (origin-only rules, other skills' references,
+# machine-wide tools). research-graph (rg.py) is read by scripts/relations.py through its CLI; without it the relation layer
+# prints "no data in the research graph" (see docs/DEVELOPER.md, limits).
+tools/research-graph/rg.py
+skills/paper-story/references/field-test-history.md
+tools/page-fill-gate/class_census.py
+tools/view-launcher/views.json
+tools/blank-space-gauge/docs/calibration-sketch-deck-169_20261104.md
+tools/pptx-presentation-gate/presentation_gate.py
+skills/diagram-authoring/references/carrier-playbook.md
+skills/scientific-research-guide/references/deliverables.md
+skills/scientific-research-guide/domains/_routing.md
+skills/literature-search-extract/connectors/registry.json
+skills/literature-search-extract/references/output-templates.md
+skills/project-retrospective/references/output-templates.md
+hooks/browser_pane_scope_guard.py
+ops/references/uat.md
+ops/30-judgment.md
+ops/05-authority.md
+ops/environment.md
+references/PROJECTS.md
 tools/carriers/samples/built/sample.explainer.pptx

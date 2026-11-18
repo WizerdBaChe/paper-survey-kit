@@ -412,6 +412,34 @@ def migrate(home: Path, data, plan_p: Path, apply: bool):
     return 0
 
 
+# AP-74 copy-of: skills/literature-search-extract/loop/runs.py::_research_graph_after_register — same body but the query hint; the two skills ship as separate script folders and do not import each other; cases: tools/research-graph/tests/test_after_register_parity.py
+def _research_graph_after_register(flag: str, path: Path) -> None:
+    """research-graph WC-8: ingest this deep read and rebuild the graph after a successful register. Non-fatal
+    by contract: any failure is ONE stderr notice and never changes the register's exit code; stdout stays the
+    register's own JSON line. rg.py exits 3 (silent skip) for a folder outside the literature root (tests)."""
+    import subprocess
+    rg = Path(__file__).resolve().parents[3] / "tools" / "research-graph" / "rg.py"
+    if not rg.exists():
+        return
+    try:
+        kw = dict(capture_output=True, text=True, encoding="utf-8", errors="replace")
+        r = subprocess.run([sys.executable, "-X", "utf8", str(rg), "ingest", flag, str(path)], timeout=120, **kw)
+        if r.returncode == 3:
+            return
+        if r.returncode != 0:
+            raise RuntimeError((r.stderr or r.stdout).strip()[-200:] or f"ingest rc={r.returncode}")
+        b = subprocess.run([sys.executable, "-X", "utf8", str(rg), "build"], timeout=600, **kw)
+        if b.returncode != 0:
+            raise RuntimeError((b.stderr or b.stdout).strip()[-200:] or f"build rc={b.returncode}")
+        alerts = [ln for ln in b.stdout.splitlines() if ln.startswith("新關聯")]
+        for ln in alerts:
+            print(ln, file=sys.stderr)
+        print(f"research-graph: updated ({len(alerts)} new relation(s)); query: rg.py near <this paper's DOI>",
+              file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 — non-fatal by contract
+        print(f"research-graph: not updated ({exc}); rebuild by hand: python {rg} build", file=sys.stderr)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--home", type=Path, default=DEFAULT_HOME)
@@ -433,6 +461,7 @@ def main(argv=None):
     elif a.cmd == "register":
         e = register(a.home, data, a.run_dir, a.kind, a.label)
         print(json.dumps({"registered": e["run_id"], "kind": e["kind"], "paper": e["paper"], "entries": len(data["entries"])}, ensure_ascii=False))
+        _research_graph_after_register("--paper", Path(a.run_dir).resolve())
     elif a.cmd == "list":
         for e in sorted(data["entries"], key=lambda x: (x.get("kind", ""), x.get("paper", ""))):
             print(f"{e.get('kind','?'):<11} {e['run_id']}\t{e.get('year') or ''}\t{e.get('title','')[:60]}\t→ {e.get('keypoint_title','')[:70]}")

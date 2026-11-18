@@ -21,6 +21,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import render_story as RS  # noqa: E402  (tile helpers and the ONE talk-script builder; render_story imports this module lazily, no cycle)
+import relations as REL  # noqa: E402  (research-graph reader shared with lab_deck)
 
 CARRIERS = Path(__file__).resolve().parents[3] / "tools" / "carriers"   # <config home>/tools/carriers, relative so a copied tree finds its own
 BUILD = CARRIERS / "build.py"
@@ -173,6 +174,90 @@ def talk_section_text(run_dir: Path):
     return re.sub(r"\[\[g:([a-z0-9-]+)\]\]", lambda m: terms.get(m.group(1), m.group(1)), txt)
 
 
+NO_DATA = "庫內無資料"
+
+
+def corpus_zh(c):
+    m = re.match(r"corpus: (\d+) works, (\d+) persons", c or "")
+    return f"本庫目前收錄 {m.group(1)} 篇論文、{m.group(2)} 位作者；以下關係只在這個範圍內成立，沒列出不代表沒有關係。" if m else ""
+
+
+def relation_section(story, run_dir: Path, M):
+    """人物與關聯 (proposal 十合一正式版收斂 R1 / item 7, user ruling 2026-11-18): authors and their inferred group, the group's
+    other papers in the corpus, the paper's near relations, and its links to every other paper already in this library (a
+    ten-paper set's members are siblings there). Default path, never an option (rules/capability-default-on.md): when the
+    graph has no data the section still prints, saying 「庫內無資料」 and why."""
+    rel = REL.paper_of(story)
+    src = story["source"]
+    blocks = []
+    if rel["status"] != "ok":
+        why = {"no DOI in story.json": "這篇的紀錄沒有 DOI，關係庫無法對上",
+               "not in corpus": "研究關聯圖譜還沒有收錄這篇（登錄進論文庫後會自動收錄，再重建本頁）"}.get(
+            rel.get("reason", ""), "研究關聯圖譜目前讀不到（" + clean(rel.get("reason", "")) + "）")
+        blocks.append({"type": "callout", "kind": "note", "title": NO_DATA, "text": why + "。"})
+        if src.get("authors"):
+            blocks.append({"type": "para", "text": "**作者（論文首頁）**：" + clean("、".join(src["authors"]))})
+        return {"id": "people", "heading": "人物與關聯：誰做的、和哪些論文有關", "summary": NO_DATA + "；只列論文首頁的作者。",
+                "blocks": blocks}
+    d = rel["data"]
+    au = [clean(a["label"]) + ("（通訊作者）" if a["corresponding"] else "") for a in d.get("authors", [])]
+    if au:
+        blocks.append({"type": "para", "text": "**作者（依署名順序）**：" + "、".join(au)})
+    gs = d.get("groups") or []
+    if gs:
+        rows = []
+        for gr in gs:
+            others = "；".join(f"{o.get('year') or ''} {o['title']}".strip() for o in gr.get("other_works", [])) or "（庫內只有這一篇）"
+            rows.append([REL.group_short(gr["label"]), "是" if gr.get("lead_is_corresponding") else "否", others])
+        blocks.append(table("團隊（推定：由通訊作者、機構與年份推得）", ["團隊", "由通訊作者帶領", "同團隊在庫內的其他論文"], rows))
+    else:
+        blocks.append({"type": "para", "text": f"**團隊**：{NO_DATA}（關係庫推不出這篇的團隊）。"})
+    nr = [r for r in d.get("relations", [])]
+    if nr:
+        blocks.append(table("和這篇相關的論文（研究關聯圖譜的規則推得）", ["關係", "另一篇", "依據"],
+                            [[relation_kind(r), r["label"], relation_basis(r)] for r in nr]))
+    else:
+        blocks.append({"type": "para", "text": f"**前後作與共被引**：{NO_DATA}（庫內沒有和這篇有規則關係的論文）。"})
+    lib = REL.library_dois(run_dir)
+    if lib:
+        rr = REL.relate([src.get("doi", "")] + list(lib))
+        me = REL.norm(src.get("doi", ""))
+        title_of = {w["key"]: w["title"] for w in (rr.get("data") or {}).get("works", [])}
+        mine = [l for l in (rr.get("data") or {}).get("links", []) if me in (l["a"], l["b"])] if rr["status"] == "ok" else []
+        if mine:
+            blocks.append(table("和論文庫裡其他已讀論文的關係", ["另一篇", "關係"],
+                                [[title_of.get(l["b"] if l["a"] == me else l["a"], ""), REL.LINK_ZH.get(l["type"], l["type"])]
+                                 for l in mine]))
+        else:
+            blocks.append({"type": "para", "text": f"**和論文庫裡其他已讀論文**：{NO_DATA}（{len(lib)} 篇已讀論文中，沒有共同作者、同團隊或引用關係）。"})
+    note = corpus_zh(rel.get("corpus"))
+    if note:
+        blocks.append({"type": "callout", "kind": "warn", "title": "範圍", "text": note})
+    lead = next((REL.group_short(g["label"]) for g in gs if g.get("lead_is_corresponding")), "")
+    return {"id": "people", "heading": "人物與關聯：誰做的、和哪些論文有關",
+            "summary": "作者、推定的團隊、同團隊的其他論文、前後作與共被引。",
+            "takeaways": ([f"團隊（推定）：{lead}"] if lead else []) + [f"相關論文 {len(nr)} 篇"], "blocks": blocks}
+
+
+def relation_kind(r):
+    if r["type"] == "predecessor":   # edge src = the earlier work (rg near: '→' when this paper is the src)
+        return "前作：它比這篇早，作者重疊" if r["dir"] == "←" else "後作：這篇比它早，作者重疊"
+    return REL.LINK_ZH.get(r["type"], r["type"])
+
+
+def relation_basis(r):
+    p = r.get("params") or {}
+    if r["type"] == "co_cited":
+        return f"被 {p.get('count', '?')} 篇庫內論文一起引用"
+    if r["type"] == "coupled":
+        return f"引用相同文獻（相似度 {p.get('score', '?')}）"
+    if r["type"] == "predecessor":
+        return f"至少 {p.get('min_shared_authors', '?')} 位共同作者、年份較早"
+    if r["type"] == "near_group":
+        return "與該團隊的論文書目耦合"
+    return "論文中的引用句"
+
+
 def build_content(run_dir: Path):
     story = json.loads((run_dir / "story.json").read_text(encoding="utf-8"))
     cpath = run_dir / "cards.json"
@@ -224,6 +309,9 @@ def build_content(run_dir: Path):
         sections.append({"id": "brief", "heading": "一眼看懂：問題、方法與成果", "summary": "問題、全部方法、每個目標有沒有做到。",
                          "takeaways": [f"{v['goal']}：{STATUS_ZH.get(v.get('status'), '')}" for v in br.get("verdicts", [])][:6],
                          "blocks": blocks})
+
+    # 2b people and relations (R1, 2026-11-18): always present, 「庫內無資料」 when the graph has nothing
+    sections.append(relation_section(story, run_dir, M))
 
     # 3 axis
     ax = story.get("axis", {})
@@ -382,7 +470,9 @@ def build_content(run_dir: Path):
         sections.append({"id": "next", "heading": "延伸與找資料", "summary": "論文自己說的下一步、值得試的延伸、怎麼找相關文獻。", "blocks": blocks})
 
     authors = src.get("authors", [])
-    meta = {"title": clean(src["title"]), "subtitle": clean(f"{', '.join(authors[:3])}{' et al.' if len(authors) > 3 else ''} · {src.get('venue', '')}"),
+    grp, gorigin = REL.group_line(story)   # B (2026-11-18): the advisor's database line — title, venue, AND which group
+    gtxt = f" · {grp}" + ("（推定）" if gorigin == "inferred" else "") if grp else ""
+    meta = {"title": clean(src["title"]), "subtitle": clean(f"{', '.join(authors[:3])}{' et al.' if len(authors) > 3 else ''} · {src.get('venue', '')}{gtxt}"),
             "date": (run.get("created") or "1970-01-01")[:10], "audience": "audience", "lang": "zh-TW",
             "purpose": "看完之後能說出這篇的設計邏輯、每張圖在說什麼、哪些數字可信、哪些要打折。",
             "source_note": clean(f"由論文深讀與敘事紀錄機械轉出；原文 {src.get('url') or src.get('doi', '')}")}

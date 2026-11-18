@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "as_of": "2026-11-04",
+  "owner": "blank-space-gauge. A layout is DATA: a new page shape is a new row here plus a control in controls.py, never a code branch. Thresholds exist only here (AP-22); the README and the calibration note name the row, never restate the value.",
+  "ink_rule": {
+    "grey_delta": 28,
+    "empty_cell_ink": 0.004,
+    "surface_delta": 6,
+    "surface_cell": 0.25,
+    "source": "ink: same rule as post-format-lab harness/holes.py (a pixel more than 28 grey levels from the paper median; a cell under 0.4 % ink is empty). surface (added 2026-11-04): a pixel more than 6 grey levels from the paper is a fill (card, sheet, pale box, hatch, highlighter); a cell at least 25 % fill is occupied even without ink, because the inside of a drawn box is held space, not bare paper. Measured: sketch-deck paper std 0.85 grey levels, white card fill +8..+11, pale blue box -20, hatched bar 31-37 % of pixels past 6."
+  },
+  "ratio_tolerance": 0.03,
+  "layouts": {
+    "sketch-deck-169": {
+      "ratio": [16, 9],
+      "what": "AssetVault sketch-deck-169 production deck slide (1920x1080 card; title + subtitle band above, credit band below)",
+      "body": {"top": 0.24, "bottom": 0.92, "left": 0.04, "right": 0.96},
+      "grid": [16, 9],
+      "look_at": {
+        "body":    {"largest_block": 0.10},
+        "cover":   {"largest_block": 0.20},
+        "closing": null
+      },
+      "calibration": "docs/calibration-sketch-deck-169_20261104.md",
+      "review_when": "the sketch-deck-169 card anatomy (title band, credit band) changes, a slide the author rejects scores under its threshold, or a published slide scores over it"
+    },
+    "card-45": {
+      "ratio": [4, 5],
+      "what": "post-format-lab sketch-post card (1080x1350; title above, takeaway pill below), the anatomy of harness/holes.py",
+      "body": {"top": 0.27, "bottom": 0.86, "left": 0.06, "right": 0.94},
+      "grid": [8, 10],
+      "look_at": {"body": null, "cover": null, "closing": null},
+      "calibration": null,
+      "review_when": "a 4:5 card set is calibrated two-sided with this tool (holes.py stays the ruler for 4:5 until then)"
+    }
+  },
+  "unknown_policy": {
+    "rule": "an image whose ratio matches no layout (and no --layout given) is measured on a generic band (6 % margins all round, grid sized to about 144 near-square cells) and reported 'undetermined': numbers are printed, no look-at verdict is given and it is excluded from every count (AP-62)",
+    "generic_body": {"top": 0.06, "bottom": 0.94, "left": 0.06, "right": 0.94},
+    "generic_cells": 144
+  }
+}

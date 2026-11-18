@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""paper-story lab_deck — class B: the lab's PPTX template edited from story.json (references/formal-deck.md §2–§4).
+"""paper-story lab_deck — class B: the lab's PPTX template edited from story.json (references/formal-deck.md §2–§4, §6).
 
   python lab_deck.py --run <run_dir> --format deck   [--out lab-deck.pptx]    single-paper talk (base: _templates/base_single-paper.pptx)
   python lab_deck.py --runs <dir1> <dir2> ... --format onepage [--out lab-onepage.pptx]   ten-papers format, one page per paper (base: _templates/base_ten-papers.pptx)
@@ -50,6 +50,12 @@ keeps "(year)"), runs the G4 density step (each table cell <= 1 number, Result q
 the slide keeps "Authors: ..." — and every moved-out sentence into the speaker notes), lays a story@6 tile's panels out inside one cell,
 and writes onepage.script + each tile's notes as the page's speaker notes. Gate L12 (onepage only, WARN): a cell with more than one
 number, or a review verdict printed on a paper page.
+
+Round 9 (2026-11-18, user ruling on the advisor's 1109 format remark, references/formal-deck.md §7): --venue default (full,
+the default) | lab-meeting (the lab-meeting special case: no Key point strip, slogan + logic-chain turns in the notes, no
+Relations). Both venues print an author / inferred-group line beside the venue badge; the default venue adds a Relations
+slide (ten-paper: how the papers relate) or page (single paper: after Key points), read from research-graph through
+relations.py, printing "No data in the research graph" rather than vanishing. Gate L14 (WARN) checks the venue.
 """
 import argparse
 import json
@@ -57,6 +63,7 @@ import re
 import shutil
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -74,6 +81,15 @@ _hksys.path.insert(0, str(_HKPath(__file__).resolve().parents[3] / "hooks" / "_l
 import roots as hkroots  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import render_story as RS  # noqa: E402  (tile / four-five-field helpers shared with the renderer — one definition)
+import relations as REL  # noqa: E402  (research-graph reader shared with the explainer — one definition of the group line)
+
+# Venue profiles (proposal 十合一正式版收斂 R2/R3, user ruling 2026-11-18): the lab meeting is a SPECIAL CASE
+# and gets the minimal carrier (1109 shape: no Key point strip, no review verdict, no relation slide; slogan, verdict and the
+# logic chain's turns go to the speaker notes). Every other audience gets the full carrier, so `default` is the default and
+# nobody who builds a deck for someone else has to know a flag exists. Excuse answered: "the advisor prefers the bare page" is
+# a preference of ONE venue, never a reason to thin the shared decks (R3).
+VENUES = ("default", "lab-meeting")
+RELATIONS_TITLE = "Relations"
 
 # Blank bases (2026-09-22): title slide only, derived once from two labmate decks by strip_to_title + metadata scrub —
 # no per-build stripping. Not shipped in the public kit: its default is --base blank (blank_base()).
@@ -365,11 +381,27 @@ def bullets_of(items, n=None):
 # ---------------------------------------------------------------- deck (single paper)
 def presenter_of(story, override=None, default="Presenter"):
     """Cover presenter: an explicit --presenter wins, then story.json run.presenter, then the default.
-    Until 2026-09-22 the deck format ignored --presenter and read story.json only (found in the lab share export)."""
-    return override or (story.get("run") or {}).get("presenter") or default
+    Until 2026-09-22 the deck format ignored --presenter and read story.json only (found in the lab share export).
+    An empty string (flag or story.json) is a decision, not a gap: the cover drops the Presenter line (a deck handed to
+    someone else to present, 2026-11-15)."""
+    if override is not None:
+        return override
+    run = story.get("run") or {}
+    return run["presenter"] if run.get("presenter") is not None else default
 
 
-def build_deck(run: Path, out: Path, presenter=None):
+def cover_logo(s1, logo=None):
+    """Remove the template's top-right cover picture (the base deck's journal logo) and, given a file, fit it in that frame.
+    One definition for every builder on the lab base deck: lab_base.strip_cover_picture (user ruling 2026-11-16)."""
+    from lab_base import strip_cover_picture  # noqa: PLC0415  (scripts dir is on sys.path, line 76)
+    strip_cover_picture(s1, logo, fit=fit_pic)
+
+
+def build_deck(run: Path, out: Path, presenter=None, venue="default"):
+    """venue (2026-11-18): `default` adds the Relations page right after the Key points page; `lab-meeting` leaves it out.
+    The ruling settled the minimal shape for the ten-paper page only; the single-paper deck keeps its round-7 shape otherwise."""
+    if venue not in VENUES:
+        raise SystemExit(f"unknown venue {venue!r} (one of {VENUES})")
     story = json.loads((run / "story.json").read_text(encoding="utf-8"))
     E = story.get("en") or {}
     src, lg, why = story["source"], story["logic"], story["why_me"]
@@ -380,7 +412,8 @@ def build_deck(run: Path, out: Path, presenter=None):
         if sh.is_placeholder and sh.placeholder_format.idx == 0:
             set_text(sh.text_frame, [src["title"]], size=24, bold_first=True)
         elif sh.has_text_frame and sh.text_frame.text.startswith("Presenter"):
-            set_text(sh.text_frame, [f"Presenter: {presenter_of(story, presenter)}", *advisor_line(), f"Date: {E.get('date', story['run'].get('created', '')[:10].replace('-', '.'))}"], size=16)
+            who = presenter_of(story, presenter)
+            set_text(sh.text_frame, [*([f"Presenter: {who}"] if who else []), *advisor_line(), f"Date: {E.get('date', story['run'].get('created', '')[:10].replace('-', '.'))}"], size=16)
         elif sh.has_text_frame and sh.name.startswith("文字方塊 1"):
             set_text(sh.text_frame, [E.get("venue", src.get("venue", ""))], size=16)
             # the round-4 render ran the venue into the template's logo (top right, from ~8.5 in): stop the box short of it
@@ -390,14 +423,13 @@ def build_deck(run: Path, out: Path, presenter=None):
                 p.alignment = PP_ALIGN.RIGHT
         elif sh.has_text_frame and sh.name.startswith("文字方塊 2"):
             set_text(sh.text_frame, [E.get("authors_line") or ("; ".join(src.get("authors", [])) + f" ({src.get('year', '')})")], size=14)
-    # the template's top-right logo belongs to the base deck's journal (EDS); en.cover_logo swaps in this paper's source logo
+    # the template's top-right logo belongs to the base deck's journal (EDS), never to this paper: it always leaves the cover.
+    # en.cover_logo (a crop of this paper's journal masthead, e.g. figures/deck/LOGO_cover.png) takes its place; without one the
+    # corner stays empty and gate L13 warns. Until 2026-11-15 a missing cover_logo kept EDS silently (Su2002 deck, user report).
     logo = run / E["cover_logo"] if E.get("cover_logo") else None
-    if logo and logo.is_file():
-        for sh in list(s1.shapes):
-            if sh.shape_type == MSO_SHAPE_TYPE.PICTURE and sh.left / 914400 > 7.0 and sh.top / 914400 < 1.0:
-                x, y, w, h = (v / 914400 for v in (sh.left, sh.top, sh.width, sh.height))
-                sh._element.getparent().remove(sh._element)
-                fit_pic(s1, logo, x, y, w, h).name = "Source logo"
+    if logo and not logo.is_file():
+        raise SystemExit(f"en.cover_logo names a file that does not exist: {logo}")
+    cover_logo(s1, logo)
     extra = E.get("notes_append") or {}
     add_notes(s1, "\n".join(t for t in (story.get("talk", {}).get("opening", ""), extra.get("title", "")) if t))
     body_layout = find_layout(prs, LAYOUT_BODY)
@@ -452,9 +484,41 @@ def build_deck(run: Path, out: Path, presenter=None):
             fit_pic(s, fp, X0, top, CW, Y_FIG - top)
         return s
 
+    def table_page(title, T, statements, figure, notes):
+        """Native-table page (R6-9: parallel items become a native table; added 2026-11-15 for a humanities paper whose data
+        are example sentences and counts, not figures). en.pages[n].table = {header: [...], rows: [[...], ...], col_w: [...]}
+        (col_w optional, inches, sums to CW); up to two statements above it at the body level; an optional figure below the
+        table takes the remaining height. A cell may be a list of segments, one paragraph each."""
+        st = [t for t in statements if t][:2]
+        y = 1.36
+        bh = (0.14 + sum(0.06 + 0.3 * sum(est_lines(seg, CW - 0.4, PT_BODY) for seg in t.split("\n")) for t in st)) if st else 0
+        s = new_page(title, notes, bullets=[(t, 0) for t in st], body_box=(X0, y, CW, bh) if st else None, line_spacing=1.0)
+        rows = ([T["header"]] if T.get("header") else []) + T["rows"]
+        ncol = len(rows[0])
+        cw = T.get("col_w") or [CW / ncol] * ncol
+        top = y + bh + (0.1 if st else 0.1)
+        fs = T.get("size", PT_NODE)
+        lh = fs * 1.2 / 72
+
+        def cell_lines(v, w):
+            segs = v if isinstance(v, list) else [v]
+            return sum(est_lines(sg, w - 0.15, fs, k=K_TIMES) for sg in segs)
+        heights = [0.12 + lh * max(cell_lines(v, w) for v, w in zip(r, cw)) for r in rows]
+        shp = add_table(s, X0, top, CW, rows, col_w=cw, font=(fs, fs), header=bool(T.get("header")))
+        shp.name = "Data table"
+        for r_, h_ in zip(shp.table.rows, heights):
+            r_.height = Inches(h_)
+        fp = deck_figure(figure)
+        tb = top + sum(heights) + 0.15
+        if fp and Y_FIG - tb >= 1.0:
+            fit_pic(s, fp, X0, tb, CW, Y_FIG - tb)
+        return s
+
     def keypoint_pages(title, table, notes, why=""):
         rows = []
+        relabel = E.get("table_labels") or {}   # 2026-11-15: a paper with no device (humanities) renames rows, e.g. Structure -> Object
         for label, key in TABLE_ROWS:
+            label = relabel.get(key, label)
             v = table.get(key, "")
             rows.append([label, v if isinstance(v, list) else [x.strip() for x in re.split(r"\s*;\s*", v) if x.strip()]])
         lw_, top = 1.8, 1.5
@@ -707,11 +771,29 @@ def build_deck(run: Path, out: Path, presenter=None):
             for p in tb.text_frame.paragraphs:
                 p.space_after = Pt(3)
 
+    def relations_page():
+        """R1/R3 item 8: authors, inferred group, same-group papers, related papers — or 「庫內無資料」 said on the slide."""
+        rows, why, rel = paper_relation_rows(story)
+        s = new_page(RELATIONS_TITLE, "")
+        if rows:
+            add_table(s, X0, 1.42, CW, rows, col_w=[2.0, CW - 2.0], font=(PT_NODE, PT_NOTE))
+            d = rel["data"]
+            grp = next((REL.group_short(g["label"]) for g in d.get("groups", []) if g.get("lead_is_corresponding")), "")
+            add_notes(s, "這頁是人物與關聯：這篇是誰做的、屬於哪個團隊" + (f"（推定是 {grp}）" if grp else "（庫內推不出團隊）")
+                      + f"，以及庫內和它有關係的論文。團隊是由通訊作者、機構與年份推得的，只在本庫範圍內成立（{rel.get('corpus', '')}）。")
+        else:
+            textbox(s, X0, 2.6, CW, 1.0, [f"No data in the research graph: {why}."], size=PT_BODY, color=GRAY, align=PP_ALIGN.CENTER, name="Relation no-data")
+            add_notes(s, "這頁是人物與關聯；庫內無資料，所以只講作者與期刊。")
+
     # --- every page in deck.pages ORDER, dispatched by en.pages[n].layout or the section (round 5)
     kp = E.get("keypoint") or lg["keypoint"]
     v5 = bool(story.get("brief"))
     epages = E.get("pages") or {}
+    rel_done = venue != "default"
     for i, pg in enumerate(pages):
+        if not rel_done and i and (pages[i - 1]["section"].lower() == "keypoint"
+                                   or ((epages.get(str(i)) or {}).get("layout") or "").lower() == "keypoint"):
+            relations_page(); rel_done = True
         sec = pg["section"].lower()
         ep = epages.get(str(i + 1)) or epages.get(pg.get("title", "")) or {}
         if ep.get("skip"):   # kept in the class A reference copies, left out of the formal deck (user 2026-09-14)
@@ -767,16 +849,109 @@ def build_deck(run: Path, out: Path, presenter=None):
             search_page(title or "Keywords and how to find extensions", E["search"], notes)
         elif lay == "references" and E.get("references"):
             references_page(title or "References", E["references"], notes)
+        elif lay == "table" and ep.get("table"):
+            table_page(title, ep["table"], ep.get("statements") or [], pg.get("figure"), notes)
         else:
             # R6-3: en.pages[n].statements = [principle, figure reading, conclusion]; an older story's highlights + takeaway fill
             # the same three slots, the takeaway as the conclusion statement instead of a blue line under the title
             hl, tk = ep.get("highlights") or pg.get("highlights", []), (ep.get("takeaway", "") if v5 else "")
             content_page(title, ep.get("statements") or (hl[:3 - bool(tk)] + ([tk] if tk else [])), pg.get("figure"), notes)
+    if not rel_done:   # a deck without a Key points page still carries the relation layer, before the Thanks slide
+        relations_page()
     ts = thanks_slide(prs)
     add_notes(ts, "我的報告到這邊，謝謝大家。\n" + "\n".join(f"（{q.get('q','')} → {q.get('a','')}）" for q in story.get("talk", {}).get("if_asked", [])))
     prs.core_properties.last_modified_by = BUILD_STAMP   # overwrite_block reads it: PowerPoint replaces it on the presenter's save
     prs.save(str(out))
     return out
+
+
+# ---------------------------------------------------------------- authors / group line + relation layer (2026-11-18)
+def header_line(story):
+    """'Mu et al. · Group: H. Y. Fu group @ Tsinghua University (inferred)' — the advisor asked for title, journal AND group
+    (1109, 33:12); both venues carry it. '' when the story has neither authors nor a group."""
+    by = REL.byline(story)
+    grp, origin = REL.group_line(story)
+    parts = ([by] if by else []) + ([f"Group: {grp}" + (" (inferred)" if origin == "inferred" else "")] if grp else [])
+    return " · ".join(parts)
+
+
+def short_label(story):
+    by = REL.byline(story).replace(" et al.", "")
+    return f"{by} {story['source'].get('year', '')}".strip() or story["source"]["title"][:20]
+
+
+def no_data_en(rel):
+    return {"no DOI in story.json": "no DOI recorded for this paper", "not in corpus": "this paper is not in the research graph yet"}.get(
+        rel.get("reason", ""), f"research graph unavailable ({rel.get('reason', '')})")
+
+
+def paper_relation_rows(story):
+    """Rows for the single-paper Relations page, or (None, reason) when the graph holds nothing (the page still prints)."""
+    rel = REL.paper_of(story)
+    if rel["status"] != "ok":
+        return None, no_data_en(rel), rel
+    d = rel["data"]
+    au = [a["label"] + (" (corresponding)" if a["corresponding"] else "") for a in d.get("authors", [])]
+    rows = [["Authors", ", ".join(au[:8]) + (" …" if len(au) > 8 else "")]]
+    gs = d.get("groups") or []
+    rows.append(["Group (inferred)", [REL.group_short(g["label"]) for g in gs[:2]] or ["No data in the research graph"]])
+    same = [f"{o.get('year') or ''} {o['title']}".strip() for g in gs for o in g.get("other_works", [])]
+    rows.append(["Same group", same[:3] or ["No other paper of this group in the corpus"]])
+    rel_rows = [f"{REL.LINK_EN.get(r['type'], r['type'])}: {r['label'][:90]}" for r in d.get("relations", [])]
+    rows.append(["Related papers", rel_rows[:4] or ["No related paper in the corpus"]])
+    return rows, "", rel
+
+
+def add_relations_set_slide(prs, layout, stories):
+    """Default venue, ten-paper format: one closing slide drawing how the N papers relate (shared author, same inferred group,
+    citation, coupling) as native editable shapes, plus the link list. 「庫內無資料」 is printed, never an empty slide."""
+    s = prs.slides.add_slide(layout)
+    for sh in list(s.shapes):
+        if sh.is_placeholder:
+            sh._element.getparent().remove(sh._element)
+    textbox(s, 0.3, 0.15, 9.4, 0.5, [f"{RELATIONS_TITLE} among the {len(stories)} papers"], size=20, bold=True, name="Page title")
+    by_doi = {REL.norm(REL.doi_of(st)): short_label(st) for st in stories if REL.doi_of(st)}
+    no_doi = [short_label(st) for st in stories if not REL.doi_of(st)]
+    rr = REL.relate([REL.doi_of(st) for st in stories])
+    pairs = {}
+    if rr["status"] == "ok":
+        for l in rr["data"]["links"]:
+            if l["a"] in by_doi and l["b"] in by_doi:
+                pairs.setdefault(tuple(sorted((l["a"], l["b"]))), []).append(l["type"])
+    missing = no_doi + [by_doi.get(REL.norm(m), m) for m in (rr.get("data") or {}).get("not_in_corpus", [])]
+    notes = ["這頁是十篇之間的關係（研究關聯圖譜，只在本庫範圍內成立；團隊是推定的）。"]
+    if pairs:
+        import math
+        keys = list(by_doi)
+        cx, cy, rad = 2.75, 4.0, 2.05
+        pos = {k: (cx + rad * math.cos(2 * math.pi * i / len(keys) - math.pi / 2), cy + rad * math.sin(2 * math.pi * i / len(keys) - math.pi / 2))
+               for i, k in enumerate(keys)}
+        color = {"shared_author": DARK, "same_group": BLUE, "cites": GREEN, "predecessor": GRAY}
+        for (a, b), types in pairs.items():
+            t = next((x for x in ("shared_author", "same_group", "cites", "predecessor") if x in types), types[0])
+            arrow(s, *pos[a], *pos[b], color=color.get(t, ORANGE), width=2.0 if t in ("shared_author", "same_group") else 1.25, head=False)
+        for k, (x, y) in pos.items():
+            box(s, x - 0.62, y - 0.2, 1.24, 0.4, [by_doi[k]], size=10, fill=LIGHT, line=BLUE, color=DARK, align=PP_ALIGN.CENTER, name="Paper node")
+        lines = []
+        for (a, b), types in sorted(pairs.items(), key=lambda kv: (by_doi[kv[0][0]], by_doi[kv[0][1]])):
+            uniq = sorted(set(types))
+            lines.append(f"{by_doi[a]} – {by_doi[b]}: " + ", ".join(REL.LINK_EN.get(t, t) + (f" ×{types.count(t)}" if types.count(t) > 1 else "") for t in uniq))
+        legend = "Lines: black shared author · blue same group (inferred) · green citation · grey predecessor · orange co-citation / coupling"
+        textbox(s, 5.55, 0.8, 4.2, 5.9, lines[:16] + (["…"] if len(lines) > 16 else []), size=10, name="Relation list")
+        textbox(s, 0.3, 6.45, 9.4, 0.4, [legend], size=9, color=GRAY, name="Relation legend")
+        notes += [f"{x}" for x in lines]
+    else:
+        why = no_data_en(rr) if rr["status"] != "ok" else "no shared author, group or citation among these papers in the corpus"
+        textbox(s, 0.6, 2.6, 8.8, 1.2, [f"No data in the research graph: {why}."], size=16, color=GRAY, align=PP_ALIGN.CENTER, name="Relation no-data")
+        notes.append("庫內無資料：" + ("研究關聯圖譜目前讀不到。" if rr["status"] != "ok" else "這幾篇在庫內沒有共同作者、同團隊或引用關係（不代表實際上沒有）。"))
+    if missing:
+        textbox(s, 0.3, 6.1, 9.4, 0.35, ["Not in the research graph: " + ", ".join(missing)], size=9, color=GRAY, name="Relation missing")
+        notes.append("庫內無資料的論文：" + "、".join(missing))
+    corpus = rr.get("corpus") or ""
+    if corpus:
+        notes.append(f"（{corpus}）")
+    add_notes(s, "\n".join(notes))
+    return s
 
 
 # ---------------------------------------------------------------- one page per paper (ten-papers format)
@@ -850,19 +1025,28 @@ def tile_grid(n):
     return cols, -(-n // cols)
 
 
-def build_onepage(runs, out: Path, presenter="Presenter", date=""):
+def build_onepage(runs, out: Path, presenter="Presenter", date="", title=None, venue="default"):
+    """Cover: --title, else a neutral "Review of N papers" (until 2026-11-15 every ten-paper deck was titled "Review of waveguide
+    coupling papers", the first set's topic); an empty presenter drops the line; an empty date is today's.
+    venue (2026-11-18): `lab-meeting` = the 1109 page (no Key point strip; slogan + logic-chain turns into the notes; no
+    Relations slide); `default` = the full page + a closing Relations slide. Both carry the author / group line."""
+    if venue not in VENUES:
+        raise SystemExit(f"unknown venue {venue!r} (one of {VENUES})")
+    stories = []
     prs = open_base("onepage", out)
     s1 = prs.slides[0]
+    date = date or time.strftime("%Y.%m.%d")
     for sh in s1.shapes:
         if sh.is_placeholder and sh.placeholder_format.idx == 0:
-            set_text(sh.text_frame, ["Review of waveguide coupling papers"], size=28, bold_first=True)
+            set_text(sh.text_frame, [title or f"Review of {len(runs)} papers"], size=28, bold_first=True)
         elif sh.has_text_frame and sh.text_frame.text.startswith("Presenter"):
-            set_text(sh.text_frame, [f"Presenter: {presenter}", *advisor_line(), f"Date: {date}"], size=16)
+            set_text(sh.text_frame, [*([f"Presenter: {presenter}"] if presenter else []), *advisor_line(), f"Date: {date}"], size=16)
     body_layout = find_layout(prs, LAYOUT_BODY)
     notes_all = []
     for run in runs:
         run = Path(run)
         story = json.loads((run / "story.json").read_text(encoding="utf-8"))
+        stories.append(story)
         E = story.get("en") or {}
         src, lg, op = story["source"], story["logic"], story["onepage"]
         s = prs.slides.add_slide(body_layout)
@@ -870,15 +1054,20 @@ def build_onepage(runs, out: Path, presenter="Presenter", date=""):
             if sh.is_placeholder:
                 sh._element.getparent().remove(sh._element)
         # G8 (user ruling 2026-11-03): the senior's pages carry the journal logo top-left; a small text badge stands in for it, and the
-        # title keeps "(year)" only. A run without a venue gets no badge and the old title line.
-        venue = (E.get("venue") or src.get("venue") or "").strip()
-        if venue:
-            box(s, 0.3, 0.1, min(2.6, 0.4 + 0.065 * len(venue)), 0.26, [venue], size=9, fill=LIGHT, line=BLUE, color=BLUE, bold_first=True, name="Venue badge")
-            textbox(s, 0.3, 0.37, 9.4, 0.5, [f"{src['title']} ({src.get('year', '')})"], size=14, bold=True, name="Page title")
-        else:
-            textbox(s, 0.3, 0.15, 9.4, 0.7, [f"{src['title']} ({src.get('year', '')})"], size=14, bold=True, name="Page title")
+        # title keeps "(year)" only. A run without a venue gets no badge. B (2026-11-18): the author / group line sits beside the
+        # badge on the same row, so the title, strip and grid keep their accepted positions.
+        jv = (E.get("venue") or src.get("venue") or "").strip()
+        hl = header_line(story)
+        bw = min(2.6, 0.4 + 0.065 * len(jv)) if jv else 0.0
+        if jv:
+            box(s, 0.3, 0.1, bw, 0.26, [jv], size=9, fill=LIGHT, line=BLUE, color=BLUE, bold_first=True, name="Venue badge")
+        if hl:
+            textbox(s, 0.3 + bw + (0.1 if jv else 0), 0.08, 9.4 - bw - (0.1 if jv else 0), 0.3, [hl], size=9, color=GRAY, name="Byline")
+        head = bool(jv or hl)
+        textbox(s, 0.3, 0.37 if head else 0.15, 9.4, 0.5 if head else 0.7, [f"{src['title']} ({src.get('year', '')})"], size=14, bold=True, name="Page title")
         kp_en = "Key point: " + (E.get("keypoint") or lg["keypoint"])
-        textbox(s, 0.3, 0.88 if venue else 0.78, 9.4, 0.55 if venue else 0.6, [kp_en], size=9 if len(kp_en) > 220 else 10, color=RGBColor(0x1A, 0x5F, 0x9E))
+        if venue == "default":
+            textbox(s, 0.3, 0.88 if head else 0.78, 9.4, 0.55 if head else 0.6, [kp_en], size=9 if len(kp_en) > 220 else 10, color=RGBColor(0x1A, 0x5F, 0x9E), name="Key point strip")
         figs = op["figures"][:6]
         tiled = RS.schema_ver(story) >= 6   # story@6: a figure is a TILE (argument step) that may hold several panels
         # pictures: a 3-column strip on the upper half, table below (deck C-style density); a three-line key point
@@ -905,8 +1094,16 @@ def build_onepage(runs, out: Path, presenter="Presenter", date=""):
         cells, extra = densify_table(t, fields)   # G4: every ten-paper page goes through the density step
         rows_t = [[CELL_LABEL[key], cells[key]] for key in CELL_LABEL if key in cells]
         add_table(s, 0.3, gy + gh + 0.1, 9.4, rows_t, col_w=[1.2, 8.2], font=9)
+        if venue == "lab-meeting":
+            # R2: the slogan and the logic chain's turns leave the slide, never the deck — the presenter speaks them when asked
+            extra = extra + [f"Keypoint（lab meeting 版不上投影片，被問到再講）：{lg.get('keypoint', '')}"]
+            steps = [c.get("step", "") for c in lg.get("chain", []) if c.get("step")]
+            if steps:
+                extra.append("邏輯鏈的轉折（口述用）：" + " → ".join(steps))
         add_notes(s, onepage_notes(op, extra) or story.get("talk", {}).get("opening", "") or lg.get("keypoint_description", "")[:600])
         notes_all.append(src["title"])
+    if venue == "default" and len(stories) >= 2:
+        add_relations_set_slide(prs, body_layout, stories)   # R1/R3 item 8: the full carrier closes with how the papers relate
     ts = thanks_slide(prs)
     add_notes(ts, "我的報告到這邊，謝謝大家。")
     prs.core_properties.last_modified_by = BUILD_STAMP
@@ -1005,7 +1202,7 @@ def layout_gates(path: Path):
     return rows
 
 
-def gates(path: Path, keypoint_en: str, fmt: str, story=None):
+def gates(path: Path, keypoint_en: str, fmt: str, story=None, venue="default", slogans=()):
     rows = []
     slides = deck_text(path)
     prs = Presentation(str(path))
@@ -1044,11 +1241,68 @@ def gates(path: Path, keypoint_en: str, fmt: str, story=None):
         if miss:
             probs.append(f"conclusion statement missing on en.pages {miss[:6]}")
         rows.append(("L6", "WARN" if probs else "PASS", "; ".join(probs) if probs else "storyline slide, every content-page conclusion statement on its slide"))
+    rows.append(cover_gate(path, fmt))
     if fmt == "deck":
         rows += layout_gates(path)
     if fmt == "onepage":
         rows.append(density_gate(path))
+    rows.append(venue_gate(path, fmt, venue, slogans))
     return rows
+
+
+def venue_gate(path: Path, fmt: str, venue: str, slogans=()):
+    """L14 (2026-11-18, proposal 十合一正式版收斂 A4/C8). lab-meeting: WARN when a paper page still prints a slogan ('Key point:'
+    or the first 40 chars of a story's slogan) or a review verdict, or when a Relations slide is present — the 1109 page carries
+    neither. default: WARN when the Relations slide is missing (the relation layer is the full carrier's, R1/R3). WARN, not FAIL:
+    the text is the presenter's to edit and a slogan written in other words cannot be determined."""
+    prs = Presentation(str(path))
+    titles = [slide_title(s) or next((sh.text_frame.text for sh in s.shapes if sh.name == "Page title"), "") for s in prs.slides]
+    has_rel = any(t.startswith(RELATIONS_TITLE) for t in titles)
+    if venue == "lab-meeting":
+        hits = []
+        for n, s in enumerate(prs.slides, 1):
+            if n == 1 or n == len(prs.slides) or fmt != "onepage":
+                continue
+            text = "\n".join(tf.text for sh in s.shapes for tf in _frames(sh)).replace(" ", " ")
+            if re.search(r"Key point\s*:", text) or any(k[:40] and k[:40] in text for k in slogans):
+                hits.append((n, "slogan"))
+            if re.search(r"Verdict\s*:|深讀判定", text):
+                hits.append((n, "verdict"))
+        probs = ([f"slogan / verdict printed on lab-meeting pages (they belong in the notes): {hits[:6]}"] if hits else []) + \
+                (["a Relations slide in an lab-meeting deck (the 1109 page has none)"] if has_rel else [])
+        return ("L14", "WARN" if probs else "PASS", "; ".join(probs) if probs else
+                "venue lab-meeting: no slogan, no verdict, no Relations slide on the paper pages")
+    need = fmt == "deck" or len(prs.slides) > 3   # a one-paper ten-paper deck has no set to relate
+    if need and not has_rel:
+        return ("L14", "WARN", "venue default: no Relations slide (the full carrier shows authors / group / related papers)")
+    return ("L14", "PASS", "venue default: Relations slide present" if has_rel else "venue default: one paper, no set to relate")
+
+
+def cover_gate(path: Path, fmt: str):
+    """L13 (2026-11-15, Su2002 report: the base deck's EDS journal logo went out on a linguistics paper): the emitted cover keeps
+    nothing of the TEMPLATE's own cover except what the generator writes on purpose. Read against the base file itself, so a new
+    template is covered without a list: FAIL when a base cover picture (same image bytes) or a base placeholder line (Paper title,
+    Journal, Year, Authors, Presenter: NAME, Date: YYYY.MM.DD) survives; WARN on a single-paper cover with no "Source logo"
+    (set en.cover_logo, a crop of this paper's journal masthead). --base blank has no template cover: SKIP."""
+    base = (TEMPLATES or Path()) / BASES[fmt]
+    if BLANK_BASE or TEMPLATES is None or not base.is_file():
+        return ("L13", "SKIP", "no template cover to compare against (--base blank)")
+    keep = {ln.strip() for ln in advisor_line()}
+    b1, e1 = Presentation(str(base)).slides[0], Presentation(str(path)).slides[0]
+
+    def pics(s):
+        return {sh.image.sha1: sh.name for sh in s.shapes if sh.shape_type == MSO_SHAPE_TYPE.PICTURE}
+
+    def lines(s):
+        return {ln.strip() for sh in s.shapes if sh.has_text_frame for ln in sh.text_frame.text.splitlines() if ln.strip()}
+
+    probs = [f"template picture kept: {e1_name}" for sha, e1_name in pics(e1).items() if sha in pics(b1)]
+    probs += [f"template text kept: {ln!r}" for ln in sorted((lines(b1) - keep) & lines(e1))]
+    if probs:
+        return ("L13", "FAIL", "cover: " + "; ".join(probs[:4]))
+    if fmt == "deck" and "Source logo" not in pics(e1).values():
+        return ("L13", "WARN", "cover has no journal logo (template logo removed; set en.cover_logo to a crop of this paper's masthead)")
+    return ("L13", "PASS", "cover carries no template leftovers" + (" and this paper's journal logo" if fmt == "deck" else ""))
 
 
 def density_gate(path: Path):
@@ -1299,10 +1553,41 @@ def selftest():
         ok = got[0] == st and needle in got[1]
         ok_all &= ok
         print(f"  {'OK ' if ok else 'BAD'} {name:<20} L3   expected {st:<5} got {got[0]:<5} {'' if ok else '— ' + got[1][:120]}")
+    # L13 cover leftovers (2026-11-15): the untouched base cover (logo + placeholders) must FAIL; the logo removed with the text
+    # written but no source logo WARNs; a written cover with this paper's logo PASSes; one leftover placeholder line alone FAILs
+    def cover(name, logo_mode, texts=True, keep_line=None):
+        out = make("cover-" + name, GOOD)
+        prs = Presentation(str(out)); s1 = prs.slides[0]
+        if texts:
+            for sh in s1.shapes:
+                if sh.is_placeholder and sh.placeholder_format.idx == 0:
+                    set_text(sh.text_frame, ["A Test Paper"], size=24)
+                elif sh.has_text_frame and sh.text_frame.text.startswith("Presenter"):
+                    set_text(sh.text_frame, [*advisor_line(), keep_line or "Date: 2026.11.15"], size=16)
+                elif sh.has_text_frame and sh.name.startswith("文字方塊"):
+                    set_text(sh.text_frame, ["Test Journal 1 (2026)"], size=16)
+        if logo_mode != "kept":
+            cover_logo(s1, png if logo_mode == "source" else None)
+        prs.save(str(out))
+        return cover_gate(out, "deck")
+    for name, args, st, needle in (("cover-template-kept", ("kept", False), "FAIL", "template picture kept"),
+                                   ("cover-logo-only-kept", ("kept",), "FAIL", "template picture kept"),
+                                   ("cover-placeholder", ("none", True, "Date: YYYY.MM.DD"), "FAIL", "Date: YYYY.MM.DD"),
+                                   ("cover-no-logo", ("none",), "WARN", "no journal logo"),
+                                   ("cover-source-logo", ("source",), "PASS", "journal logo")):
+        got = cover(name, *args)
+        if got[1] == "SKIP":
+            print(f"  SKIP {name:<20} L13  needs a template cover; this kit builds on --base blank")
+            continue
+        ok = got[1] == st and needle in got[2]
+        ok_all &= ok
+        print(f"  {'OK ' if ok else 'BAD'} {name:<20} L13  expected {st:<5} got {got[1]:<5} {'' if ok else '— ' + got[2][:120]}")
     # cover presenter (2026-09-22): the flag must win over story.json (the defect: it was ignored), story.json over the default
     for name, story, flag, want in (("presenter-flag-wins", {"run": {"presenter": "Story"}}, "Flag", "Flag"),
                                     ("presenter-from-story", {"run": {"presenter": "Story"}}, None, "Story"),
-                                    ("presenter-default", {"run": {}}, None, "Presenter")):
+                                    ("presenter-default", {"run": {}}, None, "Presenter"),
+                                    ("presenter-flag-empty", {"run": {"presenter": "Story"}}, "", ""),
+                                    ("presenter-story-empty", {"run": {"presenter": ""}}, None, "")):
         got_p = presenter_of(story, flag)
         ok = got_p == want
         ok_all &= ok
@@ -1406,6 +1691,70 @@ def selftest():
     g_bad = {g: (st, m) for g, st, m in gates(td / "ten-dense.pptx", "", "onepage")}["L12"]
     check("density-gate-fires", "L12", "WARN naming the number count and the printed verdict",
           g_bad[0], g_bad[0] == "WARN" and "(2, 'Result', 3)" in g_bad[1] and "review verdict printed" in g_bad[1])
+    # venue profiles + relation layer (2026-11-18, proposal 十合一正式版收斂 A/B/C). research-graph is stubbed (no real graph read).
+    def rg_stub(verb, q):
+        if verb == "paper":
+            if q == "10.1/x1":
+                return 0, json.dumps({"corpus": "corpus: 9 works, 9 persons", "work": "doi:10.1/x1", "title": "T1", "year": 2025,
+                                      "authors": [{"key": "orcid:1", "label": "Ada Lin", "position": 0, "corresponding": True, "evidence": "e"}],
+                                      "groups": [{"group": "group:1", "label": "Ada Lin group @ Test University (2020–2025)", "certainty": "inferred",
+                                                  "lead": "orcid:1", "lead_is_corresponding": True, "years": [2020, 2025], "other_works": []}],
+                                      "relations": [{"type": "co_cited", "dir": "↔", "other": "doi:10.1/zz", "label": "A co-cited paper", "params": {}}]})
+            return 1, json.dumps({"corpus": "corpus: 9 works, 9 persons", "query": q, "error": "work not in corpus"})
+        return 0, json.dumps({"corpus": "corpus: 9 works, 9 persons", "query": q, "not_in_corpus": [],
+                              "works": [{"key": "doi:10.1/x1"}, {"key": "doi:10.1/x2"}],
+                              "links": [{"a": "doi:10.1/x1", "b": "doi:10.1/x2", "type": "shared_author", "label": "Ada Lin", "certainty": "determined"}]})
+    REL.RUNNER = rg_stub
+    try:
+        runs2 = []
+        for k, doi in enumerate(("10.1/x1", "10.1/x2")):
+            rk = td / f"venue{k}"; shutil.copytree(run, rk)
+            st = json.loads((rk / "story.json").read_text(encoding="utf-8"))
+            st["source"].update(doi=doi, authors=["Ada Lin", "Bo Chen"] if k == 0 else ["Cy Wu"], year=2025 - k)
+            st["logic"]["chain"] = [{"step": "thickness sets the regime"}, {"step": "regime sets the loss"}]
+            (rk / "story.json").write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8"); runs2.append(rk)
+        dd = Presentation(str(build_onepage(runs2, td / "v-default.pptx", "T", "2026-11-18")))
+        ss = Presentation(str(build_onepage(runs2, td / "v-lab.pptx", "T", "2026-11-18", venue="lab-meeting")))
+        byl = next((sh.text_frame.text for sh in dd.slides[1].shapes if sh.name == "Byline"), "")
+        check("byline-group", "B", "first author et al. + the corresponding author's inferred group, both venues",
+              repr(byl), byl == "Lin et al. · Group: Ada Lin group @ Test University (inferred)"
+              and any(sh.name == "Byline" for sh in ss.slides[1].shapes))
+        byl2 = next((sh.text_frame.text for sh in dd.slides[2].shapes if sh.name == "Byline"), "")
+        check("byline-no-group", "B", "a paper the graph lacks keeps its author line, no invented group", repr(byl2), byl2 == "Wu")
+        strip = lambda p: [sh for sl in p.slides for sh in sl.shapes if sh.name == "Key point strip"]
+        rel_titles = lambda p: [sh.text_frame.text for sl in p.slides for sh in sl.shapes if sh.name == "Page title" and sh.text_frame.text.startswith(RELATIONS_TITLE)]
+        nodes = [sh.text_frame.text for sl in dd.slides for sh in sl.shapes if sh.name == "Paper node"]
+        check("venue-default-full", "A3/C8", "Key point strip on each page + a Relations slide with both papers as nodes",
+              (len(strip(dd)), rel_titles(dd), nodes), len(strip(dd)) == 2 and rel_titles(dd) and sorted(nodes) == ["Lin 2025", "Wu 2024"])
+        sn = ss.slides[1].notes_slide.notes_text_frame.text
+        check("venue-lab-minimal", "A2", "no strip, no Relations slide; slogan + chain turns in the notes",
+              (len(strip(ss)), rel_titles(ss), "Keypoint（lab" in sn, "regime sets the loss" in sn),
+              not strip(ss) and not rel_titles(ss) and "Keypoint（lab" in sn and "thickness sets the regime → regime sets the loss" in sn)
+        sl_ = [st_["en"]["keypoint"] for st_ in (json.loads((r / "story.json").read_text(encoding="utf-8")) for r in runs2)]
+        L = lambda p, v: {g: (s_, m_) for g, s_, m_ in gates(p, "", "onepage", None, v, sl_)}["L14"]
+        clean_s, clean_d = L(td / "v-lab.pptx", "lab-meeting"), L(td / "v-default.pptx", "default")
+        bad = Presentation(str(td / "v-lab.pptx")); textbox(bad.slides[1], 0.3, 0.9, 9, 0.4, ["Key point: " + sl_[0]], size=10)
+        bad.save(str(td / "v-lab-bad.pptx"))
+        fired, missing = L(td / "v-lab-bad.pptx", "lab-meeting"), L(td / "v-lab.pptx", "default")
+        check("venue-gate-two-sided", "L14", "clean decks PASS; a slogan on a lab-meeting page and a default deck without Relations WARN",
+              (clean_s[0], clean_d[0], fired[0], missing[0]),
+              (clean_s[0], clean_d[0], fired[0], missing[0]) == ("PASS", "PASS", "WARN", "WARN") and "(2, 'slogan')" in fired[1])
+        REL.RUNNER = lambda verb, q: (9, "")   # graph unavailable: the layer still prints, saying so
+        REL._CACHE.clear()
+        nd = Presentation(str(build_onepage(runs2, td / "v-nodata.pptx", "T", "2026-11-18")))
+        nod = [sh.text_frame.text for sl in nd.slides for sh in sl.shapes if sh.name == "Relation no-data"]
+        check("relations-no-data", "C9", "Relations slide kept with a no-data line", nod, len(nod) == 1 and nod[0].startswith("No data in the research graph"))
+        REL.RUNNER = rg_stub; REL._CACHE.clear()
+        dk = td / "deckrel"; dk.mkdir()
+        dst = {"source": {"title": "T", "authors": ["Ada Lin"], "year": 2025, "doi": "10.1/x1"}, "logic": {"keypoint": "k"}, "why_me": {"why_read": "w"},
+               "run": {}, "en": {}, "deck": {"pages": [{"section": "Keypoint", "title": "Key points"}, {"section": "Results", "title": "Loss"}]}}
+        (dk / "story.json").write_text(json.dumps(dst), encoding="utf-8")
+        t_def = [slide_title(x) for x in Presentation(str(build_deck(dk, dk / "d.pptx"))).slides]
+        t_ss = [slide_title(x) for x in Presentation(str(build_deck(dk, dk / "s.pptx", venue="lab-meeting"))).slides]
+        check("deck-relations-after-keypoint", "C8", "default: Relations right after the Key point page; lab-meeting: none",
+              (t_def[1:4], RELATIONS_TITLE in t_ss), t_def[2] == RELATIONS_TITLE and RELATIONS_TITLE not in t_ss)
+    finally:
+        REL.RUNNER = None; REL._CACHE.clear()
     # overwrite guard (R6-14): the generator's own output may be rebuilt; a deck saved by anyone else, or open, may not
     owner = make("guard-open", GOOD); (td / ("~$" + owner.name)).write_bytes(b"")
     for name, path, needle in (("guard-own-output", make("guard-own", GOOD), None),
@@ -1459,11 +1808,15 @@ def main(argv=None):
     ap.add_argument("--run", type=Path); ap.add_argument("--runs", type=Path, nargs="*")
     ap.add_argument("--format", choices=["deck", "onepage"])
     ap.add_argument("--out", type=Path); ap.add_argument("--render", action="store_true")
-    ap.add_argument("--presenter", default=None, help="cover presenter; deck: overrides story.json run.presenter"); ap.add_argument("--date", default="")
+    ap.add_argument("--presenter", default=None, help="cover presenter; deck: overrides story.json run.presenter; an empty string drops the line")
+    ap.add_argument("--date", default="", help="onepage cover date (default today)")
+    ap.add_argument("--title", default=None, help="onepage cover title (default 'Review of N papers')")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--base", choices=["template", "blank"], default="blank", help="blank = no template: python-pptx default master")
     ap.add_argument("--advisor", default=None, help="cover Advisor line; an empty string drops it")
     ap.add_argument("--overwrite", action="store_true", help="replace an existing output last saved by someone else (the presenter said so)")
+    ap.add_argument("--venue", choices=VENUES, default="default",
+                    help="default = full carrier (Key point strip, Relations slide); lab-meeting = the lab meeting special case (1109 page)")
     a = ap.parse_args(argv)
     global BLANK_BASE, ADVISOR
     BLANK_BASE = a.base == "blank"
@@ -1481,9 +1834,10 @@ def main(argv=None):
         stop = overwrite_block(out, a.overwrite)
         if stop:
             ap.error(stop)
-        build_deck(a.run, out, a.presenter)
+        build_deck(a.run, out, a.presenter, a.venue)
         story = json.loads((a.run / "story.json").read_text(encoding="utf-8"))
         kp = (story.get("en") or {}).get("keypoint") or story["logic"]["keypoint"]
+        slogans = [kp]
     else:
         runs = a.runs or ([a.run] if a.run else [])
         if not runs:
@@ -1492,9 +1846,14 @@ def main(argv=None):
         stop = overwrite_block(out, a.overwrite)
         if stop:
             ap.error(stop)
-        build_onepage(runs, out, a.presenter or "Presenter", a.date)
+        build_onepage(runs, out, "Presenter" if a.presenter is None else a.presenter, a.date, a.title, a.venue)
         kp = ""
-    rows = gates(out, kp, a.format, story)
+        slogans = []
+        for r_ in runs:
+            st_ = json.loads((Path(r_) / "story.json").read_text(encoding="utf-8"))
+            slogans += [x for x in ((st_.get("en") or {}).get("keypoint"), st_["logic"].get("keypoint")) if x]
+    print(f"venue: {a.venue}")
+    rows = gates(out, kp, a.format, story, a.venue, slogans)
     if a.render:
         try:
             n, stale, layout = render_png(out, out.parent / (out.stem + "-slides"))

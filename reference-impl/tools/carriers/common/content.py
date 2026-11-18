@@ -1,12 +1,13 @@
-"""Load and validate an explainer/1 content file.
+"""Load and validate an explainer/1 or explainer/2 content file.
 
-validate() runs the JSON Schema (schema/explainer-1.schema.json) and then the checks a schema
-cannot express:
+validate() runs the JSON Schema of the file's declared version (SCHEMAS: schema/explainer-1.schema.json,
+schema/explainer-2.schema.json) and then the checks a schema cannot express:
   * unique ids;
   * every string leaf of the content is walked: in a MARKUP field every [[g:]] / [[r:]] / [[s:]]
     marker resolves and no marker sits inside **bold** (the grammar cannot render it); a PLAIN field
     (PLAIN_FIELDS, rendered as literal text by every carrier) carries no markup at all — so the
-    same content reads the same in every carrier;
+    same content reads the same in every carrier; a LITERAL field (LITERAL_FIELDS: explainer/2 code
+    text) is neither parsed nor checked for markup, since it is shown byte for byte;
   * every figure is a relative path that stays inside the content file's folder tree, exists, and has
     an extension every carrier can embed (FIGURE_SUFFIXES);
   * every table row has as many cells as columns; refs[].href uses an allowed scheme.
@@ -27,13 +28,16 @@ from jsonschema.exceptions import best_match
 from . import inline
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMAS = {"explainer/1": ROOT / "schema" / "explainer-1.schema.json"}
+SCHEMAS = {"explainer/1": ROOT / "schema" / "explainer-1.schema.json",
+           "explainer/2": ROOT / "schema" / "explainer-2.schema.json"}
 FIGURE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif")   # the intersection of what html and pptx carriers embed
 HREF_OK = re.compile(r"^(https?://|file:///|#|[^:]*$)", re.I)
 # fields every carrier renders as literal text (no **bold**, no markers)
 PLAIN_FIELDS = {("glossary", "term"), ("glossary", "en"), ("refs", "label"), ("refs", "href"),
                 ("meta", "author"), ("meta", "lang"), ("meta", "date"), ("meta", "audience"),
-                ("metrics", "value"), ("metrics", "unit")}
+                ("metrics", "value"), ("metrics", "unit"), ("code", "lang")}
+# fields shown verbatim by every carrier: inline markup is never applied to them and never checked in them
+LITERAL_FIELDS = {("code", "text")}
 # keys whose strings are identifiers / enums / paths, never text
 NON_TEXT_KEYS = {"schema", "id", "type", "kind", "src"}
 _ANY_MARKUP = re.compile(r"\*\*|\[\[[grs]:")
@@ -103,6 +107,8 @@ def validate(content, base_dir=None):
             errors.append(f"ids: duplicate {kind}-ids {dup}")
     known = {k: set(v) for k, v in ids.items()}
     for where, owner, key, text in _leaves(content, "content", None):
+        if (owner, key) in LITERAL_FIELDS:
+            continue
         if (owner, key) in PLAIN_FIELDS:
             if _ANY_MARKUP.search(text):
                 errors.append(f"plain: {where}: markup is not rendered in this field by every carrier; write it as plain text")

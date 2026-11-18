@@ -2,6 +2,13 @@
   "schema": 1,
   "as_of": "2026-10-02",
   "owner": "user ruling 2026-09-04 (width-void diagnosis) — classes are DATA: add a row + a fixture, never a code branch",
+  "census": {
+    "what": "class_census.py: every literal data-page-class value under these roots must be a row of `classes` (report-only, HMI point page-fill-gate.class-census)",
+    "roots": ["~/.claude", "<projects>", "<work>", "<share>", "<course-notes>"],
+    "skip_dirs": ["node_modules", ".git", "archive", "_archive", "_previous", "candidates", "out", "build", "build_v2", "build_ctrl", "dist", "telemetry", "fixtures", "__pycache__", ".venv", "venv", "site-packages", "_upstream", "_post-format-arms", "cells"],
+    "skip_path_parts": ["/library/references/", "/.claude/projects/", "/.claude/cache/", ".test."],
+    "review_when": "a new top-level work root appears on this machine (add it to roots), or a declared class is found that the census did not report (a root or skip entry is wrong)"
+  },
   "declaration": {
     "attribute": "data-page-class",
     "on": "html",
@@ -26,6 +33,23 @@
       ]
     ],
     "source": "ops/environment.md § Display & UI-build premise — 2560x1440 @150% maximised Chrome, external FHD; re-measure when the screen or scaling changes"
+  },
+  "defect_page_overflow": {
+    "definition": "the whole page scrolls sideways on a phone: document.documentElement.scrollWidth exceeds the phone viewport width by more than tolerance_px. Measured against the device width, never innerWidth (mobile emulation widens the layout viewport to fit an overflowing page, so scrollWidth - innerWidth reads 0 on the defect)",
+    "viewport": [375, 812],
+    "mobile": true,
+    "tolerance_px": 1,
+    "severity": "WARN",
+    "exempt_modes": ["canvas"],
+    "exempt_classes": ["deck", "deck-169", "film-frame", "film-page"],
+    "exempt_why": "fixed-size frames (a 1920 canvas, a slide, a film frame) do not reflow by design; a deck is presented, not read on a phone",
+    "not_measurable": "a linked stylesheet that did not load (a root-absolute href opened from file://) -> WARN 'not measurable', never PASS; serve the built folder on loopback http and pass the URL",
+    "phone_control_min_px": 300,
+    "no_viewport_meta_severity": "WARN",
+    "no_viewport_meta": "a page without <meta name=viewport> is laid out at ~980 px and shrunk to fit on a phone: unreadable small text, not a sideways scroll; reported as its own finding and the overflow figure is not ruled on (census 2026-11-15: 108 of 440 overflow rows)",
+    "runs": "with the default viewports (no --viewport), with --phone, or alone with --phone-only; the fill and consistency checks never run at this viewport (a left-anchored cap has no meaning on a phone)",
+    "added": "2026-11-15, proposal 提案單_填滿閘門加手機寬度_20261115 (outputs/fill-gate-narrow-viewport-20261115): five live PersonalSite notes scrolled sideways at 375 px (a 6-column table, a 64-character inline hash; up to 627 px) while every desktop viewport passed; controls = fixtures/known-bad-page-overflow.html (bare 900 px table) and known-good-page-overflow.html (the same table in an overflow-x:auto box)",
+    "review_when": "the census residue reaches zero real reading pages (promote severity to FAIL), or a phone report names a page this check passed, or deliberately fixed-width live pages gain an exemption (2026-11-15 residue that holds WARN: AssetVault A4 print sheets paper-reading-one-page and printable-one-page-brief, RetortAndRove T-1b 414 px phone mock; candidate: a print-sheet class added to exempt_classes)"
   },
   "unknown_policy": {
     "severity": "WARN",
@@ -69,6 +93,15 @@
     "severity": "FAIL",
     "applies_to": "every class (a property of the block, not of the page shape); advisory viewports downgrade it to WARN like every other finding",
     "added": "2026-10-13, fb row on tool:page-fill-gate — Silicon Photonics HW2/4/5 passed the gate while 17 calculation lines hid their answers at 1707 px; positive control = the pre-fix HW5-5 d0 line (1104/931 px)"
+  },
+  "defect_squeezed_side_panel": {
+    "definition": "a side panel (aside, nav marked data-fill-content, or [data-side-panel]) whose short labels wrap onto two or more lines while the page still leaves at least min_void_px empty on BOTH sides: the panel was squeezed by a page cap, not by the screen",
+    "selectors": ["aside", "nav[data-fill-content]", "[data-side-panel]"],
+    "max_label_chars": 24,
+    "min_void_px": 120,
+    "severity": "WARN",
+    "applies_to": "every non-canvas class without slide scopes; the void is the page's own min(left void, right void), so a page that already spends its width never reads this",
+    "added": "2026-11-17, proposal 提案單_填寬閘門側欄擠壓_20261117 approved by the user — lab-machine-guide machine pages PASSed at fill 77% with 194/194 px voids while their right TOC wrapped every entry; controls = fixtures known-bad-side-squeeze.html / known-good-side-wide.html, asserted on wrapped-label count and void"
   },
   "classes": {
     "document-short": {
@@ -133,6 +166,15 @@
       "min_fill": 0.6,
       "backdrop_bands": true,
       "notes": "full-bleed painted bands without own text are backdrops and do not count as content (else every band page reads reach 100% and a left-capped column inside hides); content must be centred or reach >= 85% (a figure bleeding to the right edge reaches it); added 2026-10-02 with the figure-led page rule"
+    },
+    "canvas": {
+      "zh": "固定尺寸畫布（16:9 手繪簡報、4:5 貼文卡、影片畫格：輸出成圖、影片或 PDF，不是會隨視窗伸縮的網頁）",
+      "content": "figure-led",
+      "mode": "canvas",
+      "scope": "[data-canvas-frame], section.card, #stage",
+      "max_scopes": 8,
+      "layouts_from": "../blank-space-gauge/layouts.json",
+      "notes": "width use does not apply to a fixed-size frame, so this gate only determines that each frame (the scope, else a fixed-width body) has the aspect of a blank-space-gauge layout; a frame with no matching layout, or no frame at all, is WARN. Empty space on a canvas is blank-space-gauge's call, never this gate's. Added 2026-11-04 when sketch decks (deck-169) and film pages (film-frame, film-page) were found declaring classes this registry did not hold"
     }
   },
   "content_classes": {

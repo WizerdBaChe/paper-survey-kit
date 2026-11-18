@@ -6,7 +6,8 @@ description: >-
   lab's one-page and multi-page decks and a talk script. Trigger on 「這篇要報」「論文賞析簡報」「一頁式／十篇一頁」
   「多頁簡報」「主軸／故事線」「key point」「為什麼讀這篇」「正式簡報／英文版」. NOT the
   evidence audit (→ paper-distill), finding papers (→ literature-search-extract), own study
-  design (→ scientific-research-guide), posts (→ post-brief).
+  design (→ scientific-research-guide), posts (→ post-brief), the author's own finished
+  hand-drawn decks (→ post-format-lab deck.py).
 ---
 
 # paper-story — 主軸、故事線、邏輯抽取，然後才是簡報
@@ -78,6 +79,7 @@ python scripts\story_explainer.py --run <run_dir>                               
 python scripts\verify_story.py <run_dir>                                                                      # run by someone other than the author
 # formal deck (N6, explicit request only): scripts\lab_deck.py builds from the blank bases in <PAPER_HOME>\_templates\
 # and is edited per references\formal-deck.md (English slide text, figures swapped, minor edits) — never --pptx-from-story for a talk
+# python scripts\lab_deck.py --runs <d1> ... --format onepage [--venue lab-meeting]   # default venue = full + Relations; lab-meeting = 1109 page (formal-deck.md §7)
 python ..\paper-distill\scripts\library.py register <run_dir>;  python <NOTES_VAULT>\tools\kv-lint.py           # also rebuilds README, KEYPOINTS.md and <PaperId>_keypoint.md (2026-09-04)
 # library layout (naming over routing, 2026-09-04): <home>/<FirstAuthor><Year>_<slug>/ = the ONE accepted run per paper;
 # comparison / calibration copies go to <home>/_calibration/<PaperId>/<label>/ (register --kind calibration --label <what-it-is>), never as siblings
@@ -122,7 +124,7 @@ only deliverables go in the run folder); the `narrative-record.md` from
   at most one, `step: side-evidence` with `necessity` (S1/S4 FAIL without or beyond). The table is five fields by
   default; `onepage.fields: four` drops Features (optional by ruling 2026-11-03). The lab one-page cuts each cell to its
   numbers and first clause, moves the rest and the script (出處／目的 + tile notes) to the speaker notes, and prints
-  the venue as a badge (`references/presentation-formats.md` §1, `formal-deck.md` §2 ten-papers, `talk-conventions.md` §9).
+  the venue as a badge (`references/presentation-formats.md` §1, `formal-deck.md` §6, `talk-conventions.md` §9).
 - **The deep-mode one-page is the lab's format** (3–6 figures + the five-field table) plus ONE
   Keypoint strip; nothing else is added or removed (schema @5 and older behave this way in both modes). Its figures declare `kind`
   (`onepage.figures[].kind`): `evidence` figures and the paper's OWN process／structure
@@ -210,7 +212,9 @@ Class A — for the user (練習・學習・快速複習; readable, not presenta
    into `paper-explainer.explainer.json` (schema `explainer/1`, words only from the two contracts) and
    `tools/carriers/build.py` builds it with the `html-explainer` carrier and stamps it. Sections:
    Keypoint (slogan + 解讀 + bindings + why-me) → 一眼看懂 (problem/approach, five-field table,
-   every method, verdicts) → 主軸 → 故事線 → 逐圖判讀 (each deck figure + look/see/against/means
+   every method, verdicts) → 人物與關聯 (since 2026-11-18, R1: authors, the inferred group and its other papers, near
+   relations and links to every other paper in the library, read from research-graph by `scripts/relations.py`; printed
+   with 「庫內無資料」 when the graph has nothing — never dropped) → 主軸 → 故事線 → 逐圖判讀 (each deck figure + look/see/against/means
    + takeaway) → 口述稿 → 深讀審計 (claims + drift) → 邏輯鏈 (warrants, fragile, portable) →
    延伸與找資料; glossary from `terms[]` (first use marked), refs from `en.references`. Since 2026-11-03
    (user ruling 「只留「口述稿」section」) 口述稿 is the page's ONLY talk section: it sits right after 逐圖判讀 and is
@@ -244,8 +248,14 @@ Class B — for the real talk (explicit request 「做正式簡報」「英文�
    figure pages with no "Fig. x:" or "→" markers; soft line breaks for sub-items; labelled crops; figures may cross the
    frame for legibility; tables and visuals over text; APA references; no Source strips. `lab_deck.py` implements the
    determinable ones (size levels, figure-page statements with soft breaks, no strips, 12 pt References, an overwrite
-   guard for hand-tuned decks; §4 round 6); gates L1–L11 (`lab_deck.py --selftest` calibrates L3, L7–L11 and the guard;
-   L10 = PowerPoint's own text layout); template facts + procedure in `references/formal-deck.md` §2a / §2b / §2c / §4.
+   guard for hand-tuned decks; §4 round 6); gates L1–L13 (`lab_deck.py --selftest` calibrates L3, L7–L13 and the guard;
+   L10 = PowerPoint's own text layout; L13 = nothing of the template's own cover survives); template facts + procedure in `references/formal-deck.md` §2a / §2b / §2c / §4 / §6.
+   **Venue (round 9, user ruling 2026-11-18, `formal-deck.md` §7):** `lab_deck.py --venue default` (the default — every
+   audience outside the lab meeting; full carrier plus a Relations slide/page) or `--venue lab-meeting` (the lab meeting special case: the 1109 page, no Key point strip, slogan and logic-chain turns in the notes, no Relations). Ask
+   which venue only when the request does not say; a deck for anyone else is `default`. Both carry the author / group line.
+   Gate L14 checks the venue.
+   Before building the formal deck, crop THIS paper's journal masthead from its first page (`crop.py --page N --bbox …` →
+   `figures/deck/LOGO_cover.png`) and set `en.cover_logo`; the template's logo never stays (R7-12; L13 WARNs an empty corner).
    Since round 7 (2026-09-21) the single-survey baseline is the user's final
    `Mu2020_edge-couplers-si-pic-review/0921上台版本(中文).pptx`: English slides, Chinese notes in the
    presenter's voice (`talk-conventions.md` §8), page order and figure-page rules R7-1…R7-12 (§2c). Never
@@ -278,33 +288,6 @@ exception (e.g. R7-5 short-noun figure titles vs the shared assertion-title rule
 
 ## Field test
 
-Born 2026-09-03 from the user's rejection of the first two presentation designs
-(figure-and-text description; key point as summary). First real run: Ow 2010 by the
-main session, the same evening — it passed every gate and the user then ruled that
-its HTML is a practice copy (「能看且方便看，但很醜不能用來展示」), which produced the
-two product classes above. Offer `skill-co-upgrade` after any run that had to bypass a
-rule here. Round 1 (2026-09-03, `outputs/skill-reviews/paper-story-gaps-round1-2026-09-03.md`):
-the two calibrations' 19 findings dispositioned — Gb8 → S13 drift checklist, Gb9 → S4c
-figure kinds, schema @3, tenth tell `abstract-mismatch`; the accepted runs stay @2.
-Round 4 (2026-09-14, `outputs/skill-reviews/paper-story-gaps-round4-2026-09-14.md`): the advisor's
-four opening questions, figures first and notes told as a story — schema @5 (`brief`, page
-`asks`／`bridge`／`takeaway`／`figure_read`, `talk.story_arc`), S18–S20 / V21–V23 / L6, re-run on
-Tran 2018 (the talk paper; the round-3 run kept in `_calibration/…/before-0914`).
-Round 5 (2026-09-14, `outputs/skill-reviews/paper-story-gaps-round5-2026-09-14.md`): the user's review of the round-4
-lab deck — fonts too small, too much text, sources not shown, Future work missing, key point moved to the closing —
-gave the GaN skeleton + additions order, native diagram pages, source / keyword-search / References pages, S5 / S18 /
-S20 flips (key point up front, `deck.minutes` optional) and lab gates L7–L10; round-4 deck kept in
-`_calibration/…/round4-lab-deck-0914`.
-Round 6 (2026-09-15, rules in `references/formal-deck.md` §2b): the user's hand-tuned Mu 2020 deck became the
-formal-deck baseline. Eight revision items, then a diff of the user's final against the delivered build and four
-user additions, gave R6-1…R6-14. The user's final is kept as
-`Mu2020_edge-couplers-si-pic-review/lab-deck_v2_user-final-20260915.pptx`. `lab_deck.py` implemented R6 the same day
-(formal-deck.md §4, round 6: gate L11 and the overwrite guard added).
-Round 7 (2026-09-21, rules in `references/formal-deck.md` §2c, notes in `talk-conventions.md` §8): the user's
-`0921上台版本(中文).pptx` — English slides, Chinese notes — was ruled what a single-survey formal deck should be. Diffs v2 → v3
-and 0914 build → v3 plus a read of every render gave R7-1…R7-12 and the notes voice; the gates run on both user finals as
-known-TRUE inputs recalibrated L3, L6, L7, L9, L10 (a trailing-blank-paragraph false FAIL) and L11, each with a selftest
-positive control. Analysis record: `Mu2020_edge-couplers-si-pic-review/formal-deck-v3-analysis-20260921.md`.
-Same day, second ruling: the notes voice, the figure–text rules and the closing logic chain bind every deck (class A too:
-S20 / V23 flipped to "spoken at the close", the talk deck's slogan box moved to the Storyline page); page order and
-methodology are read per paper type.
+Offer `skill-co-upgrade` after any run that had to bypass a rule here. How each round of user
+rulings (birth 2026-09-03, rounds 1 and 4–8) produced the current rules and gates:
+`references/field-test-history.md`.

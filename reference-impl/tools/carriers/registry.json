@@ -4,9 +4,9 @@
   "carriers": [
     {
       "id": "html-explainer",
-      "version": 10,
+      "version": 12,
       "status": "active",
-      "consumes": ["explainer/1"],
+      "consumes": ["explainer/1", "explainer/2"],
       "output_suffix": ".html",
       "label": "說明網頁（單一 HTML 檔，可查閱、跳讀）",
       "reading_mode": "look-up",
@@ -21,9 +21,9 @@
     },
     {
       "id": "pptx-explainer",
-      "version": 1,
+      "version": 3,
       "status": "active",
-      "consumes": ["explainer/1"],
+      "consumes": ["explainer/1", "explainer/2"],
       "output_suffix": ".pptx",
       "label": "說明簡報（PPTX，從頭讀到尾、報告用）",
       "reading_mode": "read-through",

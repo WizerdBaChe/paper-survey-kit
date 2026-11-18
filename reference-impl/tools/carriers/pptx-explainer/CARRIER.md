@@ -1,7 +1,7 @@
-# pptx-explainer — explainer/1 -> read-through PPTX deck
+# pptx-explainer — explainer/1 and explainer/2 -> read-through PPTX deck
 
-Version **1** (registry row `pptx-explainer`, `tools/carriers/registry.json`). Consumes `explainer/1`
-(`tools/carriers/schema/explainer-1.schema.json`). Output suffix `.pptx`. Reading mode: read-through
+Version **3** (registry row `pptx-explainer`, `tools/carriers/registry.json`). Consumes `explainer/1` and `explainer/2`
+(`tools/carriers/schema/explainer-1.schema.json`, `explainer-2.schema.json`; v2 = v1 + the `code` block). Output suffix `.pptx`. Reading mode: read-through
 (from the first slide to the last, or presented). Dispatcher: `python -X utf8 tools/carriers/build.py build --carrier pptx-explainer --content <c.json> --out <f.pptx>`.
 
 Consumer of this file: builders and maintainers. Slide text is Traditional Chinese (the content's language);
@@ -25,9 +25,11 @@ The carrier decides layout only; what the deck says lives in the content file.
 | # | slide | built from | title / description |
 |---|---|---|---|
 | 1 | cover | `meta.title`, `subtitle`, `purpose`, `date`, `author` | title 38 pt, subtitle 20 pt, purpose 16 pt (own object), date + author 13 pt |
-| 2.. | per section, one or more slides | `sections[i]` | kicker `第 i 節`; title = heading; description = `summary` (own object, first slide only); blocks top to bottom |
+| 2 | start guide 「這份簡報的路線」 (2+ sections) | `sections[].heading`, `summary` | kicker `導覽`; table 節 / 這節在回答; no takeaways (goal: choose where to look) |
+| 3.. | per section, one or more slides | `sections[i]` | kicker `第 i 節`; title = heading; description = `summary` (own object, first slide only); blocks top to bottom |
 | .. | section continuation | the blocks that did not fit | title `<heading>（續）`, no description |
 | .. | section closing box | `takeaways` | box 「本節重點」 on the section's LAST slide (own slide `（續）` when it does not fit) |
+| n-3 | end overview 「全貌：帶回去用」 (2+ sections) | `meta.purpose`, `sections[].heading`, `takeaways` (`summary` when none) | kicker `全貌`; description = 讀完能做到 + purpose; numbered steps map, one item per section (goal: take back to work) |
 | n-2 | 詞彙 (1+ slides) | `glossary` | table: 詞彙 / English (only when any entry has `en`) / 說明; skipped when no glossary |
 | n-1 | 出處 (1+ slides) | `refs` | table: 出處 / 說明 / 連結 (only when any ref has `href`; plain text, no hyperlink); skipped when no refs |
 | n | colophon 「版本與來源」 | `meta.source_note`, `date`, `author` | three labelled lines |
@@ -54,6 +56,9 @@ vendored type audit's floor keys and must not be renamed.
 | metrics | number cards, up to 4 per row: value 32 pt + unit 18 pt, label 15.5 bold, note 14 | 32 / 18 / 15.5 / 14 |
 | quote | grey box with an accent bar, text, `—— source` line | 15.5 / 14 |
 | takeaways | white box with an accent rule, heading 「本節重點」, bullets in up to 3 columns | 19 / 15.5 |
+| code (explainer/2) | light-fill rectangle (`F1F3F5`, thin line) `<id>.<n>.code-bg` + one Consolas text box `<id>.<n>.code`, one paragraph per source line, 1.15 line spacing; optional 12 pt caption above the box. Own text box, NOT `L.block`: `block()` may insert soft breaks after clause marks, so code text is emitted character for character (tabs, leading spaces, blank lines kept; only a trailing newline is dropped). `lang` is not drawn | 14 (fixed) |
+
+**Code block fit rule (decision, stated):** the size is FIXED at 14 pt, the body floor, never searched or shrunk; a line longer than the box (about 105 Consolas characters) WRAPS visibly inside it. A block taller than the room left moves whole to a continuation slide, and one taller than a slide is split BY SOURCE LINE (no line is cut; a very long wrapped line stays whole). The estimator is the vendored width model (`_est_w_in`, Latin 0.55 em = Consolas) with the 1.04 safety factor and the vendored 1.3 x line-spacing pitch. The structure gate skips the `[[g:`-marker scan on shapes named `*.code` (a literal marker-like string in code is the author's text).
 
 Inline markup is rendered from `common/inline.py` tokens only: `**bold**` -> bold run; `[[g:id]]` -> the glossary
 TERM in bold; `[[r:id]]` -> `〔label〕`; `[[s:id]]` -> the target section's heading. Table cells and titles reach the
@@ -130,7 +135,7 @@ NOT implemented (by design or deferred):
   use 1.15-1.25. Inherited from the asset, not re-ruled here.
 - **Producer-side unread-key check**: every schema field is rendered except `meta.audience` (an author-side
   declaration; NO mechanism checks that audience-class text is free of paths / ids / gate counts — that stays a
-  reader check) and `refs[].href` (shown as plain text). A new schema field is NOT rendered until this
+  reader check), `refs[].href` (shown as plain text) and `code.lang` (a label for the HTML carrier; not drawn here). A new schema field is NOT rendered until this
   file's mapping and `render.py` are extended.
 - `lang` is the vendored fixed `zh-TW` (+ `altLang en-US`) whatever `meta.lang` says; harmless for Latin text, wrong
   kinsoku for a non-CJK deck. `meta.lang` only reaches the core properties.
@@ -164,12 +169,21 @@ Run: `python -X utf8 -m unittest discover -s ~/.claude/tools/carriers/pptx-expla
 
 ## Version and change log
 
-Version: **1**
+Version: **3**
 
 Change log
 - v1 2026-10-09 — first build: cover, section slides with overflow continuation, takeaways box, glossary / refs /
   colophon slides, all eight block types, speaker-notes declarations, gates `type_audit` / `structure` / `geometry`,
   vendored pptx-deck-builder (shas above).
+- v2 2026-11-04 — consumes `explainer/2`; new block `code` (Consolas 14 pt, light fill, wraps visibly, splits by source
+  line, literal text, see "Code block fit rule"); `structure` gate skips the marker scan inside `*.code` shapes; slide
+  notes label such a slide 「指令（原文照錄）」. Tests: literal exact in the deck plus a mutant that tokenises inline markup
+  (must fail the same check), long-line wrap, 60-line split, explainer/1 fixture still passes every gate.
+- v3 2026-11-16 — two menus from existing fields, no schema change (user ruling D4, R24 cross-domain borrow): a
+  start guide slide after the cover (route table, no answers) and an end overview slide before the glossary
+  (purpose in the description, every section's takeaways as a numbered map), both only for 2+ sections. Golden
+  sample 9 -> 11 slides. Tests: guide carries no takeaway, overview carries every takeaway, one-section content
+  builds neither (sample (1,1) vs (0,0)).
 
 ## Maintenance
 

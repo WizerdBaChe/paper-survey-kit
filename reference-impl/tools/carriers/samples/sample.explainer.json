@@ -1,5 +1,5 @@
 {
-  "schema": "explainer/1",
+  "schema": "explainer/2",
   "meta": {
     "title": "說明型交付物怎麼產生",
     "subtitle": "內容寫一次，載體由轉接器機械產出",
@@ -57,7 +57,7 @@
           ["說明簡報", "PPTX 檔", "從頭讀到尾、報告", "字級下限、印記"]
         ]},
         {"type": "metrics", "items": [
-          {"label": "內容格式", "value": "1", "unit": "種", "note": "所有載體共用"},
+          {"label": "內容格式", "value": "2", "unit": "版", "note": "所有載體共用"},
           {"label": "已登錄載體", "value": "2", "unit": "種"},
           {"label": "成品手改", "value": "0", "unit": "次", "note": "改內容再重建"}
         ]},
@@ -70,6 +70,7 @@
       "summary": "改載體要跑標準範例；成品被手改會被印記抓到。",
       "blocks": [
         {"type": "callout", "kind": "warn", "title": "不要手改成品", "text": "要改字，改內容檔再重建；手改過的成品檢查會判定「已被修改」。"},
+        {"type": "code", "lang": "powershell", "caption": "檢查成品有沒有被手改的指令範例", "text": "Set-Location \"$HOME\\Documents\\說明頁\"\npython build.py check 說明.html --content 說明.explainer.json   # 結果是 ok 才算數"},
         {"type": "callout", "kind": "note", "text": "使用者明確指定其他做法時（例如一次性的手繪頁），照使用者的指定。"},
         {"type": "para", "text": "這份範例本身就是用這套流程產生的：同一份內容同時建成網頁與簡報。"}
       ]

@@ -29,6 +29,12 @@ status: live 2026-09-04 · owner: 使用者裁決（寬度缺陷診斷 `outputs/
 | diagram | 圖為主載體 | diagram | 置中對稱 **或** reach ≥ 85%；fill ≥ 60% | diagram-authoring 產物 |
 | dashboard | 卡片與表格儀表 | node | reach ≥ 85% | auto-fit 卡片格；入口頁（VIEWS、啟動頁）也量這一類 |
 | showcase | 圖主展示頁 | figure-led | 置中對稱 **或** reach ≥ 85%；fill ≥ 60%；滿版色帶當背景不算內容 | 專案介紹、作品展示（2026-10-02） |
+| canvas | 固定尺寸畫布 | figure-led | 不量寬度；每個畫框（`section.card`、`#stage`、`[data-canvas-frame]`，否則固定寬的 body）的長寬比要對上 blank-space-gauge `layouts.json` 的一個版型，對不上或找不到畫框是 WARN；空白交給 blank-space-gauge 量 | sketch-deck-169 簡報、影片畫格頁（2026-11-04） |
+
+**類別普查（`class_census.py`，2026-11-04）**：這台機器上每一個寫死的 `data-page-class` 值，都必須是上表的一列。
+`python -X utf8 tools/page-fill-gate/class_census.py list` 列出沒登記的值和檔案；`emit` 是 system-hmi 的監看點
+`page-fill-gate.class-census`（只報告）；`--selftest` 跑正負對照。掃哪些根目錄、跳過哪些資料夾，寫在 `page_classes.json` 的 `census`。
+起因：閘門只在有人量那一頁時才說「類別沒登記」，所以模板和 lab 各自取名（deck-169、film-frame、app-ui…）好幾週都沒人看到。
 
 **兩套分類合成一張表**（2026-10-02）：`class`（頁型）決定寬度怎麼量；「內容類」（`content`
 欄）決定樣式規則去哪裡讀，定義在 `page_classes.json` 的 `content_classes`。node 類是操作介面，
@@ -52,18 +58,25 @@ status: live 2026-09-04 · owner: 使用者裁決（寬度缺陷診斷 `outputs/
 對照：`fixtures/known-bad-formula-overflow.html` 每次都必須 FAIL；實例正對照是修正前的 Silicon Photonics HW5（commit
 `bc9e168`，1707 px 量到 6 行）。
 
+**側欄被擠壓（`defect_squeezed_side_panel`，2026-11-17）**：三欄閱讀頁（銘牌｜本文｜目錄）被整頁上限壓窄時，
+側欄短標籤（≤ `max_label_chars` 字）折成兩行以上，旁邊卻還有大片空白。量法：`aside`、`nav[data-fill-content]`、
+`[data-side-panel]` 裡有自己文字的元素，用 Range 的行框數行；頁面左右空白取小者 ≥ `min_void_px`（120）且至少一個標籤折行
+才算，嚴重度 WARN。固定定位的浮動面板不算側欄。對照：`fixtures/known-bad-side-squeeze.html`（上限 1000 px，1707 寬時
+折行 5、空白 354 px，必須 WARN）、`fixtures/known-good-side-wide.html`（同頁拿掉上限，折行 0、空白 32 px，必須 PASS），
+斷言量到的折行數與空白值；實例正對照是機台操作筆記站 commit `d7cc85e` 的機台頁（折行 2、空白 194 px）。
+
 **區塊層級升格**：某個選擇器的「較窄靠左區塊」被人回報過一次後，把選擇器前綴寫進
 `block_fail_selectors`，該類發現從 WARN 變 FAIL。
 
 ## 用法
 
 ```powershell
-python ~/.claude\tools\page-fill-gate\fill_gate.py <built.html> [...] [--viewport 1707x830] [--class deck] [--json] [--quiet]
+python ~/.claude\tools\page-fill-gate\fill_gate.py <built.html> [...] [--viewport 1707x830] [--class deck] [--json] [--quiet] [--phone | --phone-only | --no-phone]
 python ~/.claude\tools\page-fill-gate\tests\test_fill_gate.py      # 每類正負各一，controls 必須觸發
 ```
 
-每次執行都先跑七個對照：`fixtures/known-bad-left-cap.html` 與 `fixtures/known-bad-formula-overflow.html` 必須 FAIL、`fixtures/known-good-fill.html`
-與 `fixtures/known-good-fixed-panel.html`（置中欄＋右下角固定面板）必須 PASS，另有三個頁內一致性對照（見下一節）；任一沒觸發就整次無效（RuntimeError）。
+每次執行都先跑九個對照：`fixtures/known-bad-left-cap.html` 與 `fixtures/known-bad-formula-overflow.html` 必須 FAIL、`fixtures/known-good-fill.html`
+與 `fixtures/known-good-fixed-panel.html`（置中欄＋右下角固定面板）必須 PASS，另有三個頁內一致性對照（見下一節）與一組側欄擠壓對照（見上）；任一沒觸發就整次無效（RuntimeError）。
 固定定位 (position:fixed) 的元素**連同其所有子孫**都不算內容——它浮在頁面上方；例外是標了 `data-rail` 的側欄，
 以及蓋滿視窗的固定外殼（`inset:0` 的 app／deck 殼本身就是頁面）。2026-10-12 前只排除固定元素本身，
 面板裡的文字被當成內容，置中頁被誤判「不置中」(fb:bfa19018)。
@@ -81,6 +94,29 @@ python ~/.claude\tools\page-fill-gate\tests\test_fill_gate.py      # 每類正�
 
 一行輸出長這樣：`fill-gate: FAIL 1707x830  class=document-long reach=69% fill=64% void L/R=72/439px  教科書….html`，
 `reach` 是內容右緣到內容區右緣的比例，`fill` 是內容左右緣之間的比例，chrome（固定側欄 TOC）已扣除。
+
+## 手機寬度 (phone width，2026-11-15)
+
+**守的性質：** 頁面在手機上不能整頁橫向捲動。設定在 `page_classes.json` 的 `defect_page_overflow`：375x812、開啟觸控與行動裝置模擬 (mobile emulation)，量 `document.documentElement.scrollWidth - 375`，容許 1 px。
+
+**什麼時候跑：** 不帶 `--viewport` 的一般執行會在桌面視窗之後多量一次手機寬度（預設就開，不用另外要求）；帶了 `--viewport` 時要加 `--phone`；`--phone-only` 只量這一項，適合掃整個建置站；`--no-phone` 關掉。手機寬度只量這一項，不跑填滿與一致性檢查（「靠左的寬度上限」在手機上沒有意義）。
+
+**判讀：**
+
+| 情況 | 結果 | 為什麼 |
+|---|---|---|
+| 整頁多出 1 px 以上 | 依 `severity`（目前 WARN），並列出撐寬的方塊（超出自己父層的那個，例如 `table 900px`）；找不到這種方塊時，列出文字跑出去的最內層方塊（例如 `text in div.err 434px`：不能斷行的長字串、網址、雜湊值） | 量得到的事實 |
+| 沒有 `<meta name="viewport">` | WARN，另列一項 | 手機會用桌面寬度排版再整頁縮小：不會橫向捲動，但字小到讀不了。這時的溢出數字沒有意義，不拿來判 |
+| 樣式表載不到（用 `file://` 開、資源寫成 `/_astro/...` 這種根目錄路徑） | WARN「量不了」，絕不給 PASS | 量到的是沒套樣式的頁面；請用本機 http 伺服器提供建置資料夾，傳網址進來 |
+| 固定尺寸類別（`canvas` 模式、`deck`、`deck-169`、`film-frame`、`film-page`） | PASS 並附註「不判」 | 1920 的畫布、投影片、影片畫格本來就不縮放 |
+
+**量法的坑：** 一定要減裝置寬度 375，**不能**減 `innerWidth`。行動裝置模擬下內容一溢出，版面視窗就跟著變寬（實測 375 → 917），用 `innerWidth` 減永遠是 0。Chromium 對 `file://` 載不到的樣式表仍會留一個 sheet 物件，所以「載不到」是由 Python 檢查檔案是否存在，不靠 `link.sheet`。
+
+**對照（每次量手機寬度都先跑，讀錯數值就整次無效）：** `fixtures/known-bad-page-overflow.html`（未包框的 900 px 表格，必須多出 300 px 以上，且撐寬的方塊必須是 `table`；實測 +542 px）、`fixtures/known-good-page-overflow.html`（同一張表包進 `overflow-x:auto` 的框，必須 0 px；實測 0）、`fixtures/known-bad-text-overflow.html`（80 字元的雜湊值，必須溢出並被指為 `text in p.hash`；實測 +356 px）、`fixtures/known-bad-no-viewport-meta.html`（必須回報沒有 viewport 標籤）、`fixtures/known-bad-unloaded-sheet.html`（必須回報樣式表載不到）。`tests/test_fill_gate.py` 另有 `phone_verdict` 的分支表（兩種嚴重度 × 七種情況，含容許值邊界）。
+
+**誰在用：** PersonalSite 的 `scripts/check_narrow.py` 用本機伺服器提供 `site/dist`，把每一頁交給 `fill_gate.phone_rows` 量，並加網站自己的對照（真實文章頁＋網站 CSS 的 `.table-scroll`）；網站那邊任何手機發現都擋 verify（專案層可以比共用層嚴）。全機普查的腳本與結果在 `~/.claude\outputs\fill-gate-narrow-viewport-20261115\`。
+
+**嚴重度何時升 FAIL：** 普查裡一般閱讀頁的橫向捲動降到 0 頁時（`review_when` 寫在登記表那一列）。
 
 ## 量法（一句話說清楚它看得見什麼、看不見什麼）
 
@@ -100,6 +136,8 @@ python ~/.claude\tools\page-fill-gate\tests\test_fill_gate.py      # 每類正�
 |---|---|---|---|
 | **C2 同級一致** | 可見元素按（標籤，class 清單，宣告的 ARIA 狀態）分組、組內 ≥ 2 個，比 `font-size`／`font-weight`／`font-family`／`line-height`／`letter-spacing` 的計算值 | 這幾個元素量出來不一樣（量測事實） | 作者是不是故意要不一樣（A/B 對照面板、工具類 class） |
 | **S3 規則重複宣告** | 載入後讀瀏覽器實際套用的樣式表（CSSOM，遞迴進 `@media`／`@supports`／`@layer`），找選擇器不同卻宣告相同的規則對 | 共有哪些宣告、幾條 | 這是「抄了一份」還是「兩個元件共用一個設計值或重置樣式」 |
+
+**修 S3 點名的重複規則、或刪除另外找到的死 CSS 時（2026-11-09 加）：** 改前、改後各跑一次 `python -X utf8 ~/.claude/tools/css-equiv/css_equiv.py snap --serve <dist> --page / --selectors ".a,.b" --out before.json`（改後存 `after.json`），再跑 `diff before.json after.json`，證明所選元素、頁面與視窗寬度下的計算後樣式 (computed style) 沒變；建置成功和本閘門都證明不了「沒變」。結束碼 2 代表敏感度對照沒觸發，比對無效。偽元素（`::before`／`::after`）、`:hover` 等狀態與列印樣式不在比對範圍。建好的站若用根路徑引用 `/_astro/*.css`，本閘門也要跑在 `http://127.0.0.1` 網址上，用 file:// 開會載不到樣式（L-229）。
 
 **狀態分組（2026-10-31 加）：** 帶 `aria-current`／`aria-selected`／`aria-pressed`／`aria-expanded`／`aria-checked` 的元素（值不是空、`false` 或 `undefined`）另成一組，例如目錄裡加粗的「目前這一章」。分組只看屬性名稱、不看值（`aria-current="page"` 與 `="true"` 同組）；同一狀態的元素之間照樣比；consistency 階段本身出錯時 `consistency_status` 記 WARN，不記 PASS；被分開的元素數記在 `state_split`。起因：閱讀框架模板 (research-site-shell) 在每一頁的目錄都被報 `a.l1` 500 對 700。
 

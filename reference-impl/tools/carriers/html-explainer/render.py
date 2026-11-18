@@ -1,4 +1,4 @@
-"""html-explainer carrier: explainer/1 content -> ONE self-contained .html file.
+"""html-explainer carrier: explainer/1 or explainer/2 content -> ONE self-contained .html file.
 
 render(content, content_dir, out_path) -> None   (the build.py contract)
 
@@ -30,6 +30,10 @@ PAGE_CLASS = "document-long"
 # Section ids of content are [a-z0-9-]; generated ids use '_' so they can never collide with them.
 GLOSSARY_SID = "x_glossary"
 REFS_SID = "x_refs"
+OVERVIEW_SID = "x_overview"
+# The two overview menus (design-axes part-principles §2, user ruling 2026-11-16 D4) appear only when there are
+# at least this many sections: a one-section page has nothing to choose between and nothing to gather.
+MENU_MIN_SECTIONS = 2
 
 IMAGE_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
               ".webp": "image/webp", ".svg": "image/svg+xml"}
@@ -67,9 +71,53 @@ dl.gl dd{margin:2px 0 0;}
 ol.refs{padding-left:1.6em;margin:12px 0;}
 ol.refs li{scroll-margin-top:16px;}
 ol.refs .rl{font-weight:700;}
+.guide{margin:14px 0 22px;padding:10px 14px 12px;border:1px solid var(--line);}
+.guide .gtag{font-family:var(--sans);font-weight:700;font-size:var(--pdl-meta,14px);color:var(--muted);margin-bottom:4px;}
+.guide ol{margin:0;padding-left:1.6em;}
+.guide li{margin:4px 0;}
+.guide li a{font-weight:700;}
+.guide li .gq{display:block;font-family:var(--sans);font-size:var(--pdl-meta,14px);color:var(--muted);}
+.ovgoal{margin:6px 0 14px;}
+.ovmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;margin:12px 0 16px;}
+.ovcard{background:var(--plate);border:1px solid var(--line);border-top:3px solid var(--glass);padding:10px 14px;min-width:0;}
+.ovcard .ovh{display:block;font-family:var(--sans);font-weight:700;margin-bottom:4px;}
+.ovcard ul{margin:4px 0 0;padding-left:18px;}
+.ovcard li{margin:3px 0;}
+.ovcard .ovq{font-family:var(--sans);font-size:var(--pdl-meta,14px);color:var(--muted);margin:0;}
 #rail .rx .rsum{color:var(--muted);margin:0 0 6px;}
 #rail .rx ul{margin:4px 0 8px;padding-left:18px;}
 #rail .rx li{margin:2px 0;}
+"""
+
+# Only emitted (with the copy-button asset below) when the content has a `code` block, so explainer/1 content
+# builds the same page as before the code block existed.
+CODE_CSS = """\
+/* html-explainer code block (carrier layer; the copy button's own CSS is the vendored asset) */
+.codeblock{margin:16px 0;border:1px solid var(--line);background:var(--plate);min-width:0;}
+.codeblock .codecap{font-family:var(--sans);font-weight:700;font-size:var(--pdl-meta,14px);padding:8px 12px 0;}
+.codeblock .codebar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 12px;font-family:var(--sans);font-size:var(--pdl-meta,14px);color:var(--muted);}
+.codeblock .codebar .codelang{min-height:1em;}
+.codeblock .copy-feedback-button{padding:4px 14px;border-radius:4px;font-family:var(--sans);font-size:var(--pdl-meta,14px);}
+.codeblock pre{margin:0;padding:10px 12px 12px;overflow-x:auto;max-width:100%;white-space:pre;tab-size:4;border-top:1px solid var(--line);}
+.codeblock code{font-family:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;font-size:var(--pdl-meta,14px);line-height:1.5;}
+"""
+
+# Copy buttons of `code` blocks: the AssetVault asset copy-feedback-button (vendored, inlined verbatim as a
+# module script, so its `export`s are legal) mounted on every .codeblock. The button ships `hidden` and is
+# revealed only by this script, so a page whose JS is dead shows a readable, selectable <pre> and no dead button.
+CODE_MOUNT_JS = """\
+
+(function(){
+  var boxes = document.querySelectorAll('.codeblock');
+  for (var i = 0; i < boxes.length; i++){
+    (function(box){
+      var btn = box.querySelector('button.copy-feedback-button'), code = box.querySelector('pre code');
+      if (!btn || !code) return;
+      btn.hidden = false;
+      mountCopyFeedbackButton(btn, {idleLabel: '複製', successLabel: '已複製', failureLabel: '複製失敗，請手動選取', getText: function(){ return code.textContent; }});
+    })(boxes[i]);
+  }
+})();
 """
 
 # Carrier-owned rail extension: the shell's rail lists the tokens and figures of the section in view; the
@@ -219,7 +267,23 @@ def _block(block, content_dir, sid, state, ctx):
     if t == "quote":
         src = f"<footer>{ctx.inl(block['source'])}</footer>" if block.get("source") else ""
         return f'<blockquote class="quote"><p>{ctx.inl(block["text"])}</p>{src}</blockquote>'
+    if t == "code":
+        return _code(block, ctx)
     raise ValueError(f"unknown block type {t!r}")
+
+
+def _code(block, ctx):
+    """A `code` block: literal text, NEVER passed through ctx.inl (no inline markup applies). '[' is written as
+    &#91; so a literal '[[g:..]]' in a command cannot look like an unresolved marker to the structure gate; the
+    browser still reads it back as '[' (textContent, selection, copy)."""
+    text = esc(block["text"]).replace("[", "&#91;")
+    lang = block.get("lang")
+    cap = f'<div class="codecap">{ctx.inl(block["caption"])}</div>' if block.get("caption") else ""
+    cls = f' class="language-{esc(lang)}"' if lang else ""
+    label = f'<span class="codelang">{esc(lang)}</span>' if lang else '<span class="codelang"></span>'
+    btn = '<button type="button" class="copy-feedback-button" hidden>複製</button>'
+    return (f'<div class="codeblock">{cap}<div class="codebar">{label}{btn}</div>'
+            f'<pre tabindex="0"><code{cls}>{text}</code></pre></div>')
 
 
 def _section(sec, content_dir, ctx):
@@ -230,6 +294,36 @@ def _section(sec, content_dir, ctx):
     parts += [_block(b, content_dir, sec["id"], state, ctx) for b in sec["blocks"]]
     parts.append("</section>")
     return "\n".join(parts)
+
+
+def _guide(secs, ctx):
+    """Opening menu. Goal: choose where to read. Form: a numbered route of links, each with the question that
+    section answers (its summary). No takeaways here, so the page does not hand over its answers before reading."""
+    lis = []
+    for s in secs:
+        q = f'<span class="gq">{ctx.inl(s["summary"])}</span>' if s.get("summary") else ""
+        lis.append(f'<li><a href="#{esc(s["id"])}">{esc(ctx.p_secs[s["id"]])}</a>{q}</li>')
+    return ('<div class="guide" role="navigation" aria-label="本頁導覽">'
+            '<div class="gtag">先看路線：這份分成幾段、每段在回答什麼</div>'
+            f'<ol>{"".join(lis)}</ol></div>')
+
+
+def _overview_section(meta, secs, ctx):
+    """Closing menu. Goal: take the whole thing back to work. Form: the end state restated, then one card per
+    section holding what to take away (its takeaways; a section without any shows its question instead)."""
+    cards = []
+    for i, s in enumerate(secs, 1):
+        head = f'<a class="ovh" href="#{esc(s["id"])}">{i}. {esc(ctx.p_secs[s["id"]])}</a>'
+        if s.get("takeaways"):
+            body = "<ul>" + "".join(f"<li>{ctx.inl(t)}</li>" for t in s["takeaways"]) + "</ul>"
+        elif s.get("summary"):
+            body = f'<p class="ovq">{ctx.inl(s["summary"])}</p>'
+        else:
+            body = ""
+        cards.append(f'<div class="ovcard">{head}{body}</div>')
+    goal = f'<p class="ovgoal"><b>讀完能做到：</b>{ctx.inl(meta["purpose"])}</p>' if meta.get("purpose") else ""
+    return (f'<section class="ch" id="{OVERVIEW_SID}" data-kind="overview">\n<h2>全貌：帶回去用</h2>\n'
+            f'{goal}<div class="ovmap">{"".join(cards)}</div>\n</section>')
 
 
 def _glossary_section(content, ctx):
@@ -266,7 +360,10 @@ def render(content, content_dir, out_path):
         refs[ctx.rkey[r["id"]]] = {"t": r["label"], "d": ctx.plain(r.get("detail") or r.get("href") or r["label"]),
                                    "s": f"#r_{r['id']}", "n": True}
 
+    menus = len(secs) >= MENU_MIN_SECTIONS
     nav = [f'<a class="l1" href="#{esc(s["id"])}" data-sec>{esc(ctx.p_secs[s["id"]])}</a>' for s in secs]
+    if menus:
+        nav.append(f'<a class="l1" href="#{OVERVIEW_SID}" data-sec>全貌：帶回去用</a>')
     extra = []
     if content.get("glossary"):
         extra.append(f'<a class="l1" href="#{GLOSSARY_SID}" data-sec>詞彙</a>')
@@ -293,8 +390,12 @@ def render(content, content_dir, out_path):
     head_block.append("</header>")
     if meta.get("purpose"):
         head_block.append(f'<div class="box def"><span class="tag">閱讀目的</span>{ctx.inl(meta["purpose"])}</div>')
+    if menus:
+        head_block.append(_guide(secs, ctx))
 
     body_secs = [_section(s, content_dir, ctx) for s in secs]
+    if menus:
+        body_secs.append(_overview_section(meta, secs, ctx))
     if content.get("glossary"):
         body_secs.append(_glossary_section(content, ctx))
     if content.get("refs"):
@@ -308,8 +409,14 @@ def render(content, content_dir, out_path):
         colo.append(f'<p>{ctx.inl(meta["source_note"])}</p>')
 
     css_site, css_prose, js_site = _vendor("site.css"), _vendor("prose-doc-layer.css"), _vendor("site.js")
-    if "</style" in (css_site + css_prose + CARRIER_CSS).lower() or "</script" in (js_site + RAIL_JS).lower():
+    has_code = any(b["type"] == "code" for s in secs for b in s["blocks"])
+    css_copy = _vendor("copy-feedback-button.css") + "\n" + CODE_CSS if has_code else ""
+    js_copy = _vendor("copy-feedback-button.js") + CODE_MOUNT_JS if has_code else ""
+    if ("</style" in (css_site + css_prose + CARRIER_CSS + css_copy).lower()
+            or "</script" in (js_site + RAIL_JS + js_copy).lower()):
         raise ValueError("inlined asset contains a closing style/script tag; refusing to build a broken page")
+    copy_style = f"<style>\n{css_copy}</style>\n" if has_code else ""
+    copy_script = f'<script type="module">\n{js_copy}</script>\n' if has_code else ""
 
     doc = f"""<!doctype html>
 <html lang="{esc(meta['lang'])}" data-page-class="{PAGE_CLASS}" data-audience="{esc(meta['audience'])}">
@@ -321,7 +428,7 @@ def render(content, content_dir, out_path):
 {css_site}</style>
 <style>
 {CARRIER_CSS}</style>
-<style>
+{copy_style}<style>
 {css_prose}</style>
 </head>
 <body>
@@ -347,7 +454,7 @@ window.SITE_SYMS = {_json_for_script(syms)};</script>
 {js_site}</script>
 <script>
 {RAIL_JS}</script>
-</body>
+{copy_script}</body>
 </html>
 """
     Path(out_path).write_text(doc, encoding="utf-8", newline="\n")

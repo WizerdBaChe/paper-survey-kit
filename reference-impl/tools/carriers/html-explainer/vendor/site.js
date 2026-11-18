@@ -273,8 +273,161 @@
   /* 本節速查 rail: the section in view, its decorated tokens and figures. */
   var railEl = document.getElementById('rail'), railHead = document.getElementById('railhead'),
       railBody = document.getElementById('railbody'), railFor = null;
+  /* SH-21 equation rail: on a page with numbered display equations (.eqrow .eqno) the rail follows the READING
+     POSITION instead of listing the section's tokens. It shows the equations that the text on screen cites by
+     number but that are not themselves on screen, and the meaning of the symbols those equations and the
+     equations on screen use, read from the page's symbol table (a table whose first header cell is 符號).
+     Symbols are matched on the TeX annotation, atom by atom (base + optional * + subscript). Only sections that
+     overlap the viewport are measured, so a skipped (content-visibility) section is never laid out (SH-12). */
+  var TEX_SKIP = /^\\(frac|dfrac|tfrac|bar|overline|hat|tilde|vec|dot|sqrt|left|right|big|Big|bigg|Bigg|ln|log|exp|sin|cos|tan|arcsin|arccos|arctan|tag|approx|cdot|times|quad|qquad|to|infty|int|sum|prod|propto|partial|nabla|pm|mp|le|ge|leq|geq|ne|neq|equiv|sim|simeq|Rightarrow|rightarrow|Leftarrow|leftarrow|displaystyle|limits|mathbf|boxed|underbrace|overbrace|ldots|cdots|dots|mid|in|over)$/;
+  var TEX_TEXT = /^\\(text|mathrm|mathit|operatorname|textrm|mbox)$/;
+  function texGroup(s, i){
+    if (s[i] === '{'){ var d = 1, j = i + 1; while (j < s.length && d){ if (s[j] === '{') d++; else if (s[j] === '}') d--; j++; } return [s.slice(i + 1, j - 1), j]; }
+    if (s[i] === '\\'){ var m = /^\\[A-Za-z]+/.exec(s.slice(i)); return m ? [m[0], i + m[0].length] : [s.slice(i, i + 2), i + 2]; }
+    return [s[i] || '', i + 1];
+  }
+  function texFlat(g){ return g.replace(/\\(text|mathrm|mathit|operatorname|textrm|mbox)\s*/g, '').replace(/[{}\s]/g, ''); }
+  function texAtoms(tex){
+    var out = [], s = tex.replace(/\\tag\{[^}]*\}/g, ''), i = 0;
+    while (i < s.length){
+      var c = s[i];
+      if (/\s/.test(c) || c === '{' || c === '}'){ i++; continue; }
+      var g = texGroup(s, i), base = g[0]; i = g[1];
+      if (TEX_TEXT.test(base)){ i = texGroup(s, i)[1]; continue; }
+      if (/^\\[A-Za-z]+$/.test(base) ? TEX_SKIP.test(base) : !/^[A-Za-z]$/.test(base)) continue;
+      var sub = '', star = '', extra = [];
+      for (var k = 0; k < 2; k++){
+        if (s[i] === '_'){ var t = texGroup(s, i + 1); sub = texFlat(t[0]); i = t[1]; }
+        else if (s[i] === '^'){ var u = texGroup(s, i + 1); i = u[1]; if (texFlat(u[0]) === '*') star = '*'; else extra = texAtoms(u[0]); }
+      }
+      out.push(base + star + (sub ? '_' + sub : ''));
+      out.push.apply(out, extra);
+    }
+    return out;
+  }
+  function texOf(m){ var a = m && m.querySelector('annotation[encoding="application/x-tex"]'); return a ? a.textContent : ''; }
+  var SYM_MEANING = /^(意義|含義|定義|說明|meaning|definition)/i;
+  /* the symbol rows an atom list uses: longest symbol first, and an atom taken by a longer symbol is not matched
+     again by a shorter one (the T inside kT is not the transmittance T), the SH-18 longest-wins rule on atoms */
+  function symsIn(atoms, syms){
+    var cand = [], used = [], hit = [];
+    syms.forEach(function(s, si){ s.seqs.forEach(function(q){ cand.push({si: si, q: q}); }); });
+    cand.sort(function(a, b){ return b.q.length - a.q.length; });
+    cand.forEach(function(c){
+      for (var i = 0; i + c.q.length <= atoms.length; i++){
+        var ok = true;
+        for (var j = 0; j < c.q.length; j++) if (used[i + j] || atoms[i + j] !== c.q[j]){ ok = false; break; }
+        if (!ok) continue;
+        for (j = 0; j < c.q.length; j++) used[i + j] = true;
+        if (hit.indexOf(c.si) < 0) hit.push(c.si);
+      }
+    });
+    return hit.sort(function(a, b){ return a - b; }).map(function(si){ return syms[si]; });
+  }
+  var EQ = null;
+  function eqInit(){
+    var rows = document.querySelectorAll('main .eqrow');
+    if (!rows.length) return null;
+    var byNo = {}, list = [];
+    rows.forEach(function(r){
+      var no = r.querySelector('.eqno'), m = r.querySelector('math'); if (!no || !m) return;
+      var num = no.textContent.replace(/[()\s]/g, ''); if (!num || byNo[num]) return;
+      if (!r.id) r.id = 'eq-' + num;
+      var box = r.closest('[data-label]');
+      var e = {num: num, row: r, math: m, sec: r.closest('section.ch'), atoms: texAtoms(texOf(m)),
+               label: box ? box.getAttribute('data-label') : ''};
+      byNo[num] = e; list.push(e);
+    });
+    if (!list.length) return null;
+    /* the symbol table: header cells 符號 | 意義…; a row's first cell holds one or more symbols separated by commas.
+       A table whose second header is a value column (符號 | 數值, an example's givens) is not a symbol table. */
+    var syms = [];
+    document.querySelectorAll('main table').forEach(function(t){
+      var th = t.querySelectorAll('thead th');
+      if (th.length < 2 || th[0].textContent.trim() !== '符號' || !SYM_MEANING.test(th[1].textContent.trim())) return;
+      t.querySelectorAll('tbody tr').forEach(function(tr){
+        var td = tr.children; if (td.length < 2) return;
+        var seqs = [], maths = td[0].querySelectorAll('math');
+        maths.forEach(function(m){
+          var s = texOf(m), parts = [], d = 0, cur = '';
+          for (var i = 0; i < s.length; i++){ var ch = s[i]; if (ch === '{') d++; if (ch === '}') d--; if (ch === ',' && !d){ parts.push(cur); cur = ''; } else cur += ch; }
+          parts.push(cur);
+          parts.forEach(function(p){ var a = texAtoms(p); if (a.length) seqs.push(a); });
+        });
+        if (seqs.length){
+          var cell = document.createElement('span'); cell.className = 'gl-cell';
+          Array.prototype.forEach.call(td[0].childNodes, function(n){ cell.appendChild(n.cloneNode(true)); });
+          syms.push({seqs: seqs, cell: cell, meaning: td[1].textContent.trim()});
+        }
+      });
+    });
+    /* leaf text blocks that cite an equation number, with the numbers they cite (an equation's own .eqno excluded) */
+    var cites = [], RX = /\((\d+(?:\.\d+)*[a-z]?)\)/g;
+    document.querySelectorAll('main p, main li, main td, main th, main figcaption, main blockquote').forEach(function(b){
+      if (b.querySelector('p, li')) return;
+      var w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT), n, txt = '';
+      while ((n = w.nextNode())){ if (!n.parentNode.closest('.eqno, math')) txt += n.nodeValue; }
+      var got = [], mm; RX.lastIndex = 0;
+      while ((mm = RX.exec(txt))){ if (byNo[mm[1]] && got.indexOf(mm[1]) < 0) got.push(mm[1]); }
+      if (got.length) cites.push({el: b, sec: b.closest('section.ch'), nums: got});
+    });
+    return {byNo: byNo, list: list, syms: syms, cites: cites, secs: document.querySelectorAll('main section.ch'), key: null};
+  }
+  function onScreen(el, top, bot){ var r = el.getBoundingClientRect(); return r.bottom > top && r.top < bot && r.height > 0; }
+  function railEq(sec){
+    var top = 56, bot = window.innerHeight, live = [], cited = [], shown = [];
+    /* measure only inside the sections that overlap the viewport (a skipped section is never forced into layout) */
+    EQ.secs.forEach(function(s){ if (onScreen(s, 0, bot)) live.push(s); });
+    var inLive = function(s){ return !s || live.indexOf(s) >= 0; };
+    EQ.cites.forEach(function(c){ if (inLive(c.sec) && onScreen(c.el, top, bot)) c.nums.forEach(function(x){ if (cited.indexOf(x) < 0) cited.push(x); }); });
+    EQ.list.forEach(function(e){ if (inLive(e.sec) && onScreen(e.row, top, bot)) shown.push(e.num); });
+    cited = cited.filter(function(x){ return shown.indexOf(x) < 0; }).slice(0, 6);
+    var key = cited.join(',') + '|' + shown.join(',') + '|' + (sec ? sec.id : '');
+    if (key === EQ.key) return; EQ.key = key;
+    var h = sec && sec.querySelector('h2');
+    railHead.textContent = '';
+    var rt = document.createElement('div'); rt.className = 'rt'; rt.textContent = '本段式子與符號'; railHead.appendChild(rt);
+    var rs = document.createElement('div'); rs.className = 'rs'; rs.textContent = h ? h.textContent : ''; railHead.appendChild(rs);
+    railBody.textContent = '';
+    var hd = document.createElement('h3'); hd.textContent = '引用的式子'; railBody.appendChild(hd);
+    if (!cited.length){ var none = document.createElement('div'); none.className = 'rnone'; none.textContent = '畫面上的文字沒有引用畫面外的式子'; railBody.appendChild(none); }
+    cited.forEach(function(num){
+      var e = EQ.byNo[num];
+      var a = document.createElement('a'); a.className = 'rf'; a.setAttribute('href', '#' + e.row.id);
+      a.textContent = '(' + num + ')' + (e.label ? '　' + e.label : ''); railBody.appendChild(a);
+      var box = document.createElement('div'); box.className = 'eqm'; box.appendChild(e.math.cloneNode(true)); railBody.appendChild(box);
+    });
+    var atoms = [];
+    cited.concat(shown).forEach(function(num){ atoms = atoms.concat(EQ.byNo[num].atoms, ['|']); });
+    var rows = symsIn(atoms, EQ.syms).slice(0, 12);
+    if (rows.length){
+      var sh = document.createElement('h3'); sh.textContent = '式子裡的符號'; railBody.appendChild(sh);
+      rows.forEach(function(s){
+        var r = document.createElement('div'); r.className = 'gl-row';
+        var k = document.createElement('span'); k.className = 'gl-k';
+        k.appendChild(s.cell.cloneNode(true));   /* the whole cell, so the separators between its formulas stay */
+        var b = document.createElement('span'); b.textContent = s.meaning;
+        r.appendChild(k); r.appendChild(b); railBody.appendChild(r);
+      });
+    }
+    /* an equation wider than the rail is scaled down to fit, in the next frame: every width is read before any
+       font-size is written, once per rail change, never per scroll event (SH-12) */
+    requestAnimationFrame(function(){
+      var boxes = railBody.querySelectorAll('.eqm'), fit = [];
+      boxes.forEach(function(bx){ var m = bx.firstChild; fit.push(m && m.scrollWidth > bx.clientWidth + 1 ? 0.96 * bx.clientWidth / m.scrollWidth : 1); });   /* 0.96: glyph extents do not scale exactly */
+      boxes.forEach(function(bx, i){ if (fit[i] < 1) bx.style.fontSize = Math.max(10, Math.floor(15 * fit[i] * 10) / 10) + 'px'; });
+    });
+  }
   function rail(best){
     if (!railEl) return;
+    if (EQ === null) EQ = eqInit() || false;
+    if (EQ){
+      if (getComputedStyle(railEl).display === 'none') return;   /* below 1500 px the rail is not shown */
+      var s0 = null;
+      if (best){ var t0 = document.getElementById(best.getAttribute('href').slice(1)); if (t0) s0 = t0.closest('section.ch') || t0; }
+      railEq(s0 || document.querySelector('section.ch'));
+      return;
+    }
     var sec = null;
     if (best){ var target = document.getElementById(best.getAttribute('href').slice(1)); if (target) sec = target.closest('section.ch') || target; }
     if (!sec) sec = document.querySelector('section.ch');
@@ -320,8 +473,8 @@
   function cur(){
     var y = window.scrollY + 120, best = null;
     links.forEach(function(a){ var el = document.getElementById(a.getAttribute('href').slice(1)); if (el && el.getBoundingClientRect().top + window.scrollY <= y) best = a; });
+    rail(best);   /* before the class writes below: the equation rail measures, and must not force a layout */
     links.forEach(function(a){ a.classList.toggle('cur', a === best); });
-    rail(best);
   }
   scrollJobs.push(cur);
 

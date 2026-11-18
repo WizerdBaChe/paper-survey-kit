@@ -2008,6 +2008,26 @@ def selftest(keep):
     ids = [s_["id"] for s_ in c_deep["sections"]]
     deep_ok = deep_ok and ids.index("script") == ids.index("figures") + 1   # 口述稿 sits right after 逐圖判讀
     results.append(("explainer-script-deep", "EX", "開場/逐頁/被問時/結尾 after 逐圖判讀", "present" if deep_ok else f"MISSING {heads[:4]} {ids}", deep_ok))
+    # 人物與關聯 (proposal 十合一正式版收斂 R1 / C7, 2026-11-18): the section is on the default path, with data AND without it
+    import relations as REL_
+    REL_.RUNNER = lambda verb, q: (0, json.dumps({"corpus": "corpus: 9 works, 9 persons", "work": "doi:x", "title": "T", "year": 2026,
+                                                  "authors": [{"key": "k", "label": "A. Sample", "position": 0, "corresponding": True, "evidence": "e"}],
+                                                  "groups": [{"group": "g", "label": "A. Sample group @ Test Univ (2020–2026)", "certainty": "inferred",
+                                                              "lead": "k", "lead_is_corresponding": True, "other_works": []}],
+                                                  "relations": [], "links": [], "works": [], "not_in_corpus": []}))
+    REL_._CACHE.clear()
+    try:
+        c_rel = SE.build_content(td / "good")
+        REL_.RUNNER = lambda verb, q: (9, ""); REL_._CACHE.clear()
+        c_none = SE.build_content(td / "good")
+    finally:
+        REL_.RUNNER = None; REL_._CACHE.clear()
+    p_ok = next((s_ for s_ in c_rel["sections"] if s_["id"] == "people"), None)
+    p_no = next((s_ for s_ in c_none["sections"] if s_["id"] == "people"), None)
+    rel_ok = (p_ok is not None and "A. Sample group @ Test Univ" in json.dumps(p_ok, ensure_ascii=False) and "推定" in c_rel["meta"]["subtitle"]
+              and p_no is not None and "庫內無資料" in json.dumps(p_no, ensure_ascii=False) and "推定" not in c_none["meta"]["subtitle"])
+    results.append(("explainer-people-section", "EX", "group shown (inferred) with data; 庫內無資料 kept without",
+                    "as expected" if rel_ok else f"MISMATCH ok={bool(p_ok)} none={bool(p_no)}", rel_ok))
     c6 = SE.build_content(td / "s4d-story6-good")
     sec6 = next((s_ for s_ in c6["sections"] if s_["id"] == "script"), None)
     fig6 = [b for s_ in c6["sections"] if s_["id"] == "figures" for b in s_["blocks"] if b["type"] == "figure"]

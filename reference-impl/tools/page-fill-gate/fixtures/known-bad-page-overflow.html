@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-Hant" data-page-class="document-short">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone overflow control: bare wide table</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  table { border-collapse: collapse; width: 900px; }
+  td { border: 1px solid #999; padding: 4px 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>手機寬度對照：未包框的寬表格</h1>
+  <p>這張表格固定 900 px 寬，直接放在內文裡。在 375 px 的手機上，整頁會被它撐寬而能橫向捲動，閘門必須擋下。</p>
+  <table><tr><td>欄位一</td><td>欄位二</td><td>欄位三</td><td>欄位四</td><td>欄位五</td><td>欄位六</td></tr></table>
+  <p>表格後面的一般段落。</p>
+</main>
+</body>
+</html>

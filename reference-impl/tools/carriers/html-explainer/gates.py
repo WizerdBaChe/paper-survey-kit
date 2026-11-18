@@ -182,8 +182,9 @@ class _Scan(HTMLParser):
             if v is not None and tag in ("img", "script", "iframe", "source", "video", "audio", "embed", "track", "object", "input") \
                     and not v.strip().lower().startswith("data:"):
                 self.loads.append(f"<{tag} {k}={v[:60]!r}>")
-        if tag == "link" and a.get("href") is not None and not a["href"].strip().lower().startswith("data:"):
-            self.loads.append(f"<link href={a['href'][:60]!r}>")
+        href = a.get("href")
+        if tag == "link" and href is not None and not href.strip().lower().startswith("data:"):
+            self.loads.append(f"<link href={href[:60]!r}>")
 
     def handle_endtag(self, tag):
         if tag == "h2":
@@ -229,10 +230,10 @@ def _structure(path):
     for x in s.sections:
         if not (x["h2"] or "").strip():
             problems.append(f"section {x['id']!r} has no h2 text")
-    for k in ("glossary", "refs"):
+    for k in ("glossary", "refs", "overview"):
         if sum(1 for x in others if x["kind"] == k) > 1:
             problems.append(f"more than one {k} section")
-    stray = [x["id"] for x in others if x["kind"] not in ("glossary", "refs")]
+    stray = [x["id"] for x in others if x["kind"] not in ("glossary", "refs", "overview")]
     if stray:
         problems.append(f"section.ch with unknown data-kind: {stray}")
 

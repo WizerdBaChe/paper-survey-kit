@@ -25,6 +25,7 @@ python -X utf8 ~/.claude\tools\carriers\build.py check <名稱>.html --content <
 | 位置 | 是什麼 |
 |---|---|
 | `schema/explainer-1.schema.json` | 內容格式 `explainer/1`：章節、段落、條列、步驟、表格、圖、提示框、數字卡、引言、詞彙、出處。只說「講什麼」，不含版面 |
+| `schema/explainer-2.schema.json` | 內容格式 `explainer/2` = `explainer/1` 加一種區塊 `code`（照抄的指令或程式碼，等寬、逐字不改、不套行內標記；網頁版附複製鈕）。兩版都能建；新內容檔用 v2，舊的 v1 檔照舊 |
 | `common/` | 所有載體共用、且只有這些共用：內容檢查 (`content.py`)、行內標記解析 (`inline.py`：`**粗體**`、`[[g:詞彙]]`、`[[r:出處]]`、`[[s:章節]]`)、印記 (`stamp.py`) |
 | `registry.json` | 載體登錄表：編號、版本、狀態、吃哪種內容格式、產出副檔名、適合的讀法、關卡、上游來源、何時要複查 |
 | `html-explainer/` | 說明網頁：單一 HTML 檔，沿用已驗收的研究站閱讀框架（左側導覽、右側本節速查、可拖寬可收合、滑過看定義） |

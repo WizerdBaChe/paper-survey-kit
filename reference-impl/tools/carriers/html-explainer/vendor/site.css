@@ -46,6 +46,10 @@ main section.ch{content-visibility:auto;contain-intrinsic-size:auto 1500px;}
 #rail .rs{font-weight:700;font-size:14px;margin:2px 0 8px;}
 #rail h3{font-size:14px;margin:14px 0 4px;padding-left:8px;border-left:3px solid var(--glass);}
 #rail .gl-row{grid-template-columns:auto 1fr;font-size:14px;}
+#rail .eqm{overflow-x:auto;overflow-y:hidden;margin:2px 0 12px;padding:4px 0;font-size:15px;}   /* SH-21 cited equation */
+#rail .eqm math{display:block;margin:0;}
+#rail .gl-k math{font-size:15px;}
+#rail .rnone{color:var(--muted);font-size:13px;}
 #rail a.rf{font-size:14px;}   /* the link look is shared with the chapter links: see .xlinks ul.xl a below */
 @media (min-width:1500px){:root{--rail-w:var(--rail-w-set,clamp(220px,16vw,300px));} #rail{display:block;}
   html.rail-off{--rail-w:0px;} html.rail-off #rail{visibility:hidden;padding-left:0;padding-right:0;border-left:none;overflow:hidden;}}

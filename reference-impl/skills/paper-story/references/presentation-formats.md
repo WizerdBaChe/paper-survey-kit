@@ -100,8 +100,9 @@ analysed in the origin's reference notes, not shipped).** One page = one paper; 
   Cells are density-capped on the lab one-page: a Result cell keeps its numbers (a range counts once), whole clauses
   are dropped from the slide and moved to the speaker notes, the first clause is always kept; lab_deck gate L12 WARNs
   when a cell still exceeds the density limit.
-- **Header.** Title with `(year)` only; the venue is a small badge at the top-left of the slide. The Keypoint strip is
-  unchanged.
+- **Header.** Title with `(year)` only; the venue is a small badge at the top-left of the slide, and beside it the author /
+  group line `First et al. · Group: <group> (inferred)` (2026-11-18: the advisor asked for title, journal and group). The
+  Keypoint strip is unchanged on the default venue; the lab-meeting venue drops it into the notes (`formal-deck.md` §7).
 - **Script.** `onepage.script = {source_line, purpose_line}` is printed in the 口述稿 section and the notes
   (出處 / 目的); each tile's `notes` follow it.
 
@@ -227,7 +228,8 @@ Deliverables are written BEFORE gates; the gate file is `story-gates.txt`.
 
 ## 5. The formal deck (class B)
 
-Not rendered here. `formal-deck.md` holds the template inventory (4:3, Times
+Venue profiles (user ruling 2026-11-18): `default` = full carrier + Relations; `lab-meeting` = the lab-meeting special
+case (1109 page). Table and gate L14 in `formal-deck.md` §7. Not rendered here. `formal-deck.md` holds the template inventory (4:3, Times
 New Roman, English slides, Chinese notes, the two structures), the
 `story.json` → slide mapping, the edit procedure and the acceptance (COM render
 + the office-deck rules). A run that only produced class A says so in its

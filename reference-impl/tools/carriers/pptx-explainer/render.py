@@ -1,4 +1,4 @@
-"""pptx-explainer carrier: explainer/1 content -> 16:9 read-through deck (PPTX).
+"""pptx-explainer carrier: explainer/1 or explainer/2 content -> 16:9 read-through deck (PPTX).
 
 Entry point (called by tools/carriers/build.py):
     render(content: dict, content_dir: Path, out_path: Path) -> None
@@ -14,8 +14,10 @@ steps / table / metrics by item) or, when it cannot be split, placed anyway and 
 """
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -32,13 +34,13 @@ def load_vendor():
     out = sys.stdout
     if not hasattr(out, "reconfigure"):          # deck_builder calls sys.stdout.reconfigure() at import
         try:
-            out.reconfigure = lambda **kw: None
+            setattr(out, "reconfigure", lambda **kw: None)
         except Exception:
             pass
     import deck_builder as hb
     import deck_layout as lay
     for m in (hb, lay):
-        if Path(m.__file__).resolve().parent != VENDOR:
+        if Path(cast(str, m.__file__)).resolve().parent != VENDOR:
             raise RuntimeError(f"{m.__name__} was loaded from {m.__file__}, not from {VENDOR}; "
                                "another deck_builder/deck_layout is shadowing the vendored copy")
     return hb, lay
@@ -65,7 +67,7 @@ FINDINGS_LAST: list = []       # layout findings of the last render (fit / orpha
 DECL_LAST: list = []           # per-page P1 declarations of the last render
 
 KIND_ZH = {"para": "文字", "bullets": "文字", "callout": "文字", "quote": "文字", "takeaways": "文字",
-           "steps": "流程圖", "table": "表", "figure": "圖", "metrics": "數字卡"}
+           "steps": "流程圖", "table": "表", "figure": "圖", "metrics": "數字卡", "code": "指令（原文照錄）"}
 CALLOUT = {  # kind -> (default title, fill, bar colour, title colour)
     "key": ("重點", H.GLASS_BG, L.ACCENT, L.ACCENT),
     "note": ("備註", L.SOFT, NOTE_BAR, L.INK),
@@ -227,6 +229,13 @@ def prepare(b, c, tag):
         src = c.rich(b["source"]) if b.get("source") else None
         return {"k": "quote", "tag": tag, "segs": segs, "source": src[0] if src else None,
                 "g": g + (src[1] if src else []), "r": r + (src[2] if src else [])}
+    if t == "code":
+        # literal text: split into lines only, NEVER tokenised (no inline markup applies to code)
+        lines = b["text"].replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        while len(lines) > 1 and lines[-1] == "":
+            lines.pop()                                    # a trailing newline is not a visible line
+        cap, g, r = (c.md(b["caption"]) if b.get("caption") else (None, [], []))
+        return {"k": "code", "tag": tag, "lines": lines, "caption": cap, "g": g, "r": r}
     raise ValueError(f"unknown block type {t!r}")
 
 
@@ -510,6 +519,56 @@ def make_quote(n, avail):
     return Unit("quote", h, draw, n["g"], n["r"])
 
 
+CODE_PT = 14                   # = the body floor: a code box shrinks nothing, a long line WRAPS visibly instead
+CODE_LS = 1.15
+CODE_PAD_X, CODE_PAD_Y = 0.18, 0.14
+
+
+def _code_geometry(n):
+    """(inner width, text height, caption height, total height) of a code unit. Wrap is estimated per line with
+    the vendored width estimator (Consolas is 0.55 em, which is the estimator's Latin width) and the vendored
+    1.3 x line-spacing pitch, so the estimate errs tall like every other block."""
+    w = L.CW - 2 * CODE_PAD_X
+    rows = 0
+    for ln in n["lines"]:
+        rows += max(1, math.ceil(H._est_w_in([(ln, {})], CODE_PT) * 1.04 / w))
+    th = rows * CODE_PT * 1.3 * CODE_LS / 72 + 0.02
+    cap_h = 0.38 if n["caption"] else 0.0
+    return w, th, cap_h, cap_h + th + 2 * CODE_PAD_Y
+
+
+def make_code(n, avail):
+    w, th, cap_h, h = _code_geometry(n)
+
+    def draw(s, y):
+        yy = y
+        if n["caption"]:
+            L.caption(s, L.MX, yy, L.CW, n["caption"], h=0.34)
+            yy += cap_h
+        box_h = h - cap_h
+        r = H.add_rect(s, L.MX, yy, L.CW, box_h, L.CODE_BG, line_color=H.LINE)
+        r.name = n["tag"] + ".code-bg"
+        # Own text box, not L.block: block() may insert soft line breaks after clause marks and narrows boxes,
+        # and code text must reach the file character for character.
+        box, tf = H.tb(s, L.MX + CODE_PAD_X, yy + CODE_PAD_Y, w, th)
+        box.name = n["tag"] + ".code"
+        for i, ln in enumerate(n["lines"]):
+            p = H.para(tf, [(ln, {})], size=CODE_PT, color=L.INK, name=H.MONO, first=(i == 0),
+                       space_after=0, line_spacing=CODE_LS)
+            if not ln:      # an empty line has no run to carry a size: give the paragraph end mark the code size
+                p._p.get_or_add_endParaRPr().set("sz", str(int(CODE_PT * 100)))
+    return Unit("code", h, draw, n["g"], n["r"])
+
+
+def split_code(n, avail):
+    lines = n["lines"]
+    for k in range(len(lines) - 1, 0, -1):
+        u = make_code(dict(n, lines=lines[:k]), avail)
+        if u.h <= avail + EPS:
+            return u, dict(n, lines=lines[k:], caption=None)
+    return None
+
+
 def make_takeaways(n, avail):
     items = n["items"]
     ncol = min(len(items), 3)
@@ -543,9 +602,10 @@ def make_takeaways(n, avail):
 
 
 MAKERS = {"para": make_para, "bullets": make_bullets, "steps": make_steps, "table": make_table,
-          "callout": make_callout, "metrics": make_metrics, "quote": make_quote, "takeaways": make_takeaways}
+          "callout": make_callout, "metrics": make_metrics, "quote": make_quote, "takeaways": make_takeaways,
+          "code": make_code}
 SPLITTERS = {"para": split_para, "bullets": split_bullets, "steps": split_steps, "table": split_table,
-             "metrics": split_metrics}
+             "metrics": split_metrics, "code": split_code}
 
 
 def make(n, avail, content_dir):
@@ -558,7 +618,7 @@ def make(n, avail, content_dir):
 class Page:
     def __init__(self):
         self.units = []
-        self.end = None          # y below the last unit
+        self.end: Any = None     # y below the last unit
 
 
 def paginate(nodes, top_first, top_cont, content_dir, title):
@@ -692,6 +752,33 @@ def build_cover(prs, c, meta):
     return 1
 
 
+MENU_MIN_SECTIONS = 2     # one section needs no route and no take-home map
+
+
+def build_guide(prs, c, content_dir, sections):
+    """START menu: the route. Section headings + the question each answers; no answers (goal: choose where to look)."""
+    header = ["節", "這節在回答"]
+    rows = [[f"第 {i} 節　" + c.md(sec["heading"])[0], c.md(sec["summary"])[0] if sec.get("summary") else "—"]
+            for i, sec in enumerate(sections, 1)]
+    node = {"k": "table", "tag": "guide", "caption": None, "header": header, "rows": rows, "g": [], "r": [],
+            "col_w": _col_weights(header, rows)}
+    return build_pages(prs, c, content_dir, [node], "這份簡報的路線", "導覽",
+                       "先看每一節在回答什麼，再決定從哪裡看起。", "這份簡報分成哪幾節、每節在回答什麼")
+
+
+def build_overview(prs, c, content_dir, meta, sections):
+    """END menu: the take-home map. Purpose restated + each section's takeaways (goal: use it back at work)."""
+    # the purpose rides in the description line, so the map itself stays on one slide
+    desc = ("讀完能做到：" + c.md(meta["purpose"])[0]) if meta.get("purpose") else "每一節帶走的一句，回到工作上照這張用。"
+    items = []
+    for sec in sections:
+        body = "；".join(sec["takeaways"]) if sec.get("takeaways") else sec.get("summary")
+        items.append((c.rich(sec["heading"]), c.rich(body) if body else None))
+    node = {"k": "steps", "tag": "overview.map", "items": items, "start": 1}
+    return build_pages(prs, c, content_dir, [node], "全貌：帶回去用", "全貌", desc,
+                       "看完之後，每一節要帶走什麼、怎麼用")
+
+
 def render(content, content_dir, out_path):
     L.FINDINGS.clear()
     L.DECL.clear()
@@ -700,6 +787,9 @@ def render(content, content_dir, out_path):
     prs = L.new_prs()
     n_slides = build_cover(prs, c, meta)
     sections = content["sections"]
+    menus = len(sections) >= MENU_MIN_SECTIONS
+    if menus:
+        n_slides += build_guide(prs, c, content_dir, sections)
     for si, sec in enumerate(sections, 1):
         nodes = [prepare(b, c, f"{sec['id']}.{bi}") for bi, b in enumerate(sec["blocks"], 1)]
         tk = None
@@ -709,6 +799,8 @@ def render(content, content_dir, out_path):
         summary_md = c.md(sec["summary"])[0] if sec.get("summary") else None
         q = c.plain(sec["summary"]) if sec.get("summary") else f"{c.plain(sec['heading'])}是什麼"
         n_slides += build_pages(prs, c, content_dir, nodes, heading_md, f"第 {si} 節", summary_md, q, tk)
+    if menus:
+        n_slides += build_overview(prs, c, content_dir, meta, sections)
     if content.get("glossary"):
         has_en = any(g.get("en") for g in content["glossary"])
         header = ["詞彙"] + (["English"] if has_en else []) + ["說明"]

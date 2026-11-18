@@ -168,7 +168,9 @@ last · L5 (with `--render`) PowerPoint COM export · L6 storyline slide and con
 < 14 pt, a run off the six size levels, or a slide over 650 characters (Key points and References exempt) · L8 FAIL
 no References slide, WARN a leftover Source strip · L9 WARN skeleton order by fixed titles · L10 (with `--render`)
 PowerPoint's own text layout: FAIL text taller than a bordered shape or a shape below the slide edge · L11 WARN
-`[n]` tags, a "Fig. x:" prefix or a leading "→" · L12 (onepage) WARN a cell with more than one number.
+`[n]` tags, a "Fig. x:" prefix or a leading "→" · L12 (onepage) WARN a cell with more than one number · L13 nothing of the base deck's own cover may survive
+(FAIL on its picture or placeholder lines; WARN on a single-paper cover with no source logo; SKIP with `--base blank`) · L14 WARN venue
+profile violations (§7).
 `--selftest` builds a clean deck plus injected defects and asserts the slide or shape each defect changes; the
 PowerPoint-only cases are skipped, and said so, without PowerPoint. The density ruler (650) and the glyph-width
 constant `K_TIMES = 0.46` were measured on the origin's decks (2026-09-14).
@@ -188,3 +190,32 @@ and schema ≤ @5 keep 3–6 figures); table = `onepage.table` in English with `
 English) under the title. Density step: every cell is cut to its numbers and first clause; the dropped clauses
 and the verdict move to the speaker notes, which hold the page script (`onepage.script`) followed by each tile's
 `notes`. Gate L12 WARNs when a cell is still over the limit; 120 characters per cell is the outer bound.
+
+## 7. Venue profiles and the relation layer (owner ruling 2026-11-18)
+
+The owner ruled that one meeting (the presenter's own lab meeting) is a special case and gets the minimal carrier; the
+explainer keeps everything and gains people / group / paper relations; every other audience gets the full carrier,
+never thinned by one venue's preference. This supersedes §6's Keypoint-line paragraph for `--venue lab-meeting` only.
+A reader adopting the kit decides which of their own venues, if any, is the minimal one; the flag name is generic.
+
+| | `--venue default` (the default) | `--venue lab-meeting` |
+|---|---|---|
+| who | any audience outside the minimal venue: shared decks, other talks | the minimal-page venue (the one-page ten-paper shape) |
+| header row | venue badge + `First et al. · Group: <group> (inferred)` | same |
+| Keypoint line | printed under the title (§6) | not printed; the slogan goes to the notes 「Keypoint（lab meeting 版不上投影片，被問到再講）」 |
+| logic chain | unchanged (class A pages; deck Storyline per §2c) | its step names go to the notes as 「邏輯鏈的轉折（口述用）」 |
+| review verdict | notes (both venues) | notes |
+| Relations | ten-paper: a closing slide drawing how the papers relate; single-paper deck: a page right after Key points | none |
+
+- **Group line source order:** the presenter's `en.group` / `source.group` (stated) → the corresponding author's group
+  from the research graph (`rg.py paper`, always labelled inferred) → none (never invented). The explainer subtitle
+  carries the same line.
+- **The relation layer is on the default path:** `scripts/relations.py` reads a research graph through
+  `rg.py --json paper|relate`. The graph tool (`tools/research-graph/`) is **not shipped in this kit**: without it
+  `relations.py` returns status `unavailable` and the Relations slide / the explainer's 人物與關聯 section still print,
+  with 「庫內無資料」 / "No data in the research graph" and the reason. Supplying your own `rg.py` that answers the
+  same two JSON queries turns the layer on; nothing else changes.
+- **Gate L14** (WARN): lab-meeting pages printing a slogan or verdict, or carrying a Relations slide; a default deck
+  without its Relations slide. Selftest: `venue-gate-two-sided` and the B / A / C checks in `lab_deck.py --selftest`.
+- **Not ruled:** a minimal shape for the single-paper deck at the minimal venue — `--venue lab-meeting` there only
+  drops the Relations page.

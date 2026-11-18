@@ -1,0 +1,42 @@
+.copy-feedback-button {
+  --copy-button-bg: var(--av-bg, #ffffff);
+  --copy-button-ink: var(--av-fg, #26231d);
+  --copy-button-border: var(--av-border, #cfc9bd);
+  --copy-ok: var(--av-accent, #2f5d50);
+  --copy-ok-ink: var(--av-accent-fg, #ffffff);
+  --copy-fail: #a33f36;
+  --copy-fail-ink: #ffffff;
+  --copy-button-radius: 999px;
+  --copy-button-padding: 0.65rem 1rem;
+  --copy-button-transition: 140ms ease;
+  appearance: none;
+  border: 1px solid var(--copy-button-border);
+  border-radius: var(--copy-button-radius);
+  padding: var(--copy-button-padding);
+  background: var(--copy-button-bg);
+  color: var(--copy-button-ink);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  transition: border-color var(--copy-button-transition),
+    background-color var(--copy-button-transition), color var(--copy-button-transition);
+}
+
+.copy-feedback-button:hover,
+.copy-feedback-button:focus-visible {
+  border-color: var(--copy-ok);
+  outline: 3px solid color-mix(in srgb, var(--copy-ok) 24%, transparent);
+  outline-offset: 2px;
+}
+
+.copy-feedback-button[data-state="ok"] {
+  border-color: var(--copy-ok);
+  background: var(--copy-ok);
+  color: var(--copy-ok-ink);
+}
+
+.copy-feedback-button[data-state="fail"] {
+  border-color: var(--copy-fail);
+  background: var(--copy-fail);
+  color: var(--copy-fail-ink);
+}

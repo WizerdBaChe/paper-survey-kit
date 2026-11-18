@@ -270,10 +270,14 @@ three one-liners taken from the reference list, not from a search —
 Ref 15–19 are its toolchain, and the entry-point why already used them),
 `who_else` (the other groups the Introduction positions against), `community`
 (which conference / journal community this belongs to). The library index then
-answers "what else did this group do" by grep. Not built: an author database or
-a network view — the post's Author Network is a cross-paper object with no owner
-yet; revisit when the ten-paper deck needs its papers grouped, or when the
-library passes ~20 entries and grep stops being enough.
+answers "what else did this group do" by grep. The cross-paper view now has an
+owner: literature-search-extract's researcher genealogy format
+(`output-templates.md` §12, per run, typed and evidenced edges); these three
+lines are its per-paper input. The persistent cross-paper view is the research
+graph (`tools/research-graph/rg.py`, live 2026-11-17): `library.py register`
+feeds it this card automatically, and `rg.py who <author>` / `rg.py near <doi>`
+answer "what else did this group do" with evidenced edges. These three lines stay
+the per-paper source the graph reads (document origin), not a second copy.
 
 Stop rule (user: 不要為了做而做): if the run's question is already answered,
 do not mine the extension sections for completeness; write "not needed for

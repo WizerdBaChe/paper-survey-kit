@@ -16,6 +16,7 @@ from __future__ import annotations
 import importlib.util
 import re
 from pathlib import Path
+from typing import Any, cast
 
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -34,6 +35,7 @@ def _render():
     global _RENDER
     if _RENDER is None:
         spec = importlib.util.spec_from_file_location("pptx_explainer_render_for_gates", HERE / "render.py")
+        assert spec is not None and spec.loader is not None
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         _RENDER = mod
@@ -94,14 +96,15 @@ def _structure(path):
     for i, s in enumerate(slides, 1):
         for nm, tf in _frames(s):
             n_text += 1
-            if MARKER.search(tf.text):
+            # a `.code` shape holds literal code text (explainer/2): a '[[g:' in it is the author's own text
+            if MARKER.search(tf.text) and not nm.endswith(".code"):
                 probs.append(f"slide {i} {nm}: leftover '[[' marker")
             if nm == "kicker" and re.fullmatch(r"第 \d+ 節", tf.text.strip()):
                 kickers.add(tf.text.strip())
         if not s.has_notes_slide:
             probs.append(f"slide {i}: no notes slide")
             continue
-        nt = s.notes_slide.notes_text_frame.text
+        nt = cast(Any, s.notes_slide.notes_text_frame).text
         if MARKER.search(nt):
             probs.append(f"slide {i} notes: leftover '[[' marker")
         if DECLARATION not in nt:
@@ -128,7 +131,7 @@ def _content_box(shp):
 
 def _geometry(path):
     prs = Presentation(str(path))
-    W, Hh = prs.slide_width, prs.slide_height
+    W, Hh = cast(int, prs.slide_width), cast(int, prs.slide_height)
     band_top = Inches(7.0) + TOL                 # page numbers sit below y = 7.0 in
     probs, n_checked = [], 0
     for i, s in enumerate(prs.slides, 1):

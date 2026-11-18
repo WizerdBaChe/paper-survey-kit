@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant" data-page-class="document-short">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>known-good side wide</title>
+<!-- Control for defect_squeezed_side_panel: the same page as known-bad-side-squeeze.html with the cap lifted
+     (width = window minus gutters, the lab-machine-guide 5f7e665 fix). The side columns take the spare width,
+     so no side label wraps. Must PASS with 0 wrapped labels. -->
+<style>
+  body { margin: 0; font: 16px/1.6 sans-serif; }
+  .wrap { width: calc(100% - 64px); margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: minmax(160px, 1fr) 600px minmax(160px, 1fr); gap: 20px; }
+  .side a, .side dt, .side dd { display: block; margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>機台操作筆記示範頁</h1>
+  <div class="grid">
+    <aside class="side" aria-label="nameplate">
+      <dl><dt>型號與廠牌資訊以及確認程度</dt><dd>電子槍蒸鍍機台型號範例</dd><dt>機台所在地點與樓層以及房號</dt><dd>光電所某某無塵室範例</dd></dl>
+    </aside>
+    <main>
+      <p>本頁是控制組：中間閱讀欄六百像素，兩側欄吃掉視窗剩下的寬度。寬螢幕下側欄的短標籤各佔一行，兩側不留大片空白。</p>
+      <p>第二段文字只是讓閱讀欄有足夠高度，不影響量測。第二段文字只是讓閱讀欄有足夠高度，不影響量測。第二段文字只是讓閱讀欄有足夠高度，不影響量測。</p>
+    </main>
+    <nav class="side" aria-label="toc" data-fill-content>
+      <a href="#a">開機前的檢查與準備工作與注意事項</a><a href="#b">抽真空與加熱步驟說明與等待時間</a><a href="#c">結束關機與紀錄填寫與交接清潔</a>
+    </nav>
+  </div>
+</div>
+</body>
+</html>
