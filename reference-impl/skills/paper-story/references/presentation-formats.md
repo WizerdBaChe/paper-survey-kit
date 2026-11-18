@@ -229,7 +229,7 @@ Deliverables are written BEFORE gates; the gate file is `story-gates.txt`.
 ## 5. The formal deck (class B)
 
 Venue profiles (user ruling 2026-11-18): `default` = full carrier + Relations; `lab-meeting` = the lab-meeting special
-case (1109 page). Table and gate L14 in `formal-deck.md` §7. Not rendered here. `formal-deck.md` holds the template inventory (4:3, Times
+case (minimal lab-meeting page). Table and gate L14 in `formal-deck.md` §7. Not rendered here. `formal-deck.md` holds the template inventory (4:3, Times
 New Roman, English slides, Chinese notes, the two structures), the
 `story.json` → slide mapping, the edit procedure and the acceptance (COM render
 + the office-deck rules). A run that only produced class A says so in its

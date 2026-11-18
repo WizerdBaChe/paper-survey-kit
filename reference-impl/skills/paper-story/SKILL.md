@@ -79,7 +79,7 @@ python scripts\story_explainer.py --run <run_dir>                               
 python scripts\verify_story.py <run_dir>                                                                      # run by someone other than the author
 # formal deck (N6, explicit request only): scripts\lab_deck.py builds from the blank bases in <PAPER_HOME>\_templates\
 # and is edited per references\formal-deck.md (English slide text, figures swapped, minor edits) — never --pptx-from-story for a talk
-# python scripts\lab_deck.py --runs <d1> ... --format onepage [--venue lab-meeting]   # default venue = full + Relations; lab-meeting = 1109 page (formal-deck.md §7)
+# python scripts\lab_deck.py --runs <d1> ... --format onepage [--venue lab-meeting]   # default venue = full + Relations; lab-meeting = minimal lab-meeting page (formal-deck.md §7)
 python ..\paper-distill\scripts\library.py register <run_dir>;  python <NOTES_VAULT>\tools\kv-lint.py           # also rebuilds README, KEYPOINTS.md and <PaperId>_keypoint.md (2026-09-04)
 # library layout (naming over routing, 2026-09-04): <home>/<FirstAuthor><Year>_<slug>/ = the ONE accepted run per paper;
 # comparison / calibration copies go to <home>/_calibration/<PaperId>/<label>/ (register --kind calibration --label <what-it-is>), never as siblings
@@ -251,7 +251,7 @@ Class B — for the real talk (explicit request 「做正式簡報」「英文�
    guard for hand-tuned decks; §4 round 6); gates L1–L13 (`lab_deck.py --selftest` calibrates L3, L7–L13 and the guard;
    L10 = PowerPoint's own text layout; L13 = nothing of the template's own cover survives); template facts + procedure in `references/formal-deck.md` §2a / §2b / §2c / §4 / §6.
    **Venue (round 9, user ruling 2026-11-18, `formal-deck.md` §7):** `lab_deck.py --venue default` (the default — every
-   audience outside the lab meeting; full carrier plus a Relations slide/page) or `--venue lab-meeting` (the lab meeting special case: the 1109 page, no Key point strip, slogan and logic-chain turns in the notes, no Relations). Ask
+   audience outside the lab meeting; full carrier plus a Relations slide/page) or `--venue lab-meeting` (the lab meeting special case: the minimal lab-meeting page, no Key point strip, slogan and logic-chain turns in the notes, no Relations). Ask
    which venue only when the request does not say; a deck for anyone else is `default`. Both carry the author / group line.
    Gate L14 checks the venue.
    Before building the formal deck, crop THIS paper's journal masthead from its first page (`crop.py --page N --bbox …` →

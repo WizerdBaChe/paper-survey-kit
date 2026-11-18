@@ -83,7 +83,7 @@ YEARS_RE = re.compile(r"\s*\(\d{4}[–-]\d{4}\)\s*$")
 
 
 def group_short(label: str) -> str:
-    """'H. Y. Fu group @ Tsinghua University (2020–2020)' -> 'H. Y. Fu group @ Tsinghua University'."""
+    """'Ada Lin group @ Test University (2020–2020)' -> 'Ada Lin group @ Test University'."""
     return YEARS_RE.sub("", label or "").strip()
 
 
@@ -108,7 +108,7 @@ def byline(story: dict) -> str:
     if not au:
         return ""
     a = au[0].strip()
-    surname = a.split(",")[0].strip() if "," in a else (a.split()[-1] if a.split() else a)   # 'Mu, X.' / 'Xin Mu' -> 'Mu'
+    surname = a.split(",")[0].strip() if "," in a else (a.split()[-1] if a.split() else a)   # 'Lin, A.' / 'Ada Lin' -> 'Lin'
     return surname + (" et al." if len(au) > 1 else "")
 
 
@@ -120,7 +120,7 @@ def library_dois(run_dir: Path) -> dict[str, str]:
     home = run_dir.resolve().parent
     for d in sorted(home.iterdir()):
         try:
-            if not d.is_dir() or d.name.startswith(("_", ".")) or d.is_symlink() or (os.lstat(d).st_file_attributes & 0x400):
+            if not d.is_dir() or d.name.startswith(("_", ".")) or d.is_symlink() or (getattr(os.lstat(d), "st_file_attributes", 0) & 0x400):
                 continue
         except (OSError, AttributeError):
             continue

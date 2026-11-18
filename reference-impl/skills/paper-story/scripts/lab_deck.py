@@ -51,7 +51,7 @@ the slide keeps "Authors: ..." — and every moved-out sentence into the speaker
 and writes onepage.script + each tile's notes as the page's speaker notes. Gate L12 (onepage only, WARN): a cell with more than one
 number, or a review verdict printed on a paper page.
 
-Round 9 (2026-11-18, user ruling on the advisor's 1109 format remark, references/formal-deck.md §7): --venue default (full,
+Round 9 (2026-11-18, user ruling on the advisor's lab-meeting format remark, references/formal-deck.md §7): --venue default (full,
 the default) | lab-meeting (the lab-meeting special case: no Key point strip, slogan + logic-chain turns in the notes, no
 Relations). Both venues print an author / inferred-group line beside the venue badge; the default venue adds a Relations
 slide (ten-paper: how the papers relate) or page (single paper: after Key points), read from research-graph through
@@ -84,7 +84,7 @@ import render_story as RS  # noqa: E402  (tile / four-five-field helpers shared 
 import relations as REL  # noqa: E402  (research-graph reader shared with the explainer — one definition of the group line)
 
 # Venue profiles (proposal 十合一正式版收斂 R2/R3, user ruling 2026-11-18): the lab meeting is a SPECIAL CASE
-# and gets the minimal carrier (1109 shape: no Key point strip, no review verdict, no relation slide; slogan, verdict and the
+# and gets the minimal carrier (minimal shape: no Key point strip, no review verdict, no relation slide; slogan, verdict and the
 # logic chain's turns go to the speaker notes). Every other audience gets the full carrier, so `default` is the default and
 # nobody who builds a deck for someone else has to know a flag exists. Excuse answered: "the advisor prefers the bare page" is
 # a preference of ONE venue, never a reason to thin the shared decks (R3).
@@ -867,8 +867,8 @@ def build_deck(run: Path, out: Path, presenter=None, venue="default"):
 
 # ---------------------------------------------------------------- authors / group line + relation layer (2026-11-18)
 def header_line(story):
-    """'Mu et al. · Group: H. Y. Fu group @ Tsinghua University (inferred)' — the advisor asked for title, journal AND group
-    (1109, 33:12); both venues carry it. '' when the story has neither authors nor a group."""
+    """'Lin et al. · Group: Ada Lin group @ Test University (inferred)' — the advisor asked for title, journal AND group
+    (the advisor's remark at a lab meeting); both venues carry it. '' when the story has neither authors nor a group."""
     by = REL.byline(story)
     grp, origin = REL.group_line(story)
     parts = ([by] if by else []) + ([f"Group: {grp}" + (" (inferred)" if origin == "inferred" else "")] if grp else [])
@@ -1028,7 +1028,7 @@ def tile_grid(n):
 def build_onepage(runs, out: Path, presenter="Presenter", date="", title=None, venue="default"):
     """Cover: --title, else a neutral "Review of N papers" (until 2026-11-15 every ten-paper deck was titled "Review of waveguide
     coupling papers", the first set's topic); an empty presenter drops the line; an empty date is today's.
-    venue (2026-11-18): `lab-meeting` = the 1109 page (no Key point strip; slogan + logic-chain turns into the notes; no
+    venue (2026-11-18): `lab-meeting` = the minimal lab-meeting page (no Key point strip; slogan + logic-chain turns into the notes; no
     Relations slide); `default` = the full page + a closing Relations slide. Both carry the author / group line."""
     if venue not in VENUES:
         raise SystemExit(f"unknown venue {venue!r} (one of {VENUES})")
@@ -1252,7 +1252,7 @@ def gates(path: Path, keypoint_en: str, fmt: str, story=None, venue="default", s
 
 def venue_gate(path: Path, fmt: str, venue: str, slogans=()):
     """L14 (2026-11-18, proposal 十合一正式版收斂 A4/C8). lab-meeting: WARN when a paper page still prints a slogan ('Key point:'
-    or the first 40 chars of a story's slogan) or a review verdict, or when a Relations slide is present — the 1109 page carries
+    or the first 40 chars of a story's slogan) or a review verdict, or when a Relations slide is present — the minimal lab-meeting page carries
     neither. default: WARN when the Relations slide is missing (the relation layer is the full carrier's, R1/R3). WARN, not FAIL:
     the text is the presenter's to edit and a slogan written in other words cannot be determined."""
     prs = Presentation(str(path))
@@ -1269,7 +1269,7 @@ def venue_gate(path: Path, fmt: str, venue: str, slogans=()):
             if re.search(r"Verdict\s*:|深讀判定", text):
                 hits.append((n, "verdict"))
         probs = ([f"slogan / verdict printed on lab-meeting pages (they belong in the notes): {hits[:6]}"] if hits else []) + \
-                (["a Relations slide in an lab-meeting deck (the 1109 page has none)"] if has_rel else [])
+                (["a Relations slide in a lab-meeting deck (the minimal lab-meeting page has none)"] if has_rel else [])
         return ("L14", "WARN" if probs else "PASS", "; ".join(probs) if probs else
                 "venue lab-meeting: no slogan, no verdict, no Relations slide on the paper pages")
     need = fmt == "deck" or len(prs.slides) > 3   # a one-paper ten-paper deck has no set to relate
@@ -1796,8 +1796,8 @@ def selftest():
         ok = why is not None and "last saved by" in why
         ok_all &= ok
         print(f"  {'OK ' if ok else 'BAD'} {'guard-after-ppt-save':<20} guard expected refuse got {'write' if why is None else 'refuse'} {'' if ok else '— PowerPoint kept the stamp'}")
-    except ImportError as e:
-        print(f"  SKIP L10 / PowerPoint-save cases — PowerPoint COM unavailable ({e}); L10 and the guard premise are uncalibrated on this machine")
+    except Exception as e:   # no pywin32, or pywin32 without a PowerPoint that opens the file: an instrument fault, not a verdict
+        print(f"  SKIP L10 / PowerPoint-save cases — PowerPoint COM unavailable ({type(e).__name__}: {e}); L10 and the guard premise are uncalibrated on this machine")
     print("temp dir:", td)
     print("SELFTEST", "PASS" if ok_all else "FAIL")
     return 0 if ok_all else 1
@@ -1816,7 +1816,7 @@ def main(argv=None):
     ap.add_argument("--advisor", default=None, help="cover Advisor line; an empty string drops it")
     ap.add_argument("--overwrite", action="store_true", help="replace an existing output last saved by someone else (the presenter said so)")
     ap.add_argument("--venue", choices=VENUES, default="default",
-                    help="default = full carrier (Key point strip, Relations slide); lab-meeting = the lab meeting special case (1109 page)")
+                    help="default = full carrier (Key point strip, Relations slide); lab-meeting = the lab meeting special case (minimal lab-meeting page)")
     a = ap.parse_args(argv)
     global BLANK_BASE, ADVISOR
     BLANK_BASE = a.base == "blank"
