@@ -84,8 +84,9 @@ K6 的突變在第一次寫錯欄位（cards.json 沒有叫 `quote` 的欄位）
 - 不宣稱示範成果展示新功能：`examples/` 的簡報與說明頁是 v1.0.x 產的，沒有關聯頁，也沒有作者群一行；v1.1.0 沒有重產它。
 - L13 的五個範本封面自測控制在空白底上印 SKIP（沒有範本可比），所以「封面不留範本殘餘」在這個 repo 只有程式路徑被跑過，
   沒有被範本資料驗證過。
-- 乾淨環境的結果不是全綠：`verify/fresh_clone_run.txt` 記了四次從乾淨 clone、空 HOME 的跑法。擋掉 PowerPoint 後 10 of 10 ok；
-  有 PowerPoint 又把 USERPROFILE 指到空資料夾時 K2 失敗（9 of 10，原因未完全查清）；擋掉 jsonschema 或 playwright 時 K1／K3／K4 明確失敗。
+- 乾淨環境的結果不是全綠：`verify/fresh_clone_run.txt` 記了五次從乾淨 clone、空 HOME 的跑法。擋掉 PowerPoint 後 10 of 10 ok；
+  有 PowerPoint 又把 USERPROFILE 指到空資料夾時，K2 第一次失敗（9 of 10，原因未查清），修正 COM 錯誤處理後的第五次是 10 of 10
+  （PowerPoint 案例實際有跑），所以那次失敗沒有重現、也沒有被解釋；擋掉 jsonschema 或 playwright 時 K1／K3／K4 明確失敗。
 - 不宣稱審計結論正確：腳本只證明「有寫、有出處、引句是原文」，不證明判斷是對的。
 - 不宣稱在 Windows 以外能跑；macOS / Linux 未實測。
 - 不宣稱在真實論文上的表現：這個 repo 只附虛構論文的成果；原作者在真實論文上的評估資料沒有出貨（有版權與個資問題）。

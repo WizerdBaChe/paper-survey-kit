@@ -141,9 +141,10 @@ paths is `verify/unshipped_paths.txt`.
 | E9 | `skills/paper-story/SKILL.md`, `skills/paper-story/scripts/lab_deck.py` | a template journal logo's name is generalised in two places; the nickname of the origin's base decks becomes "lab base deck"; a session id inside a ruling's provenance is removed (dates kept) |
 | E10 | `tools/page-fill-gate/page_classes.json` | the machine-wide census root list (the owner's work folders) → `<projects>`, `<work>`, `<share>`, `<course-notes>` |
 | E11 | `skills/paper-story/scripts/lab_base.py` | the base-deck nickname and a template logo's name in its docstring and one function docstring are generalised; the user-ruling quote becomes a neutral sentence |
-| E12 | `skills/paper-story/scripts/lab_deck.py` | `cover_gate` answers SKIP when no template folder is configured (the origin raised `TypeError` there because the folder is unset in the kit) |
+| E12 | — | dropped before the v1.1.0 tag: the `cover_gate` `TypeError` with no template folder is fixed at the origin, so the kit copy needs no edit |
 | E13 | `skills/paper-story/scripts/lab_deck.py` | the five L13 selftest controls print SKIP, not BAD, when the gate has no template cover to compare against (`--base blank`) |
 | R6 | all text files | the venue id and the names of the origin's own lab meeting in prose, test names and CLI help become the neutral `lab-meeting` / "lab meeting" (code, `--venue` choices, selftests and docs together, so the shipped selftests pass) |
+| R7 | all text files | the date and recording timestamp of the origin's lab meeting in venue prose become what the page is ("minimal lab-meeting page", "the advisor's remark at a lab meeting"); the screen gains a `meeting-date` pattern |
 | R5 | `tools/page-fill-gate/README.md` | the origin research project's internal folder and file names (its deck build gate, its dossier and discussion-pack tests, a scratch script) → what they are, marked not shipped |
 | R1 | all text files | private machine folders → `<PAPER_HOME>`, `<NOTES_VAULT>`, `~/.claude`, `<projects>/`, `<share>/`, `<work>`, `<media>/` |
 | R2 | all text files | the origin's lab-template reference is not shipped; every pointer to it now names `references/formal-deck.md` |

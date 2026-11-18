@@ -118,6 +118,7 @@ flowchart LR
 - 腳本查的是「有沒有、空不空、是不是原文」；**「為什麼」寫得對不對、判定詞合不合理、key point 能不能搬走，仍要人判斷**。每條規則是程式強制或流程規則，見 [`docs/EVIDENCE.md`](docs/EVIDENCE.md) 的 Enforcement map。
 - 說明頁是繁體中文，正式簡報是英文。
 - 只在 Windows 11 + Python 3.12 實測；PowerPoint 版面量測（`--render`）需要 Windows + PowerPoint。
+- 必要依賴：`pymupdf python-pptx pillow lxml jsonschema playwright matplotlib pytest` 加 `python -m playwright install chromium`；少了 `jsonschema` 或 `playwright`，驗收控制會明確失敗（見 [`verify/fresh_clone_run.txt`](verify/fresh_clone_run.txt)）。只有 PowerPoint 是選用，沒有時那幾個案例印 SKIP。
 - PyMuPDF 是 AGPL-3.0（或商業授權）。
 - 更多限制與人工驗收清單：[`docs/DEVELOPER.md`](docs/DEVELOPER.md#限制)。
 

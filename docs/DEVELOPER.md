@@ -111,7 +111,8 @@ python -X utf8 verify/run_controls.py <一個新的空資料夾>
 - **依賴與乾淨環境的實測**（[`verify/fresh_clone_run.txt`](../verify/fresh_clone_run.txt)）：從乾淨 clone、HOME 指到空資料夾，
   擋掉 PowerPoint（pywin32）後 10 of 10 ok；擋掉 `jsonschema`（K1、K3 失敗）或 `playwright`（K3、K4 失敗）時控制項會明確失敗而不是通過，
   所以這兩個是必要依賴，只有 PowerPoint 是選用。在有裝 PowerPoint 的機器上把 USERPROFILE 指到空資料夾時，K2 的 PowerPoint 案例
-  曾無法開檔（9 of 10），原因沒有完全查清；用你自己的使用者資料夾跑就不受影響。
+  曾有一次無法開檔、整個 selftest 中斷（9 of 10），原因沒有查清，之後在同樣條件下沒有重現（run 5 為 10 of 10）。
+  修正後，PowerPoint 開檔失敗之類的 COM 錯誤一律讓那幾個案例印 SKIP，不再讓 selftest 中斷。
 - **關聯層需要 research graph，這個 repo 沒有附。** `relations.py` 透過 `rg.py --json paper|relate` 讀人物、研究群與論文關聯；
   找不到 `rg.py`（或設 `PAPER_STORY_RG=off`）時回報 `unavailable`，說明頁的「人物與關聯」與完整版簡報的關聯頁照常出現，
   內容是「庫內無資料」加原因，作者群那一行也不會編造。要啟用就提供自己的 `rg.py`，回答同樣兩個 JSON 查詢。示範成果是 v1.0.x 產的，沒有關聯頁。

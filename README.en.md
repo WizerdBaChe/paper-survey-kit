@@ -101,6 +101,7 @@ flowchart LR
 - Scripts check presence, emptiness and verbatim quotes; **whether a why is right, a verdict earned or a key point transferable stays a reader's call**. See the Enforcement map in [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 - The explainer page is Traditional Chinese; the formal deck is English.
 - Tested only on Windows 11 + Python 3.12; PowerPoint layout measurement (`--render`) needs Windows + PowerPoint.
+- Required: `pymupdf python-pptx pillow lxml jsonschema playwright matplotlib pytest` plus `python -m playwright install chromium`; without `jsonschema` or `playwright` the acceptance controls fail loudly (see [`verify/fresh_clone_run.txt`](verify/fresh_clone_run.txt)). Only PowerPoint is optional; without it those cases print SKIP.
 - PyMuPDF is AGPL-3.0 (or commercial).
 - Full limits and the manual acceptance list: [`docs/DEVELOPER.md`](docs/DEVELOPER.md).
 

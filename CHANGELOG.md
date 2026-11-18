@@ -19,12 +19,15 @@ tools move to the origin's state of 2026-11-18.
   view prints 「庫內無資料」 / "No data in the research graph" with the reason (status `unavailable`).
 - `lab_deck.py`: the cover keeps nothing of a base deck's own cover (new gate L13, built on the new
   `scripts/lab_base.py`); blank-base decks have no template cover, so the five L13 selftest controls print
-  SKIP there (declared edit E13) and a missing template folder no longer crashes the gate (E12).
+  SKIP there (declared edit E13) and a missing template folder no longer crashes the gate (fixed at the
+  origin). The PowerPoint selftest cases print SKIP on any COM fault, not only when pywin32 is missing.
+- `relations.py` reads the reparse-point flag with `getattr`, so the sibling-library walk no longer returns
+  nothing on Linux or macOS (untested there).
 - Shared tools: `explainer/2` schema (literal code block), copy-feedback button and a start guide / end
   overview in both carriers, page-fill-gate phone-width check, canvas class and the layout vocabulary file
   it reads (`tools/blank-space-gauge/layouts.json`), paper-distill text/JATS runs.
-- Declared edits: E8 dropped (its anchor left the origin's SKILL.md; the slimmed file was re-screened); E9–E13
-  and token rule R6 added (`docs/BUILD-SPEC.md` §9); the two "course notes" token rules dropped (strings gone).
+- Declared edits: E8 dropped (its anchor left the origin's SKILL.md; the slimmed file was re-screened); E12
+  dropped (fixed at the origin); E9–E11, E13, E14 and token rules R6–R7 added (`docs/BUILD-SPEC.md` §9); the two "course notes" token rules dropped (strings gone).
 - Not shipped on purpose: `references/field-test-history.md` and the machine-wide `class_census.py`
   (listed in `verify/unshipped_paths.txt`). The example run is the v1.0.1 build and is not regenerated, so it
   shows no Relations slide.

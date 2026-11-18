@@ -1,4 +1,5 @@
-fresh clone of the release candidate (commit 2c86517, the v1.1.0 tree before this file was added) into a new
+fresh clone of the release candidate (runs 1-4: the tree of commit 60d7147, the v1.1.0 docs commit before this file
+and before the review fixes; run 5: the tree of commit f6dde8b, after them; both commits are ancestors of v1.1.0) into a new
 scratch folder, then from its root, with HOME, USERPROFILE and CLAUDE_CONFIG_DIR pointed at a new empty folder
 (HK_HOST_TOML and PAPER_DISTILL_HOME unset, so verify/run_controls.py supplies its own):
   python -X utf8 verify/run_controls.py <new scratch dir>
@@ -82,3 +83,23 @@ Reading runs 3 and 4 (read from the failing commands run by hand on a copy; no g
   html-explainer 3 failures; pptx-explainer 34 tests ok, 1 skipped).
 The controls therefore refuse, loudly, when either module is missing; the "Needs" list in verify/run_controls.py,
 AGENTS.md and docs/DEVELOPER.md names both.
+
+== run 5: after the review fixes (tree of f6dde8b), empty home, every dependency present (PowerPoint installed)
+exit code 0
+env: python 3.12.7, Windows 11, pymupdf 1.26.7, python-pptx 1.0.2, playwright 1.62.0, jsonschema 4.26.0, pytest 9.1.1
+K1   render_story.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K2   lab_deck.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K3   build.py selftest: exit 0, 'selftest: ALL PASS' found -> ok
+K4   test_fill_gate.py : exit 0, 'test_fill_gate: PASS' found -> ok
+K5a  glossary.py --selftest: exit 0, 'selftest OK' found -> ok
+K5b  paper-distill pytest: exit 0, 50 passed in 4.50s -> ok
+K6   verify_run: shipped V2 PASS, FAIL lines 0 (exit 0) vs quote altered at paper_says/conclusion_quote V2 WARN (exit 0) -> ok
+K7a  verify_story: shipped exit 0, V2 FAIL False vs entry_point.why emptied exit 2, V2 FAIL True -> ok
+K7b  verify_story: shipped V11 FAIL False vs drift[0].quote altered exit 2, V11 FAIL True -> ok
+K8   make_paper.py text-layer sha256: shipped 47a2aa796d1f7327 vs regenerated 47a2aa796d1f7327 -> ok
+controls: 10 of 10 ok
+
+Run 5 re-checked by hand, same environment: lab_deck.py --selftest printed the nine L10 cases and
+guard-after-ppt-save as OK, so the PowerPoint cases ran (not skipped). The run-1 K2 failure did not reproduce and
+stays unexplained. Since f6dde8b any COM fault in that block (no pywin32, or PowerPoint unable to open the file)
+prints "SKIP L10 / PowerPoint-save cases" instead of ending the selftest.
