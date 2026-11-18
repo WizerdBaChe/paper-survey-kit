@@ -1,17 +1,84 @@
-fresh clone of the release candidate (the v1.0.0 tree before this file was updated) into a new scratch
-folder, then from its root:
+fresh clone of the release candidate (commit 2c86517, the v1.1.0 tree before this file was added) into a new
+scratch folder, then from its root, with HOME, USERPROFILE and CLAUDE_CONFIG_DIR pointed at a new empty folder
+(HK_HOST_TOML and PAPER_DISTILL_HOME unset, so verify/run_controls.py supplies its own):
   python -X utf8 verify/run_controls.py <new scratch dir>
-exit code 0; output verbatim:
+Four runs. Optional dependencies are blocked by a sitecustomize import hook on PYTHONPATH that raises ImportError
+for the named modules. Every line below is verbatim except the run labels.
 
+== run 1: empty home, every dependency present (PowerPoint installed on this machine)
+exit code 1
+env: python 3.12.7, Windows 11, pymupdf 1.26.7, python-pptx 1.0.2, playwright 1.62.0, jsonschema 4.26.0, pytest 9.1.1
+K1   render_story.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K2   lab_deck.py --selftest: exit 1, 'SELFTEST PASS' absent -> MISMATCH
+K3   build.py selftest: exit 0, 'selftest: ALL PASS' found -> ok
+K4   test_fill_gate.py : exit 0, 'test_fill_gate: PASS' found -> ok
+K5a  glossary.py --selftest: exit 0, 'selftest OK' found -> ok
+K5b  paper-distill pytest: exit 0, 50 passed in 1.91s -> ok
+K6   verify_run: shipped V2 PASS, FAIL lines 0 (exit 0) vs quote altered at paper_says/conclusion_quote V2 WARN (exit 0) -> ok
+K7a  verify_story: shipped exit 0, V2 FAIL False vs entry_point.why emptied exit 2, V2 FAIL True -> ok
+K7b  verify_story: shipped V11 FAIL False vs drift[0].quote altered exit 2, V11 FAIL True -> ok
+K8   make_paper.py text-layer sha256: shipped 47a2aa796d1f7327 vs regenerated 47a2aa796d1f7327 -> ok
+controls: 9 of 10 ok; MISMATCH: K2
+
+Cause of the K2 mismatch (run_controls gave the same K2 MISMATCH on two runs; the cause is read from the
+selftest's own traceback in a third run by hand with the same environment): the PowerPoint-only cases (L10) call PowerPoint through COM, and
+`Presentations.Open` raised "PowerPoint could not open the file" while the profile folders pointed at an empty
+folder. The same selftest run from a shell with the same three variables passed, so what differs is not isolated
+(unverified guess: a PowerPoint instance already running under the real profile was reused there). On a machine
+without PowerPoint these cases are skipped and said so (run 2); with a real profile and PowerPoint they pass
+(the 10 of 10 run in verify/controls_run.txt). PowerPoint is the one dependency the kit treats as optional.
+
+== run 2: empty home, PowerPoint blocked (pywin32 modules win32com, pythoncom, pywintypes raise ImportError)
+exit code 0
 env: python 3.12.7, Windows 11, pymupdf 1.26.7, python-pptx 1.0.2, playwright 1.62.0, jsonschema 4.26.0, pytest 9.1.1
 K1   render_story.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
 K2   lab_deck.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
 K3   build.py selftest: exit 0, 'selftest: ALL PASS' found -> ok
 K4   test_fill_gate.py : exit 0, 'test_fill_gate: PASS' found -> ok
 K5a  glossary.py --selftest: exit 0, 'selftest OK' found -> ok
-K5b  paper-distill pytest: exit 0, 50 passed in 2.02s -> ok
+K5b  paper-distill pytest: exit 0, 50 passed in 3.03s -> ok
 K6   verify_run: shipped V2 PASS, FAIL lines 0 (exit 0) vs quote altered at paper_says/conclusion_quote V2 WARN (exit 0) -> ok
 K7a  verify_story: shipped exit 0, V2 FAIL False vs entry_point.why emptied exit 2, V2 FAIL True -> ok
 K7b  verify_story: shipped V11 FAIL False vs drift[0].quote altered exit 2, V11 FAIL True -> ok
 K8   make_paper.py text-layer sha256: shipped 47a2aa796d1f7327 vs regenerated 47a2aa796d1f7327 -> ok
 controls: 10 of 10 ok
+
+== run 3: empty home, jsonschema blocked (PowerPoint also blocked, to keep run 1's cause out of this one)
+exit code 1
+env: python 3.12.7, Windows 11, pymupdf 1.26.7, python-pptx 1.0.2, playwright 1.62.0, jsonschema 4.26.0, pytest 9.1.1
+K1   render_story.py --selftest: exit 2, 'SELFTEST PASS' absent -> MISMATCH
+K2   lab_deck.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K3   build.py selftest: exit 1, 'selftest: ALL PASS' absent -> MISMATCH
+K4   test_fill_gate.py : exit 0, 'test_fill_gate: PASS' found -> ok
+K5a  glossary.py --selftest: exit 0, 'selftest OK' found -> ok
+K5b  paper-distill pytest: exit 0, 50 passed in 2.25s -> ok
+K6   verify_run: shipped V2 PASS, FAIL lines 0 (exit 0) vs quote altered at paper_says/conclusion_quote V2 WARN (exit 0) -> ok
+K7a  verify_story: shipped exit 0, V2 FAIL False vs entry_point.why emptied exit 2, V2 FAIL True -> ok
+K7b  verify_story: shipped V11 FAIL False vs drift[0].quote altered exit 2, V11 FAIL True -> ok
+K8   make_paper.py text-layer sha256: shipped 47a2aa796d1f7327 vs regenerated 47a2aa796d1f7327 -> ok
+controls: 8 of 10 ok; MISMATCH: K1, K3
+
+== run 4: empty home, playwright blocked (PowerPoint also blocked)
+exit code 1
+env: python 3.12.7, Windows 11, pymupdf 1.26.7, python-pptx 1.0.2, playwright 1.62.0, jsonschema 4.26.0, pytest 9.1.1
+K1   render_story.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K2   lab_deck.py --selftest: exit 0, 'SELFTEST PASS' found -> ok
+K3   build.py selftest: exit 1, 'selftest: ALL PASS' absent -> MISMATCH
+K4   test_fill_gate.py : exit 2, 'test_fill_gate: PASS' absent -> MISMATCH
+K5a  glossary.py --selftest: exit 0, 'selftest OK' found -> ok
+K5b  paper-distill pytest: exit 0, 50 passed in 3.33s -> ok
+K6   verify_run: shipped V2 PASS, FAIL lines 0 (exit 0) vs quote altered at paper_says/conclusion_quote V2 WARN (exit 0) -> ok
+K7a  verify_story: shipped exit 0, V2 FAIL False vs entry_point.why emptied exit 2, V2 FAIL True -> ok
+K7b  verify_story: shipped V11 FAIL False vs drift[0].quote altered exit 2, V11 FAIL True -> ok
+K8   make_paper.py text-layer sha256: shipped 47a2aa796d1f7327 vs regenerated 47a2aa796d1f7327 -> ok
+controls: 8 of 10 ok; MISMATCH: K4, K3
+
+Reading runs 3 and 4 (read from the failing commands run by hand on a copy; no gate flipped to a pass):
+- jsonschema is required, not optional: `tools/carriers/common/content.py` imports it at module level (K3
+  ImportError), and render_story's selftest ends SELFTEST FAIL because its schema gate cannot run (K1). verify_run
+  and verify_story, which import it inside a try, still ran (K6, K7 ok) and downgrade the schema check.
+- playwright is required for the page measurement: test_fill_gate.py prints "SKIP: instrument unavailable:
+  playwright blocked" and exits 2 (K4, not a pass), and the html-explainer golden build and unit tests fail (K3:
+  html-explainer 3 failures; pptx-explainer 34 tests ok, 1 skipped).
+The controls therefore refuse, loudly, when either module is missing; the "Needs" list in verify/run_controls.py,
+AGENTS.md and docs/DEVELOPER.md names both.
