@@ -16,9 +16,10 @@ paper-survey-kit/
 │   └── assets/                    README 圖片 + build_assets.py（重產所有圖）+ src/（圖的原始頁）
 ├── reference-impl/                原始碼的位元組副本（佈局同 ~/.claude，相對路徑可解析）
 │   ├── skills/paper-distill/      證據審計：ingest、probe、glossary、crop、units、verify_run、library
-│   ├── skills/paper-story/        敘事重建：render_story（S1–S20）、story_explainer、verify_story（V1–V23）、lab_deck（L1–L12）
+│   ├── skills/paper-story/        敘事重建：render_story（S1–S20）、story_explainer、verify_story（V1–V23）、lab_deck（L1–L14，--venue default|lab-meeting）、relations（人物與關聯，讀 rg.py；沒有就印「庫內無資料」）、lab_base
 │   ├── tools/carriers/            內容檔 → 蓋章的 HTML / PPTX（html-explainer、pptx-explainer）
 │   ├── tools/page-fill-gate/      量頁面填滿度
+│   ├── tools/blank-space-gauge/   只有 layouts.json（填滿檢查的固定畫布類別讀它）
 │   └── hooks/_lib/                roots.py / tree.py / hosts.py：機器根目錄
 ├── examples/
 │   ├── fictional-paper/           make_paper.py → 虛構論文 paper.pdf（含刻意的證據缺口）
@@ -38,7 +39,7 @@ flowchart LR
   STORY --> RS[render_story.py<br/>S1–S20]
   RS --> SE[story_explainer.py] --> CB[tools/carriers/build.py<br/>html-explainer] --> HTML[paper-explainer.html]
   RS --> VS[verify_story.py<br/>V1–V23，另一個 session 跑]
-  STORY -. 明確要求才做 .-> LD[lab_deck.py<br/>L1–L12，空白底 4:3] --> PPTX[lab-deck.pptx]
+  STORY -. 明確要求才做 .-> LD[lab_deck.py<br/>L1–L14，空白底 4:3] --> PPTX[lab-deck.pptx]
   CB --> FG[page-fill-gate]
 ```
 
@@ -107,6 +108,11 @@ python -X utf8 verify/run_controls.py <一個新的空資料夾>
 - 說明頁與 class-A 輸出是繁體中文；投影片是英文。
 - 只在 Windows 實測；字型不同時頁面量測數字可能略有差異。
 - PyMuPDF 是 AGPL-3.0（或商業授權），散布你做的東西前要確認授權相容。
+- **關聯層需要 research graph，這個 repo 沒有附。** `relations.py` 透過 `rg.py --json paper|relate` 讀人物、研究群與論文關聯；
+  找不到 `rg.py`（或設 `PAPER_STORY_RG=off`）時回報 `unavailable`，說明頁的「人物與關聯」與完整版簡報的關聯頁照常出現，
+  內容是「庫內無資料」加原因，作者群那一行也不會編造。要啟用就提供自己的 `rg.py`，回答同樣兩個 JSON 查詢。示範成果是 v1.0.x 產的，沒有關聯頁。
+- **`--venue lab-meeting` 是極簡的一頁式版型，哪個場合要用它由你決定**（原作者只用在自己的實驗室例會）；單篇簡報在這個版型下只是少了關聯頁，
+  還沒有為它定義更小的版型。五個 L13 封面殘餘的自測控制需要範本封面，空白底沒有範本，所以印 SKIP（不是通過，也不是失敗）。
 - 文件裡的 `<PAPER_HOME>`、`<NOTES_VAULT>`、AssetVault、Retort & Rove 是原作者環境的名稱，只說明規則從哪來，不是依賴。
 
 ## 人工驗收
@@ -124,6 +130,9 @@ python -X utf8 verify/run_controls.py <一個新的空資料夾>
 1. 說明頁在手機寬度下仍是單欄可讀。
 2. 滑過術語時有說明卡。
 3. 正式簡報的講稿（備忘稿）讀起來像在講話，不像在念摘要。
+4. 對示範 run 分別用 `--venue default` 與 `--venue lab-meeting` 產單篇簡報：前者在 Key points 後多一頁關聯頁，後者沒有；
+   沒有 research graph 時，關聯頁只寫「庫內無資料」和原因。十篇一頁（`--format onepage`）的差別更大：`default` 每頁有 Key point 條與一張關聯投影片，
+   `lab-meeting` 沒有，口號與邏輯鏈轉折在備忘稿；兩者的期刊標籤旁都有作者一行。
 
 ## 重產 README 圖片
 

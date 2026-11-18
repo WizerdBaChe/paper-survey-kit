@@ -69,6 +69,7 @@ The tree under `reference-impl/` maps 1:1 onto a `~/.claude` home:
 | `reference-impl/skills/paper-story/` | `~/.claude/skills/paper-story/` | story, explainer page, formal deck |
 | `reference-impl/tools/carriers/` | `~/.claude/tools/carriers/` | the explainer page build (`story_explainer.py` finds it at `../../tools/carriers` from its own folder) |
 | `reference-impl/tools/page-fill-gate/` | `~/.claude/tools/page-fill-gate/` | the carriers' fill gate and the renderer's S7b |
+| `reference-impl/tools/blank-space-gauge/layouts.json` | `~/.claude/tools/blank-space-gauge/layouts.json` | the fill gate's fixed-canvas (`canvas`) class reads its layout vocabulary from here; only this one data file ships, not the gauge tool |
 | `reference-impl/hooks/_lib/{roots,tree,hosts}.py` | `~/.claude/hooks/_lib/` | machine roots; skip if your home already has these files |
 | `verify/host.toml` | `~/.claude/adapt/host.toml` (or point `HK_HOST_TOML` at it) | roots.py refuses to guess without a host file |
 
@@ -80,6 +81,13 @@ Set `PAPER_DISTILL_HOME` to the folder that will hold the paper library.
 - Keep the two product classes apart: never convert the explainer page into the formal deck.
 - The formal deck defaults to a blank base; a user's own template goes in `<PAPER_HOME>/_templates/`
   (`references/formal-deck.md` §1). Do not ship anyone's group template onward.
+- The relation layer (people / group / paper relations on the explainer and in the decks) reads a research
+  graph through `rg.py --json paper|relate`. That tool is not shipped: `scripts/relations.py` then reports
+  `unavailable` and every relation view prints "No data in the research graph" with the reason. Keep that
+  fallback when you adapt it; supply your own `rg.py` with the same two queries to turn the layer on.
+- The formal deck has two venue profiles (`lab_deck.py --venue default|lab-meeting`): `default` is the full
+  carrier; `lab-meeting` is the minimal one-page shape. Which of your user's venues is the minimal one is
+  their decision; do not guess it.
 - The skills write Traditional Chinese for class-A output; changing the language is a content decision for
   your user, not a code change.
 

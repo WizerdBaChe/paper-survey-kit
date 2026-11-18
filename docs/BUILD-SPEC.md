@@ -23,7 +23,7 @@ script; nothing is judged by taste where a determinable check exists.
 | component | path | role |
 |---|---|---|
 | paper-distill | `reference-impl/skills/paper-distill/` | ingest (PDF / text / JATS → `source/`), probe (structure + anomalies), glossary, crop, units, verify_run, library |
-| paper-story | `reference-impl/skills/paper-story/` | render_story (gates S1–S20 + explainer), story_explainer (story.json + cards.json → `explainer/1` content), verify_story (V1–V23, run by another session), lab_deck (formal PPTX, gates L1–L12) |
+| paper-story | `reference-impl/skills/paper-story/` | render_story (gates S1–S20 + explainer), story_explainer (story.json + cards.json → `explainer/1` content), verify_story (V1–V23, run by another session), lab_deck (formal PPTX, gates L1–L14, `--venue default|lab-meeting`), relations (`rg.py` reader for the people / group / paper relation layer; `unavailable` when `rg.py` is absent, which is the kit's normal state), lab_base (cover-picture helper) |
 | carriers | `reference-impl/tools/carriers/` | `build.py`: content file `*.explainer.json` → stamped HTML (`html-explainer`) or PPTX (`pptx-explainer`); `check` says ok / unstamped / edited / stale |
 | page-fill gate | `reference-impl/tools/page-fill-gate/` | measures how much of the viewport a built page fills (class `deck` / `document-long`), two-sided fixtures |
 | machine roots | `reference-impl/hooks/_lib/roots.py` (+ `tree.py`, `hosts.py`) | reads `adapt/host.toml` or `HK_HOST_TOML`; every optional root may be `none` |
@@ -86,7 +86,7 @@ produced summaries twice in the origin's calibration.
 | id | what | must pass | must fail |
 |---|---|---|---|
 | K1 | paper-story renderer selftest | `render_story.py --selftest` → SELFTEST PASS | (its own injected defects inside) |
-| K2 | formal deck selftest on the blank base | `lab_deck.py --selftest` → SELFTEST PASS | (injected layout defects inside) |
+| K2 | formal deck selftest on the blank base | `lab_deck.py --selftest` → SELFTEST PASS | (injected layout defects inside; the five L13 template-cover controls print SKIP on the blank base; the venue, byline and Relations controls run with no research graph) |
 | K3 | carriers selftest | `build.py selftest` → ALL PASS (asset comparison UNDETERMINED without the upstream asset) | hand-edit / stale controls inside |
 | K4 | page-fill gate | `test_fill_gate.py` → PASS | known-bad fixtures inside |
 | K5 | glossary and paper-distill unit tests | `glossary.py --selftest`, `pytest test_*.py` | — |
@@ -109,6 +109,10 @@ Visual acceptance (the explainer page and the deck as a person sees them) is a h
 - **Formal deck:** `lab_deck.py` defaults to `--base blank` here. With your own template, put two
   title-only decks in `<PAPER_HOME>/_templates/` and pass `--base template` (`references/formal-deck.md` §1).
   `--render` needs Windows + PowerPoint (COM).
+- **Relation layer:** `scripts/relations.py` finds `tools/research-graph/rg.py` three folders above its own
+  (`<config home>/tools/research-graph/rg.py`) and calls `rg.py --json paper|relate`; `PAPER_STORY_RG=off`
+  disables it. The graph tool is not shipped; absent, the status is `unavailable` and the views print
+  "No data in the research graph" with the reason. Supply your own `rg.py` answering both queries to enable it.
 - **Not shipped, referenced by the docs:** the origin's AssetVault (upstream of the carriers' vendor files
   and of the deck shell; `render_story.py --check-shell` compares against it), Retort & Rove (a reader of
   `units.json`), the origin's `rules/*.md` and `ops/` files cited in provenance lines.
@@ -119,7 +123,9 @@ Visual acceptance (the explainer page and the deck as a person sees them) is a h
 
 Origin = the author's `~/.claude` at the release date. `reference-impl/` keeps the origin's layout.
 Not shipped: `paper-distill/evals/*` and `paper-story/evals/*` except the four control fixtures the code
-reads, `paper-distill/archive/`, `carriers/samples/built/`, `__pycache__`. The list of unshipped origin
+reads, `paper-distill/archive/`, `carriers/samples/built/`, `__pycache__`, `paper-story/references/field-test-history.md`,
+`page-fill-gate/class_census.py`, and the research-graph tool the relation layer reads (`tools/research-graph/`).
+From `tools/blank-space-gauge/` only `layouts.json` ships (the fill gate's canvas class reads it). The list of unshipped origin
 paths is `verify/unshipped_paths.txt`.
 
 | id | where | what changed |
@@ -127,15 +133,21 @@ paths is `verify/unshipped_paths.txt`.
 | E1 | `skills/paper-story/scripts/lab_deck.py` | the cover's advisor default is empty; `--base` defaults to `blank`; the comment naming the decks the origin's blank bases were derived from, and their folder, is replaced by a neutral line; a template logo's name is generalised; the default presenter name is `Presenter` |
 | E2 | `skills/paper-story/SKILL.md`, `skills/paper-distill/references/design-rationale.md`, `skills/paper-story/references/talk-conventions.md`, `skills/paper-story/references/logic-extraction.md`, `tools/page-fill-gate/README.md`, `skills/paper-story/scripts/pptx_helpers.py`, `tools/carriers/pptx-explainer/vendor/deck_builder.py` | the name of the origin's research group and its project is replaced by "the presenter's own project" / "研究專案" / "an earlier research project" (dates kept) |
 | E3 | `hooks/_lib/roots.py` | an example folder in a docstring generalised |
-| E4 | `tools/carriers/pptx-explainer/CARRIER.md` | the recorded sha256 of `vendor/deck_builder.py` recomputed after E2 |
+| E4 | `tools/carriers/pptx-explainer/CARRIER.md` | the recorded sha256 of `tools/carriers/pptx-explainer/vendor/deck_builder.py` recomputed after E2 |
 | E5 | `skills/paper-story/references/logic-extraction.md`, `skills/paper-distill/references/design-rationale.md` | two portability examples no longer name the origin research project's subject or its evaluation criteria ("another substrate's micro-mirror process", "your own project's choice"); the user's field is stated generically |
 | E6 | `skills/paper-story/references/talk-conventions.md`, `skills/paper-story/references/presentation-formats.md`, `skills/paper-story/assets/story.schema.json` | every example sentence quoted from a labmate's talk notes is replaced by an invented sentence in the same register (the fictional paper's domain); the patterns, counter-examples and rules are unchanged and the file says so; a reference-deck folder name, a private analysis note's path and file name, and an opaque criterion id are removed |
 | E7 | `skills/paper-distill/references/reading-method.md` | two provenance rows keep their sources (a public resource site, a public post) but drop the private file paths |
-| E8 | `skills/paper-story/SKILL.md` | a pointer to the unshipped template reference written without its `.md` suffix now names `formal-deck.md` §4 |
+| E8 | (dropped at v1.1.0) | the anchor it edited no longer exists in the origin's SKILL.md (the field-test history moved to an unshipped reference); the slimmed SKILL.md was re-screened instead |
+| E9 | `skills/paper-story/SKILL.md`, `skills/paper-story/scripts/lab_deck.py` | a template journal logo's name is generalised in two places; the nickname of the origin's base decks becomes "lab base deck"; a session id inside a ruling's provenance is removed (dates kept) |
+| E10 | `tools/page-fill-gate/page_classes.json` | the machine-wide census root list (the owner's work folders) → `<projects>`, `<work>`, `<share>`, `<course-notes>` |
+| E11 | `skills/paper-story/scripts/lab_base.py` | the base-deck nickname and a template logo's name in its docstring and one function docstring are generalised; the user-ruling quote becomes a neutral sentence |
+| E12 | `skills/paper-story/scripts/lab_deck.py` | `cover_gate` answers SKIP when no template folder is configured (the origin raised `TypeError` there because the folder is unset in the kit) |
+| E13 | `skills/paper-story/scripts/lab_deck.py` | the five L13 selftest controls print SKIP, not BAD, when the gate has no template cover to compare against (`--base blank`) |
+| R6 | all text files | the venue id and the names of the origin's own lab meeting in prose, test names and CLI help become the neutral `lab-meeting` / "lab meeting" (code, `--venue` choices, selftests and docs together, so the shipped selftests pass) |
 | R5 | `tools/page-fill-gate/README.md` | the origin research project's internal folder and file names (its deck build gate, its dossier and discussion-pack tests, a scratch script) → what they are, marked not shipped |
 | R1 | all text files | private machine folders → `<PAPER_HOME>`, `<NOTES_VAULT>`, `~/.claude`, `<projects>/`, `<share>/`, `<work>`, `<media>/` |
 | R2 | all text files | the origin's lab-template reference is not shipped; every pointer to it now names `references/formal-deck.md` |
-| R3 | all text files | labmates' and a conference speaker's deck names (used as style precedents) → "labmate deck A–E" / "deck F"; a school name in two CSS/JS comments → "course notes" |
+| R3 | all text files | labmates' and a conference speaker's deck names (used as style precedents) → "labmate deck A–E" / "deck F" (the two "course notes" token rules of v1.0.x were dropped at v1.1.0: the strings left the origin) |
 | X1 | `examples/library/index.json`, `examples/library/Placeholder2026_wax-delay-bridges/_meta.json` | the example run's absolute library folder (written by `ingest.py` / `library.py`) → `<PAPER_DISTILL_HOME>`; `library.py` resolves entries by that path, so on your machine re-register the run (`library.py register`) before using library commands on it. The run's captions were re-checked and its figures re-cropped once the control fixtures were in place (`source/figures.json` `caption_check.controls = ok`; the re-cut crops are byte-identical) |
 | O1 | `skills/paper-story/references/formal-deck.md` | NEW, written for this pack: the template-free replacement of the origin's lab-template reference (same section numbers; no template facts, people or paths) |
 

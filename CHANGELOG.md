@@ -3,7 +3,33 @@
 All notable changes to this repository. Versions follow semantic versioning: minor = new capability,
 patch = fix.
 
-## v1.0.1 — 2026-11-03
+## [1.1.0] - 2026-11-18
+
+New capability: venue profiles, an author / group line and a relation layer in `paper-story`; the shared
+tools move to the origin's state of 2026-11-18.
+
+- `lab_deck.py --venue default|lab-meeting`: `default` is the full carrier (Key point strip, a Relations
+  slide for the ten-paper page or a Relations page after Key points for a single paper); `lab-meeting` is the
+  minimal one-page shape (no Key point strip, slogan and logic-chain turns in the speaker notes, no Relations
+  slide). New gate L14 (WARN) checks both profiles; `formal-deck.md` §7 records the rules.
+- Both venues print an author / inferred-group line beside the venue badge (source order: stated group, then
+  the research graph labelled inferred, then nothing; never invented).
+- New `scripts/relations.py` reads people / group / paper relations through `rg.py --json paper|relate`;
+  `story_explainer.py` gains a 人物與關聯 section. The graph tool is **not shipped**: without it every relation
+  view prints 「庫內無資料」 / "No data in the research graph" with the reason (status `unavailable`).
+- `lab_deck.py`: the cover keeps nothing of a base deck's own cover (new gate L13, built on the new
+  `scripts/lab_base.py`); blank-base decks have no template cover, so the five L13 selftest controls print
+  SKIP there (declared edit E13) and a missing template folder no longer crashes the gate (E12).
+- Shared tools: `explainer/2` schema (literal code block), copy-feedback button and a start guide / end
+  overview in both carriers, page-fill-gate phone-width check, canvas class and the layout vocabulary file
+  it reads (`tools/blank-space-gauge/layouts.json`), paper-distill text/JATS runs.
+- Declared edits: E8 dropped (its anchor left the origin's SKILL.md; the slimmed file was re-screened); E9–E13
+  and token rule R6 added (`docs/BUILD-SPEC.md` §9); the two "course notes" token rules dropped (strings gone).
+- Not shipped on purpose: `references/field-test-history.md` and the machine-wide `class_census.py`
+  (listed in `verify/unshipped_paths.txt`). The example run is the v1.0.1 build and is not regenerated, so it
+  shows no Relations slide.
+
+## [1.0.1] - 2026-11-03
 
 - README image source pages declare a registered page class (`diagram` for the pipeline, `showcase` for
   hero and social card) instead of the unregistered `figure`.
@@ -11,7 +37,7 @@ patch = fix.
 - `docs/DEVELOPER.md` explains why the page-fill gate does not apply to the fixed-size image canvases.
 - No change to the skills, the demo run or any README picture (all PNGs regenerate byte-identical).
 
-## v1.0.0 — 2026-11-03
+## [1.0.0] - 2026-11-03
 
 First public release.
 

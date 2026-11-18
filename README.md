@@ -55,16 +55,6 @@
 
 </td>
 </tr>
-<tr>
-<td colspan="2" valign="top">
-
-**整體流程：一篇論文，兩種讀法，同一個資料夾**<br>
-<sub>圖中名詞對應 SKILL.md 的節點 N0–N6；正式簡報只在明確要求時做</sub>
-
-<img src="docs/assets/pipeline.zh-TW.png" alt="流程圖：論文 PDF 經過取用與結構探針，分成 paper-distill 證據審計（IMRaD 骨架、主張審計、讀圖卡）與 paper-story 敘事重建（主軸、故事線與偏移、邏輯抽取）兩條線，都經過檢查閘 S1–S20、V1–V23、L1–L12，產出練習用說明頁與英文正式簡報" width="100%">
-
-</td>
-</tr>
 </table>
 
 ## 快速開始（交給你的 agent）
@@ -72,7 +62,7 @@
 把下面這段貼給 Claude Code（或其他能讀檔、跑 Python 的 agent）：
 
 ```text
-請讀 https://github.com/WizerdBaChe/paper-survey-kit 的 AGENTS.md，照它的步驟：
+請讀 https://github.com/WizerdBaChe/paper-survey-kit/tree/v1.1.0 （固定在 tag v1.1.0，不要用 main）裡的 AGENTS.md，照它的步驟：
 1. 先跑 verify/run_controls.py，把結果和 verify/controls_run.txt 對照後告訴我；
 2. 列出 BUILD-SPEC §8 裡哪些路徑要對應到我的環境，等我確認；
 3. 確認後把兩個 skill 和它們需要的工具裝進我的 ~/.claude。
@@ -83,6 +73,12 @@
 
 ## 運作流程
 
+**整體流程：一篇論文，兩種讀法，同一個資料夾**（圖中名詞對應 SKILL.md 的節點 N0–N6；正式簡報只在明確要求時做）
+
+<img src="docs/assets/pipeline.zh-TW.png" alt="流程圖：論文 PDF 經過取用與結構探針，分成 paper-distill 證據審計（IMRaD 骨架、主張審計、讀圖卡）與 paper-story 敘事重建（主軸、故事線與偏移、邏輯抽取）兩條線，都經過檢查閘 S1–S20、V1–V23、L1–L14，產出練習用說明頁與英文正式簡報" width="100%">
+
+文字版（同一張流程）：
+
 ```mermaid
 flowchart LR
   A[論文 PDF] --> B[取用與結構探針]
@@ -92,15 +88,19 @@ flowchart LR
   E --> F[render_story<br/>S1–S20]
   F --> G[說明頁 HTML]
   F --> H[verify_story<br/>V1–V23]
-  E -. 明確要求才做 .-> I[正式簡報 PPTX<br/>空白底 L1–L12]
+  E -. 明確要求才做 .-> I[正式簡報 PPTX<br/>空白底 L1–L14]
 ```
 
-## 這版有什麼（v1.0.0）
+## 這版有什麼（v1.1.0）
 
-- 兩個 skill 完整公開：腳本、schema、方法文件，去識別化後的位元組副本。
-- 正式簡報改成**無模板空白底**（4:3），不附任何團體模板；有自己的模板可以放進去用。
-- 一篇虛構示範論文，故意埋了四個證據缺口，以及在它上面完整跑完的成果。
-- 驗收腳本 K1–K8，每一項都印出「正確版 vs 故意弄壞版」兩個值。
+- **報告場合分兩種版型**：`lab_deck.py --venue default|lab-meeting`。`default` 是完整版（Key point 條、關聯頁）；
+  `lab-meeting` 是極簡的一頁式（不印 Key point 條，口號與邏輯鏈轉折放進講者備忘稿，沒有關聯頁）。新檢查閘 L14 兩邊都查。
+- **作者與推定的研究群一行**：兩種版型都會在期刊標籤旁印出「第一作者 et al. · Group: …（inferred）」；
+  取用順序是自己寫的、圖資料庫推定的、都沒有就不印，不會編造。
+- **人物與關聯**：說明頁多一段「人物與關聯」，完整版簡報多一張關聯頁，把這篇和別篇、作者與研究群連起來。
+  它讀 research graph（`rg.py`），這個圖資料庫**不在這個 repo 裡**：沒有它時整段印「庫內無資料」和原因，其餘照常跑。
+- 其他：封面不留範本殘餘（L13）、檢查閘 L1–L14、頁面填滿檢查加手機寬度與固定畫布類別、說明頁載體支援 `explainer/2`。
+- 前一版（v1.0.0）：兩個 skill 完整公開、無模板空白底簡報、虛構示範論文與雙側驗收腳本。完整清單見 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 你想要……就讀……
 

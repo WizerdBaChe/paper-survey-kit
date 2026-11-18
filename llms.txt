@@ -2,7 +2,7 @@
 
 > Two Claude Code skills for reading one research paper: paper-distill audits its evidence (IMRaD skeleton, claim audit with calibrated verdict words, figure cards) and paper-story rebuilds its story with a why on every step (axis, storyline, drift with verbatim quotes, key point as reusable logic), rendered to a practice explainer page and an optional formal English deck on a template-free blank base. Every step is gated by scripts. Ships with a fictional demo paper and a full worked run. Tested on Windows 11 and Python 3.12.
 
-Start at AGENTS.md. Pin a release tag, not main. Code MIT, documentation CC BY 4.0.
+Start at AGENTS.md. Pin a release tag, not main: https://github.com/WizerdBaChe/paper-survey-kit/tree/v1.1.0 (current). Code MIT, documentation CC BY 4.0.
 
 ## Read-only route (no command execution)
 

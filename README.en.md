@@ -41,16 +41,12 @@ This repo reads one paper two ways and keeps both in one run folder:
 | ![Drift section of the explainer: rows for an abstract number that the body does not support, a humidity claim tested at one humidity, and a baseline borrowed from another paper, each with a verbatim quote and page](docs/assets/explainer-drift.png) | ![Logic section of the explainer: an abstract key point sentence, a role-binding table and a logic chain with a warrant and locator on every link](docs/assets/explainer-logic.png) |
 | **Drift table** — where the telling outruns the evidence | **Key point** — a slogan with no material names or numbers, plus bindings and warrants |
 
-![Pipeline: a paper PDF goes through ingest and structure probes, then splits into the paper-distill lane (IMRaD skeleton, claim audit, figure cards) and the paper-story lane (axis, storyline and drift, logic extraction); both pass gates S1–S20, V1–V23, L1–L12 and produce a practice explainer page and a formal English deck](docs/assets/pipeline.zh-TW.png)
-
-<sub>Pipeline labels are in Traditional Chinese.</sub>
-
 ## Quick start (hand it to your agent)
 
 Paste this to Claude Code (or any agent that can read files and run Python):
 
 ```text
-Read AGENTS.md in https://github.com/WizerdBaChe/paper-survey-kit and follow it:
+Read AGENTS.md in https://github.com/WizerdBaChe/paper-survey-kit/tree/v1.1.0 (pinned to tag v1.1.0, not main) and follow it:
 1. run verify/run_controls.py and compare the result with verify/controls_run.txt;
 2. list which paths in BUILD-SPEC §8 map to what in my environment and wait for my confirmation;
 3. then install the two skills and the tools they need into my ~/.claude.
@@ -58,6 +54,10 @@ Do not change any gate's verdicts; report any mismatch to me.
 ```
 
 ## How it works
+
+![Pipeline: a paper PDF goes through ingest and structure probes, then splits into the paper-distill lane (IMRaD skeleton, claim audit, figure cards) and the paper-story lane (axis, storyline and drift, logic extraction); both pass gates S1–S20, V1–V23, L1–L14 and produce a practice explainer page and a formal English deck](docs/assets/pipeline.zh-TW.png)
+
+<sub>Pipeline labels are in Traditional Chinese. The same flow as text:</sub>
 
 ```mermaid
 flowchart LR
@@ -68,15 +68,23 @@ flowchart LR
   E --> F[render_story<br/>S1–S20]
   F --> G[explainer HTML]
   F --> H[verify_story<br/>V1–V23]
-  E -. on explicit request .-> I[formal PPTX<br/>blank base L1–L12]
+  E -. on explicit request .-> I[formal PPTX<br/>blank base L1–L14]
 ```
 
-## What's new (v1.0.0)
+## What's new (v1.1.0)
 
-- Both skills public in full: scripts, schemas, method docs, de-identified byte copies.
-- The formal deck is built on a **template-free blank base** (4:3); no group's template ships; your own can be dropped in.
-- A fictional demo paper with four deliberate evidence gaps, and a full run on it.
-- Acceptance controls K1–K8, each printing the correct and the deliberately broken value.
+- **Two venue profiles for the formal deck:** `lab_deck.py --venue default|lab-meeting`. `default` is the full carrier
+  (Key point strip, a Relations slide); `lab-meeting` is the minimal one-page shape (no Key point strip, slogan and
+  logic-chain turns in the speaker notes, no Relations slide). New gate L14 checks both.
+- **An author / inferred-group line** beside the venue badge on both profiles ("First et al. · Group: … (inferred)"):
+  stated group first, then the research graph labelled inferred, then nothing; never invented.
+- **People and relations:** the explainer gains a 人物與關聯 section and the default decks a Relations slide / page
+  tying this paper to others, its authors and groups. It reads a research graph (`rg.py`) that is **not part of this
+  repo**: without it the section prints "No data in the research graph" and the reason, and everything else runs.
+- Also: a cover that keeps nothing of a base deck's own cover (L13), gates L1–L14, the page-fill gate's phone-width
+  check and fixed-canvas class, `explainer/2` in the carriers. Full list: [`CHANGELOG.md`](CHANGELOG.md).
+- Earlier (v1.0.0): both skills public in full, the template-free blank-base deck, a fictional demo paper with a full
+  run, and two-sided acceptance controls.
 
 ## You want… read…
 
